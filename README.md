@@ -1,4 +1,4 @@
-# HPC_HYDRO
+## HPC HYDRO
 This is a work repository for HPC1b
 
-Contributors: Mihai Tomozeiu, Christian Reinhard, Rafael Khun
+Contributors: Mihai Tomozeiu, Christian Reinhardt, Rafael Kung
