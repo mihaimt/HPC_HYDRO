@@ -16,7 +16,7 @@
 
 7. Clone the repository with:  
 
-   **git clone git@github.com:mihaimt/Computational_Science_II**.
+   **git clone git@github.com:mihaimt/HPC_HYDRO**.
 
    Now you should be able to modify/add files in the repository from your terminal.  
    
@@ -27,9 +27,7 @@
 
 * **git commit -am "*description*"**  
 
-* **git push**  
-
-    For tests on modifying/creating files use the **Computational_Science_II/Testing_git** directory.  
+* **git push**    
   
 ### Succint description:
 <https://training.github.com/kit/downloads/github-git-cheat-sheet.pdf>  
