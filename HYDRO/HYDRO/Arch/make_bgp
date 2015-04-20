@@ -1,0 +1,51 @@
+# C compiler
+#------------------
+CC = bgxlc_r
+
+# Fortran compilers
+#------------------
+F90 = bgxlf90_r
+
+# MPI C compiler
+#------------------
+MPICC = mpixlc_r
+
+# MPI Fortran compilers
+#------------------
+MPIF90 = mpixlf90_r
+
+# C compilation options
+#-----------------------------
+CFLAGS = -O3
+
+# Fortran compilation options
+#-----------------------------
+FFLAGS = -O3
+
+# Linker options
+#---------------
+LDFLAGS = -O3 
+
+# OpenMP C compilation options
+#---------------------------
+CFLAGS_OMP =  -qsmp=omp
+
+# OpenMP Fortran compilation options
+#---------------------------
+FFLAGS_OMP =  -qsmp=omp
+
+# MPI C compilation options
+#---------------------------
+CFLAGS_MPI =
+
+# MPI Fortran compilation options
+#---------------------------
+FFLAGS_MPI =
+
+# OpenMP link options
+#--------------------
+LDFLAGS_OMP = -qsmp=omp
+
+# MPI link options
+#--------------------
+LDFLAGS_MPI =
