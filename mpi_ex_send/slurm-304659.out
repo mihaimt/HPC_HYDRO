@@ -1,0 +1,4 @@
+MPI: 4 processes initialized.
+Process 0: Sending data to process 3 (N = 1000)
+Process 3: Receiving data from process 3 (N = 1000)
+Application 1058206 resources: utime ~0s, stime ~0s, Rss ~4096, inblocks ~6267, outblocks ~14685
