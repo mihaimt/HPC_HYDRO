@@ -3,9 +3,9 @@
 
 #include "parametres.h"
 void hydro_init(hydroparam_t * H, hydrovar_t * Hv);
-void MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv,int * argc, char *** argv);
+void MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv, int * argc, char *** argv);
 void hydro_finish(const hydroparam_t H, hydrovar_t * Hv);
-void MPI_hydro_finish(const hydroparam_t H, hydrovar_t * Hv);
+void MPI_hydro_finish(hydroparam_t *H, hydrovar_t * Hv);
 
 void allocate_work_space(const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw);
 void deallocate_work_space(const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw);

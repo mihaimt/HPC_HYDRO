@@ -39,8 +39,15 @@ main(int argc, char **argv)
   process_args(argc, argv, &H);
   hydro_init(&H, &Hv);
   PRINTUOLD(H, &Hv);
-  
-  printf("Hydro starts - sequential version \n");
+
+  /* Initialize MPI library */
+  H.iMPIError = MPI_Init(&argc,&argv);
+
+  MPI_Comm_size(MPI_COMM_WORLD,&H.iNProc);
+  MPI_Comm_rank(MPI_COMM_WORLD,&H.iProc);
+ 
+ 
+  printf("Hydro starts - MPI version \n");
 
   // vtkfile(nvtk, H, &Hv);
   if (H.dtoutput > 0) 

@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <stdio.h>
+#include <mpi.h>
 
 #include "utils.h"
 #include "hydro_funcs.h"
@@ -55,7 +56,7 @@ hydro_init(hydroparam_t * H, hydrovar_t * Hv)
 }                               // hydro_init
 
 void
-MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv,  int * argc, int *** argv)
+MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv,  int * argc, char *** argv)
 {
 	/*
 	** MPI_hydro_init() is basically the same function as hydro_init() but
@@ -67,17 +68,17 @@ MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv,  int * argc, int *** argv)
     long x, y;
 
 	/* We need to allocate memory for this variable! */
-	status = malloc(sizeof(MPI_Status));
+	H->MPIStatus = malloc(sizeof(MPI_Status));
 	
 	/* Initialize MPI library */
-	H.iMPIError = MPI_Init(argc,argv);
+	H->iMPIError = MPI_Init(argc,argv);
 	
-	MPI_Comm_size(MPI_COMM_WORLD,&H.iNProc);
-	MPI_Comm_rank(MPI_COMM_WORLD,&H.iProc);
+	MPI_Comm_size(MPI_COMM_WORLD,&H->iNProc);
+	MPI_Comm_rank(MPI_COMM_WORLD,&H->iProc);
 	
-	if (H.iMPIError != 0)
+	if (H->iMPIError != 0)
 	{
-		printf("MPI_Init: Error %i\n",i);
+		printf("MPI_Init: Error %i\n",H->iMPIError);
 		exit(1);
 	}
 	
@@ -101,13 +102,16 @@ MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv,  int * argc, int *** argv)
     Hv->uold = (double *) calloc(H->nvar * H->nxt * H->nyt, sizeof(double));
 
     // wind tunnel with point explosion
-    for (j = H->jmin + ExtraLayer; j < H->jmax - ExtraLayer; j++) {
-        for (i = H->imin + ExtraLayer; i < H->imax - ExtraLayer; i++) {
-            Hv->uold[IHvP(i, j, ID)] = one;
-            Hv->uold[IHvP(i, j, IU)] = zero;
-            Hv->uold[IHvP(i, j, IV)] = zero;
-            Hv->uold[IHvP(i, j, IP)] = 1e-5;
-        }
+	if (H->iProc == 0)
+	{
+		for (j = H->jmin + ExtraLayer; j < H->jmax - ExtraLayer; j++) {
+			for (i = H->imin + ExtraLayer; i < H->imax - ExtraLayer; i++) {
+				Hv->uold[IHvP(i, j, ID)] = one;
+	            Hv->uold[IHvP(i, j, IU)] = zero;
+   				Hv->uold[IHvP(i, j, IV)] = zero;
+				Hv->uold[IHvP(i, j, IP)] = 1e-5;
+	        }
+		}
     }
     // point explosion at middle of the domian
     /*    x = (H->imax - H->imin) / 2 + ExtraLayer * 0;
@@ -126,14 +130,15 @@ hydro_finish(const hydroparam_t H, hydrovar_t * Hv)
 }                               // hydro_finish
 
 void
-MPI_hydro_finish(const hydroparam_t H, hydrovar_t * Hv)
+MPI_hydro_finish(hydroparam_t *H, hydrovar_t * Hv)
 {
+	/* (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here?? */
 	/* Finalize MPI library */
-	H.iMPIError = MPI_Finalize();
+	H->iMPIError = MPI_Finalize();
 
-	if (H.iMPIError != 0)
+	if (H->iMPIError != 0)
 	{
-		printf("MPI_Finalize: Error %i\n",i);
+		printf("MPI_Finalize: Error %i\n",H->iMPIError);
 		exit(1);
 	}
 
