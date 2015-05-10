@@ -55,11 +55,91 @@ hydro_init(hydroparam_t * H, hydrovar_t * Hv)
 }                               // hydro_init
 
 void
+MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv,  int * argc, int *** argv)
+{
+	/*
+	** MPI_hydro_init() is basically the same function as hydro_init() but
+	** it also initializes the MPI library, only allocates the local
+	** computational domain and sets the initial conditions depending on
+	** the rank of the current MPI process.
+	*/
+    long i, j;
+    long x, y;
+
+	/* We need to allocate memory for this variable! */
+	status = malloc(sizeof(MPI_Status));
+	
+	/* Initialize MPI library */
+	H.iMPIError = MPI_Init(argc,argv);
+	
+	MPI_Comm_size(MPI_COMM_WORLD,&H.iNProc);
+	MPI_Comm_rank(MPI_COMM_WORLD,&H.iProc);
+	
+	if (H.iMPIError != 0)
+	{
+		printf("MPI_Init: Error %i\n",i);
+		exit(1);
+	}
+	
+	/* At this point the MPI library is initialized and we can use all functions. */
+		
+    // *WARNING* : we will use 0 based arrays everywhere since it is C code!
+    H->imin = H->jmin = 0;
+
+    // We add two extra layers left/right/top/bottom
+    H->imax = H->nx + ExtraLayerTot;
+    H->jmax = H->ny + ExtraLayerTot;
+    H->nxt = H->imax - H->imin; // column size in the array
+    H->nyt = H->jmax - H->jmin; // row size in the array
+    // maximum direction size
+    H->nxyt = (H->nxt > H->nyt) ? H->nxt : H->nyt;
+
+    H->arSz = (H->nxyt + 2);
+    H->arVarSz = (H->nxyt + 2) * H->nvar;
+
+    // allocate uold for each conservative variable
+    Hv->uold = (double *) calloc(H->nvar * H->nxt * H->nyt, sizeof(double));
+
+    // wind tunnel with point explosion
+    for (j = H->jmin + ExtraLayer; j < H->jmax - ExtraLayer; j++) {
+        for (i = H->imin + ExtraLayer; i < H->imax - ExtraLayer; i++) {
+            Hv->uold[IHvP(i, j, ID)] = one;
+            Hv->uold[IHvP(i, j, IU)] = zero;
+            Hv->uold[IHvP(i, j, IV)] = zero;
+            Hv->uold[IHvP(i, j, IP)] = 1e-5;
+        }
+    }
+    // point explosion at middle of the domian
+    /*    x = (H->imax - H->imin) / 2 + ExtraLayer * 0;
+    y = (H->jmax - H->jmin) / 2 + ExtraLayer * 0;
+
+     printf("PFL %d %d\n", x, y);
+     Hv->uold[IHvP(x, y, IP)] = one / H->dx / H->dx;*/
+    // point explosion at corner (top,left)
+    Hv->uold[IHvP(H->imin+ExtraLayer, H->jmin+ExtraLayer, IP)] = one / H->dx / H->dx;
+}                               // MPI_hydro_init
+
+void
 hydro_finish(const hydroparam_t H, hydrovar_t * Hv)
 {
     Free(Hv->uold);
 }                               // hydro_finish
 
+void
+MPI_hydro_finish(const hydroparam_t H, hydrovar_t * Hv)
+{
+	/* Finalize MPI library */
+	H.iMPIError = MPI_Finalize();
+
+	if (H.iMPIError != 0)
+	{
+		printf("MPI_Finalize: Error %i\n",i);
+		exit(1);
+	}
+
+    Free(Hv->uold);
+}
+                               // hydro_finish
 void
 allocate_work_space(const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw)
 {
