@@ -81,11 +81,11 @@ main(int argc, char **argv)
 		
 		/* This is the acutal calculation */
 		if ((H.nstep % 2) == 0) {
-			hydro_godunov(1, dt, H, &Hv, &Hw, &Hvw);
-			hydro_godunov(2, dt, H, &Hv, &Hw, &Hvw); 
+			MPI_hydro_godunov(1, dt, H, &Hv, &Hw, &Hvw);
+			MPI_hydro_godunov(2, dt, H, &Hv, &Hw, &Hvw); 
 		} else {
-			hydro_godunov(2, dt, H, &Hv, &Hw, &Hvw);
-			hydro_godunov(1, dt, H, &Hv, &Hw, &Hvw);
+			MPI_hydro_godunov(2, dt, H, &Hv, &Hw, &Hvw);
+			MPI_hydro_godunov(1, dt, H, &Hv, &Hw, &Hvw);
 		}
 
 		end_iter = cclock();
