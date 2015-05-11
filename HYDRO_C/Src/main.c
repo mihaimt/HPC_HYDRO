@@ -45,7 +45,7 @@ main(int argc, char **argv)
 	process_args(argc, argv, &H);
 	
 	/* Initialize MPI library and allocate memory for the variables. */
-	MPI_hydro_init(&H, &Hv);
+	MPI_hydro_init(&H, &Hv,&argc,&argv);
 	PRINTUOLD(H, &Hv);
 
 	printf("Hydro starts - MPI version \n");
@@ -78,7 +78,8 @@ main(int argc, char **argv)
 			H.iMPIError = MPI_Allreduce(&dt,&dtmin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
 			dt = dtmin;
 		}
-
+		
+		/* This is the acutal calculation */
 		if ((H.nstep % 2) == 0) {
 			hydro_godunov(1, dt, H, &Hv, &Hw, &Hvw);
 			hydro_godunov(2, dt, H, &Hv, &Hw, &Hvw); 
@@ -119,7 +120,7 @@ main(int argc, char **argv)
 	}   // end while loop
 		
 	/* Finalize MPI and free memory. */
-	MPI_hydro_finish(H, &Hv);
+	MPI_hydro_finish(&H, &Hv);
 	end_time = cclock();
 	elaps = (double) (end_time - start_time);
 	timeToString(outnum, elaps); 
