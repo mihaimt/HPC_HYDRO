@@ -3,6 +3,7 @@
 
 #include "parametres.h"
 void MPI_init(hydroparam_t * H, int * argc, char *** argv);
+void MPI_finish(hydroparam_t * H);
 void hydro_init(hydroparam_t * H, hydrovar_t * Hv);
 void MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv);
 void hydro_finish(const hydroparam_t H, hydrovar_t * Hv);

@@ -24,7 +24,7 @@ usage(void)
 
 default_values(hydroparam_t * H)
 {
-
+	fprintf(stderr,"Setting default values ...\n");
     // Default values should be given
     H->prt = 0;                 // no printing of internal arrays
     H->nx = 2;

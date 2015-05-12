@@ -43,6 +43,24 @@ MPI_init(hydroparam_t * H, int * argc, char *** argv)
 }                               // MPI_init
 
 void
+MPI_finish(hydroparam_t *H)
+{
+	/* (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here?? */
+	/* Finalize MPI library */
+	H->iMPIError = MPI_Finalize();
+
+	Free(H->MPIStatus);
+
+	if (H->iMPIError != 0)
+	{
+		printf("MPI_Finalize: Error %i\n",H->iMPIError);
+		exit(1);
+	}
+
+	H->bInit = 0;
+}
+
+void
 hydro_init(hydroparam_t * H, hydrovar_t * Hv)
 {
     long i, j;
@@ -149,14 +167,9 @@ void
 MPI_hydro_finish(hydroparam_t *H, hydrovar_t * Hv)
 {
 	/* (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here?? */
-	/* Finalize MPI library */
-	H->iMPIError = MPI_Finalize();
 
-	if (H->iMPIError != 0)
-	{
-		printf("MPI_Finalize: Error %i\n",H->iMPIError);
-		exit(1);
-	}
+	/* Finalize MPI library */
+	if (H->MPIStatus != NULL) MPI_finish(H);
 
     Free(Hv->uold);
 }
