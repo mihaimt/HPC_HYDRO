@@ -2,8 +2,9 @@
 #define HYDRO_FUNCS_H_INCLUDED
 
 #include "parametres.h"
+void MPI_init(hydroparam_t * H, int * argc, char *** argv);
 void hydro_init(hydroparam_t * H, hydrovar_t * Hv);
-void MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv, int * argc, char *** argv);
+void MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv);
 void hydro_finish(const hydroparam_t H, hydrovar_t * Hv);
 void MPI_hydro_finish(hydroparam_t *H, hydrovar_t * Hv);
 

@@ -45,11 +45,13 @@ typedef struct _hydroparam {
 	** iProc: rank of the current process
 	** iNProc: total number of processes in MPI_COMM_WORLD
 	** iMPIError: error returned from an MPI call
+	** bInit: is the MPI library initialized
 	** MPIStatus: status of an MPI call
 	*/
 	int iProc;
 	int iNProc;
 	int iMPIError;
+	int bInit;
 	MPI_Status *MPIStatus;
 } hydroparam_t;
 

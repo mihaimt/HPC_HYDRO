@@ -40,12 +40,19 @@ main(int argc, char **argv)
 	** domain.
 	*/
 	double dtmin = 0.0;
+	
+	/* MPI not yet initialized. */
+	H.bInit = 0;
 
 	start_time = cclock();
+
+	/* Initialize MPI library (and allocate memory for the MPI variables). */
+	MPI_init(&H, &argc, &argv);
+
 	process_args(argc, argv, &H);
 	
-	/* Initialize MPI library and allocate memory for the variables. */
-	MPI_hydro_init(&H, &Hv,&argc,&argv);
+	/* Initialize the hydro variables and set initial conditions. */
+	MPI_hydro_init(&H, &Hv);
 	PRINTUOLD(H, &Hv);
 
 	printf("Hydro starts - MPI version \n");
