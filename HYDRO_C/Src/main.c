@@ -62,7 +62,8 @@ main(int argc, char **argv)
 	 ** The main loop.
 	 */
 	while ((H.t < H.tend) && (H.nstep < H.nstepmax)) 
-	{	
+	{
+//		fprintf(stderr,"Main loop: nstep = %i \n",H.nstep);	
 		start_iter = cclock();
 		outnum[0] = 0;
 		flops = 0;
@@ -76,6 +77,7 @@ main(int argc, char **argv)
 				
 			/* Get the smallest possible time step for all processes. */
 			H.iMPIError = MPI_Allreduce(&dt,&dtmin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
+//			fprintf(stderr,"Process %i: dt = %g dtmin = %g\n",H.iProc,dt,dtmin);
 			dt = dtmin;
 		}
 		
