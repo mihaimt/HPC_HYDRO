@@ -8,6 +8,7 @@ SRC=cmpflx.c conservar.c equation_of_state.c hydro_godunov.c main.c parametres.c
 OBJ = $(patsubst %.c, %.o, ${SRC})
 CC = cc
 MPICC = cc
+LMPICC = mpicc
 
 default: mono
 
@@ -35,6 +36,11 @@ mpiomp: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_MPI) $(LDFLAGS_OMP)
 mpiomp: $(OBJ)
 	$(CCOMP) $(LINKFLAGS) $(OBJ) -o hydro_mpiomp -lm
 
+lmpi: CCOMP = $(LMPICC)
+lmpi: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_MPI)
+lmpi: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_MPI)
+lmpi: $(OBJ)
+	$(CCOMP) $(LINKFLAGS) $(OBJ) -o hydro_mpi -lm
 
 clean   :
 	rm -f *.o core* hydro_mono hydro_mpi hydro_omp hydro_mpiomp
