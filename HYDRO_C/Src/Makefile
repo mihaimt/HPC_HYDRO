@@ -40,7 +40,7 @@ lmpi: CCOMP = $(LMPICC)
 lmpi: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_MPI)
 lmpi: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_MPI)
 lmpi: $(OBJ)
-	$(CCOMP) $(LINKFLAGS) $(OBJ) -o hydro_lmpi.exe -lm
+	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_lmpi -lm
 
 clean   :
 	rm -f *.o core* hydro_mono hydro_mpi hydro_omp hydro_mpiomp
