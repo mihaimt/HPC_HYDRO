@@ -264,7 +264,7 @@ MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
  */
 
 void
-MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
+MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t* Hv ) {
 
     int count;
     MPI_Status *status;
@@ -276,7 +276,7 @@ MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
         count = 2*H.ny;
     }
     //MPI_Waitall(count, reqs, status);
-}                               // MPI_get_boundary_end
+}
 
 
 
