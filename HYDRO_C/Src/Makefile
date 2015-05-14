@@ -8,6 +8,7 @@ SRC=cmpflx.c conservar.c equation_of_state.c hydro_godunov.c main.c parametres.c
 OBJ = $(patsubst %.c, %.o, ${SRC})
 CC = cc
 MPICC = cc
+LMPICC = mpicc
 
 default: mono
 
@@ -15,26 +16,31 @@ mono: CCOMP = $(CC)
 mono: CCOMPFLAGS = $(FFLAGS)
 mono: LINKFLAGS = $(LDFLAGS)
 mono: $(OBJ)
-	$(CCOMP) $(LINKFLAGS) $(OBJ) -o hydro_mono -lm
+	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_mono -lm
 
 mpi: CCOMP = $(MPICC)
 mpi: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_MPI)
 mpi: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_MPI)
 mpi: $(OBJ)
-	$(CCOMP) $(LINKFLAGS) $(OBJ) -o hydro_mpi -lm
+	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_mpi -lm
 
 omp: CCOMP = $(CC)
 omp: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_OMP)
 omp: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_OMP)
 omp: $(OBJ)
-	$(CCOMP) $(LINKFLAGS) $(OBJ) -o hydro_omp -lm
+	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_omp -lm
 
 mpiomp: CCOMP = $(MPICC)
 mpiomp: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_MPI) $(FFLAGS_OMP)
 mpiomp: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_MPI) $(LDFLAGS_OMP)
 mpiomp: $(OBJ)
-	$(CCOMP) $(LINKFLAGS) $(OBJ) -o hydro_mpiomp -lm
+	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_mpiomp -lm
 
+lmpi: CCOMP = $(LMPICC)
+lmpi: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_MPI)
+lmpi: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_MPI)
+lmpi: $(OBJ)
+	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_lmpi -lm
 
 clean   :
 	rm -f *.o core* hydro_mono hydro_mpi hydro_omp hydro_mpiomp
