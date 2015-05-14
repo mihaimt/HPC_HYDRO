@@ -4,6 +4,8 @@
    (C) Pierre-Francois Lavallee : IDRIS      -- original F90 code
    (C) Guillaume Colin de Verdiere : CEA/DAM -- for the C version
  */
+
+
 #include <stdio.h>
 #include <time.h>
 
@@ -20,8 +22,10 @@ hydrovarwork_t Hvw;             // nvar
 hydrowork_t Hw;
 unsigned long flops = 0;
 
+
 int
 main ( int argc, char **argv ) {
+
     int nb_th=1;
     double dt = 0;
     long nvtk = 0;

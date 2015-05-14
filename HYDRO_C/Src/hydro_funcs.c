@@ -15,13 +15,16 @@
 #include "utils.h"
 #include "hydro_funcs.h"
 
+
+/*
+ * MPI_init() initializes the MPI library and allocates memory for the
+ * MPI variables. We need to do this before anything else so that MPI
+ * is initialized and ready to use.
+ */
+
 void
 MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
-    /*
-    ** MPI_init() initializes the MPI library and allocates memory for the
-    ** MPI variables. We need to do this before anything else so that MPI
-    ** is initialized and ready to use.
-    */
+
     H->bInit = 0;
 
     /* We need to allocate memory for this variable! */
@@ -40,10 +43,12 @@ MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
     H->bInit = 1;
 }                               // MPI_init
 
+
 void
 MPI_finish ( hydroparam_t *H ) {
-    /* (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here?? */
-    /* Finalize MPI library */
+
+    // (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here??
+
     H->iMPIError = MPI_Finalize();
 
     Free ( H->MPIStatus );
@@ -58,6 +63,7 @@ MPI_finish ( hydroparam_t *H ) {
 
 void
 hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
+
     long i, j;
     long x, y;
 
@@ -95,19 +101,22 @@ hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
      Hv->uold[IHvP(x, y, IP)] = one / H->dx / H->dx;*/
     // point explosion at corner (top,left)
     Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;
-}                               // hydro_init
+}
+
+
+/*
+ * MPI_hydro_init() is basically the same function as hydro_init() but
+ * it only allocates the local computational domain and sets the initial
+ * conditions depending on the rank of the current MPI process.
+ */
 
 void
 MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
-    /*
-    ** MPI_hydro_init() is basically the same function as hydro_init() but
-    ** it only allocates the local computational domain and sets the initial
-    ** conditions depending on the rank of the current MPI process.
-    */
+
     long i, j;
     long x, y;
 
-    /* Make sure that MPI is initialized before we use it. */
+    // Make sure that MPI is initialized before we use it.
     assert ( H->bInit );
 
     // *WARNING* : we will use 0 based arrays everywhere since it is C code!
@@ -118,6 +127,7 @@ MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     H->jmax = H->ny + ExtraLayerTot;
     H->nxt = H->imax - H->imin; // column size in the array
     H->nyt = H->jmax - H->jmin; // row size in the array
+
     // maximum direction size
     H->nxyt = ( H->nxt > H->nyt ) ? H->nxt : H->nyt;
 
@@ -136,38 +146,47 @@ MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
             Hv->uold[IHvP ( i, j, IP )] = 1e-5;
         }
     }
+
     // point explosion at middle of the domian
-    /*    x = (H->imax - H->imin) / 2 + ExtraLayer * 0;
+/*
+    x = (H->imax - H->imin) / 2 + ExtraLayer * 0;
     y = (H->jmax - H->jmin) / 2 + ExtraLayer * 0;
 
-     printf("PFL %d %d\n", x, y);
-     Hv->uold[IHvP(x, y, IP)] = one / H->dx / H->dx;*/
+    printf("PFL %d %d\n", x, y);
+    Hv->uold[IHvP(x, y, IP)] = one / H->dx / H->dx;
+*/
+
     // point explosion at corner (top,left)
     // (CR) Bottom left??
     if ( H->iProc == 0 ) {
-        /* Only in the domain of process zero we have the initial explosion. */
+        // Only in the domain of process zero we have the initial explosion.
         Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;
     }
-}                               // MPI_hydro_init
+}
+
 
 void
 hydro_finish ( const hydroparam_t H, hydrovar_t * Hv ) {
     Free ( Hv->uold );
-}                               // hydro_finish
+}
+
 
 void
 MPI_hydro_finish ( hydroparam_t *H, hydrovar_t * Hv ) {
-    /* (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here?? */
+    // (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here??
 
-    /* Finalize MPI library */
+    // Finalize MPI library
     if ( H->MPIStatus != NULL ) MPI_finish ( H );
 
     Free ( Hv->uold );
 }
-// hydro_finish
+
+
 void
 allocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
+
     WHERE ( "allocate_work_space" );
+
     Hvw->u = DMalloc ( H.arVarSz );
     Hvw->q = DMalloc ( H.arVarSz );
     Hvw->dq = DMalloc ( H.arVarSz );
@@ -177,6 +196,7 @@ allocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * H
     Hvw->qright = DMalloc ( H.arVarSz );
     Hvw->qgdnv = DMalloc ( H.arVarSz );
     Hvw->flux = DMalloc ( H.arVarSz );
+
     Hw->e = DMalloc ( H.arSz );
     Hw->c = DMalloc ( H.arSz );
     Hw->rl = DMalloc ( H.arSz );
@@ -208,7 +228,7 @@ allocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * H
     Hw->pold = DMalloc ( H.arSz );
     Hw->ind = IMalloc ( H.arSz );
     Hw->ind2 = IMalloc ( H.arSz );
-}                               // allocate_work_space
+}
 
 
 /*
@@ -222,8 +242,11 @@ VFree(double **v, const hydroparam_t H)
     Free(v);
 } // VFree
 */
+
+
 void
 deallocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
+
     WHERE ( "deallocate_work_space" );
 
     //
@@ -271,7 +294,6 @@ deallocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t *
     Free ( Hw->ind );
     Free ( Hw->ind2 );
 
-}                               // deallocate_work_space
+}
 
 
-// EOF

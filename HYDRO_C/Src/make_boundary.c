@@ -13,17 +13,21 @@
 #include "parametres.h"
 #include "make_boundary.h"
 #include "utils.h"
+
+
 void
 make_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
 
     // - - - - - - - - - - - - - - - - - - -
-    // Cette portion de code est � v�rifier
-    // d�tail. J'ai des doutes sur la conversion
+    // Cette portion de code est à vérifier
+    // détail. J'ai des doutes sur la conversion
     // des index depuis fortran.
     // - - - - - - - - - - - - - - - - - - -
+
+    WHERE ( "make_boundary" );
+
     long i, ivar, i0, j, j0;
     double sign;
-    WHERE ( "make_boundary" );
 
 
     if ( idim == 1 ) {
@@ -52,6 +56,7 @@ make_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
         /* fprintf(stderr,"PFL H.nvar %d H.nx %d\n",H.nvar,H.nx);
         fprintf(stderr,"PFL ExtraLayer %d ExtraLayerTot %d\n",ExtraLayer,ExtraLayerTot);
         fprintf(stderr,"PFL H.jmin %d H.jmax %d\n",H.jmin,H.jmax); */
+
 
         // Right boundary
         for ( ivar = 0; ivar < H.nvar; ivar++ ) {
@@ -123,48 +128,49 @@ make_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
     }
 }                               // make_boundary
 
+
+
+/*
+ * Exchange the boundary conditions with neighboring domains that are on
+ * different processes. We use MPI_IRecv() and MPI_ISend() to exchange the
+ * data. This means we have to make sure that all data was transvered before
+ * we can do the computation for the most outer layer of the grid using
+ * MPI_get_boundary_end().
+ */
+
 void
 MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
-    /*
-    ** Exchange the boundary conditions with neighboring domains that are on
-    ** different processes. We use MPI_IRecv() and MPI_ISend() to exchange the
-    ** data. This means we have to make sure that all data was transvered before
-    ** we can do the computation for the most outer layer of the grid using
-    ** MPI_get_boundary_end().
-    */
 
-    // - - - - - - - - - - - - - - - - - - -
-    // Cette portion de code est � v�rifier
-    // d�tail. J'ai des doutes sur la conversion
-    // des index depuis fortran.
-    // - - - - - - - - - - - - - - - - - - -
-    long i, ivar, i0, j, j0, k;
-    double sign;
     WHERE ( "MPI_get_boundary_start" );
 
-    /*
-    ** (CR) We communicate each cell of the array separately. This should be improved at some point!
-    */
+    long i, ivar, i0, j, j0, k;
+    double sign;
+
+    // (CR) We communicate each cell of the array separately. This should be improved at some point!
+
 
     if ( idim == 1 ) {
-        /* Get values from the left domain. */
-        if ( H.iProc > 0 ) {
-            /* Dont do this for the most left domain. */
-//			MPI_Irecv(values, count, type, source, tag, comm, req)
-//			H.iMPIError = MPI_Irecv(Hv, 1, columntype, H.iProc-1, tag, MPI_COMM_WORLD,req);
-//			MPI_Isend(values, count, datatype, dest, tag, comm, req)
-//			H.iMPIError = MPI_Isend(Hv, 1, columntype, H.iProc-1, tag, MPI_COMM_WORLD,MPI_Request *request);
+        // Get values from the left domain.
+        if ( H.iProc > 0 ) { // Dont do this for the most left domain.
+            
+            /*
+            MPI_Irecv(values, count, type, source, tag, comm, req)
+            H.iMPIError = MPI_Irecv(Hv, 1, columntype, H.iProc-1, tag, MPI_COMM_WORLD,req);
+            MPI_Isend(values, count, datatype, dest, tag, comm, req)
+            H.iMPIError = MPI_Isend(Hv, 1, columntype, H.iProc-1, tag, MPI_COMM_WORLD,MPI_Request *request);
+            */
+
             for ( ivar = 0; ivar < H.nvar; ivar++ ) {
-                /* For each variable */
+                // For each variable
                 for ( i = 0; i < ExtraLayer; i++ ) {
-                    /*
-                    ** Copy the last two layers of the neighboring computational domain
-                    ** into our extra layer.
-                    */
+
+                    // Copy the last two layers of the neighboring computational domain into our extra layer.
+
                     for ( k = H.jmin+ExtraLayer; k < H.jmax-ExtraLayer; k++ ) {
-                        //					MPI_Irecv(values, 1, MPI_DOUBLE, H.iProc-1, tag, MPI_COMM_WORLD, req);
+                        // MPI_Irecv(values, 1, MPI_DOUBLE, H.iProc-1, tag, MPI_COMM_WORLD, req);
                     }
-                    /* Done. */
+                    // Done.
+                    
                     for ( j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++ ) {
                         Hv->uold[IHv ( i, j, ivar )] = Hv->uold[IHv ( i0, j, ivar )] * sign;
                         MFLOPS ( 1, 0, 0, 0 );
@@ -172,10 +178,15 @@ MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
                 }
             }
         }
-        /* fprintf(stderr,"PFL H.nvar %d H.nx %d\n",H.nvar,H.nx);
+
+        /*
+        fprintf(stderr,"PFL H.nvar %d H.nx %d\n",H.nvar,H.nx);
         fprintf(stderr,"PFL ExtraLayer %d ExtraLayerTot %d\n",ExtraLayer,ExtraLayerTot);
-        fprintf(stderr,"PFL H.jmin %d H.jmax %d\n",H.jmin,H.jmax); */
-        /* Get values from the right domain. */
+        fprintf(stderr,"PFL H.jmin %d H.jmax %d\n",H.jmin,H.jmax);
+        */
+
+
+        // Get values from the right domain.
         for ( ivar = 0; ivar < H.nvar; ivar++ ) {
             for ( i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++ ) {
                 sign = 1.0;
@@ -190,9 +201,9 @@ MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
                     i0 = i - H.nx;
                 }
                 for ( j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++ ) {
-                    /* fprintf(stderr,"PFL %d %d\n",i,j); */
+                    // fprintf(stderr,"PFL %d %d\n",i,j);
                     Hv->uold[IHv ( i, j, ivar )] = Hv->uold[IHv ( i0, j, ivar )] * sign;
-                    /*		  fprintf(stderr,"PFL \n"); */
+                    // fprintf(stderr,"PFL \n");
 
                     MFLOPS ( 1, 0, 0, 0 );
                 }
@@ -243,14 +254,18 @@ MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
             }
         }
     }
-}                               // MPI_get_boundary_start
+}
+
+
+
+/*
+ * Make sure that all boundary cells have been successfully exchanged between
+ * the processes before we continue.
+ */
 
 void
 MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
-    /*
-    ** Make sure that all boundary cells have been successfully exchanged between
-    ** the processes before we continue.
-    */
+
     int count;
     MPI_Status *status;
 
@@ -263,18 +278,21 @@ MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
     //MPI_Waitall(count, reqs, status);
 }                               // MPI_get_boundary_end
 
+
+
+/*
+ * Exchange the boundary conditions with neighboring domains that are on
+ * different processes.
+ */
+
 void
 MPI_get_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
-    /*
-    ** Exchange the boundary conditions with neighboring domains that are on
-    ** different processes.
-    */
 
     // Initiate send and receive requests
     MPI_get_boundary_start ( idim, H, Hv );
 
     // Make sure the data was successfully exchanged before we continue.
     MPI_get_boundary_end ( idim, H, Hv );
-}                               // MPI_get_boundary
+}
 
-//EOF
+
