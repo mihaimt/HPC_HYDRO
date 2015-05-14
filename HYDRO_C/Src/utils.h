@@ -18,19 +18,19 @@
 // Make sure that the pointer is unusable afterwards.
 #define Free(x) do { if ((x)) { free((x)); }; (x) = NULL; } while (0)
 #endif /*  */
-double **allocate(long imin, long imax, long nvar);
-double *DMalloc(long n);
-long *IMalloc(long n);
+double **allocate ( long imin, long imax, long nvar );
+double *DMalloc ( long n );
+long *IMalloc ( long n );
 
 // 0 means perfect memory management from the code ;-)
 #define MallocGuard 0
 // static const long MallocGuard = 0;
-void printuold(const hydroparam_t H, hydrovar_t * Hv);
-void printarray(double *a, long n, const char *nom);
-void printarrayi(long *a, long n, const char *nom);
-void printarrayv(double *a, long n, const char *nom, const hydroparam_t H);
-void timeToString(char *buf, const double timeInS);
-double cclock(void);
+void printuold ( const hydroparam_t H, hydrovar_t * Hv );
+void printarray ( double *a, long n, const char *nom );
+void printarrayi ( long *a, long n, const char *nom );
+void printarrayv ( double *a, long n, const char *nom, const hydroparam_t H );
+void timeToString ( char *buf, const double timeInS );
+double cclock ( void );
 
 #ifndef PRINTUOLD
 #define PRINTUOLD(x, y) if ((x).prt) { printuold((x), (y)); }

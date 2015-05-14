@@ -17,89 +17,88 @@
 #define DABS(x) (double) fabs((x))
 
 void
-riemann(double *RESTRICT qleft, double *RESTRICT qright,
-        double *RESTRICT qgdnv, double *RESTRICT rl,
-        double *RESTRICT ul, double *RESTRICT pl, double *RESTRICT cl,
-        double *RESTRICT wl, double *RESTRICT rr, double *RESTRICT ur,
-        double *RESTRICT pr, double *RESTRICT cr, double *RESTRICT wr,
-        double *RESTRICT ro, double *RESTRICT uo, double *RESTRICT po,
-        double *RESTRICT co, double *RESTRICT wo,
-        double *RESTRICT rstar, double *RESTRICT ustar,
-        double *RESTRICT pstar, double *RESTRICT cstar,
-        long *RESTRICT sgnm, double *RESTRICT spin,
-        double *RESTRICT spout, double *RESTRICT ushock,
-        double *RESTRICT frac, double *RESTRICT scr,
-        double *RESTRICT delp, double *RESTRICT pold,
-        long *RESTRICT ind, long *RESTRICT ind2,
-        const long narray,
-        const double Hsmallr,
-        const double Hsmallc,
-        const double Hgamma, const long Hniter_riemann, const long Hnvar, const long Hnxyt)
-{
+riemann ( double *RESTRICT qleft, double *RESTRICT qright,
+          double *RESTRICT qgdnv, double *RESTRICT rl,
+          double *RESTRICT ul, double *RESTRICT pl, double *RESTRICT cl,
+          double *RESTRICT wl, double *RESTRICT rr, double *RESTRICT ur,
+          double *RESTRICT pr, double *RESTRICT cr, double *RESTRICT wr,
+          double *RESTRICT ro, double *RESTRICT uo, double *RESTRICT po,
+          double *RESTRICT co, double *RESTRICT wo,
+          double *RESTRICT rstar, double *RESTRICT ustar,
+          double *RESTRICT pstar, double *RESTRICT cstar,
+          long *RESTRICT sgnm, double *RESTRICT spin,
+          double *RESTRICT spout, double *RESTRICT ushock,
+          double *RESTRICT frac, double *RESTRICT scr,
+          double *RESTRICT delp, double *RESTRICT pold,
+          long *RESTRICT ind, long *RESTRICT ind2,
+          const long narray,
+          const double Hsmallr,
+          const double Hsmallc,
+          const double Hgamma, const long Hniter_riemann, const long Hnvar, const long Hnxyt ) {
 
     // Local variables
     double smallp, gamma6, ql, qr, usr, usl, wwl, wwr, smallpp;
     long i, invar, iter, nface;
 #define IHVW(i, v) ((i) + (v) * Hnxyt)
 
-    WHERE("riemann");
+    WHERE ( "riemann" );
 
     // Constants
     nface = narray;
-    smallp = Square(Hsmallc) / Hgamma;
+    smallp = Square ( Hsmallc ) / Hgamma;
     smallpp = Hsmallr * smallp;
-    gamma6 = (Hgamma + one) / (two * Hgamma);
+    gamma6 = ( Hgamma + one ) / ( two * Hgamma );
     // Pressure, density and velocity
-    for (i = 0; i < nface; i++) {
-        rl[i] = MAX(qleft[IHVW(i, ID)], Hsmallr);
-        ul[i] = qleft[IHVW(i, IU)];
-        pl[i] = MAX(qleft[IHVW(i, IP)], (double) (rl[i] * smallp));
-        rr[i] = MAX(qright[IHVW(i, ID)], Hsmallr);
-        ur[i] = qright[IHVW(i, IU)];
-        pr[i] = MAX(qright[IHVW(i, IP)], (double) (rr[i] * smallp));
+    for ( i = 0; i < nface; i++ ) {
+        rl[i] = MAX ( qleft[IHVW ( i, ID )], Hsmallr );
+        ul[i] = qleft[IHVW ( i, IU )];
+        pl[i] = MAX ( qleft[IHVW ( i, IP )], ( double ) ( rl[i] * smallp ) );
+        rr[i] = MAX ( qright[IHVW ( i, ID )], Hsmallr );
+        ur[i] = qright[IHVW ( i, IU )];
+        pr[i] = MAX ( qright[IHVW ( i, IP )], ( double ) ( rr[i] * smallp ) );
         // Lagrangian sound speed
         cl[i] = Hgamma * pl[i] * rl[i];
         cr[i] = Hgamma * pr[i] * rr[i];
         // First guess
-        wl[i] = sqrt(cl[i]);
-        wr[i] = sqrt(cr[i]);
+        wl[i] = sqrt ( cl[i] );
+        wr[i] = sqrt ( cr[i] );
         pstar[i] =
-            ((wr[i] * pl[i] + wl[i] * pr[i]) +
-             wl[i] * wr[i] * (ul[i] - ur[i])) / (wl[i] + wr[i]);
-        pstar[i] = MAX(pstar[i], 0.0);
+            ( ( wr[i] * pl[i] + wl[i] * pr[i] ) +
+              wl[i] * wr[i] * ( ul[i] - ur[i] ) ) / ( wl[i] + wr[i] );
+        pstar[i] = MAX ( pstar[i], 0.0 );
         pold[i] = pstar[i];
         // ind est un masque de traitement pour le newton
         ind[i] = 1;             // toutes les cellules sont a traiter
 
-	// Newton-Raphson iterations to find pstar at the required accuracy
-	for (iter = 0; iter < Hniter_riemann; iter++) {
-	  double precision = 1.e-6;
-	  if (ind[i] == 1) {
-	    wwl = sqrt(cl[i] * (one + gamma6 * (pold[i] - pl[i]) / pl[i]));
-	    wwr = sqrt(cr[i] * (one + gamma6 * (pold[i] - pr[i]) / pr[i]));
-	    ql = two * wwl * Square(wwl) / (Square(wwl) + cl[i]);
-	    qr = two * wwr * Square(wwr) / (Square(wwr) + cr[i]);
-	    usl = ul[i] - (pold[i] - pl[i]) / wwl;
-	    usr = ur[i] + (pold[i] - pr[i]) / wwr;
-	    delp[i] =
-	      MAX((double) (qr * ql / (qr + ql) * (usl - usr)),
-		  (double) (-pold[i]));
-	    pold[i] = pold[i] + delp[i];
-	    uo[i] = DABS(delp[i] / (pold[i] + smallpp));
-	    if (uo[i] <= precision) {
-	      ind[i] = 0; // cellule qui n'est plus a considerer
-	    }
-	  }
+        // Newton-Raphson iterations to find pstar at the required accuracy
+        for ( iter = 0; iter < Hniter_riemann; iter++ ) {
+            double precision = 1.e-6;
+            if ( ind[i] == 1 ) {
+                wwl = sqrt ( cl[i] * ( one + gamma6 * ( pold[i] - pl[i] ) / pl[i] ) );
+                wwr = sqrt ( cr[i] * ( one + gamma6 * ( pold[i] - pr[i] ) / pr[i] ) );
+                ql = two * wwl * Square ( wwl ) / ( Square ( wwl ) + cl[i] );
+                qr = two * wwr * Square ( wwr ) / ( Square ( wwr ) + cr[i] );
+                usl = ul[i] - ( pold[i] - pl[i] ) / wwl;
+                usr = ur[i] + ( pold[i] - pr[i] ) / wwr;
+                delp[i] =
+                    MAX ( ( double ) ( qr * ql / ( qr + ql ) * ( usl - usr ) ),
+                          ( double ) ( -pold[i] ) );
+                pold[i] = pold[i] + delp[i];
+                uo[i] = DABS ( delp[i] / ( pold[i] + smallpp ) );
+                if ( uo[i] <= precision ) {
+                    ind[i] = 0; // cellule qui n'est plus a considerer
+                }
+            }
         }
-	
+
         pstar[i] = pold[i];
-        wl[i] = sqrt(cl[i] * (one + gamma6 * (pstar[i] - pl[i]) / pl[i]));
-        wr[i] = sqrt(cr[i] * (one + gamma6 * (pstar[i] - pr[i]) / pr[i]));
-        MFLOPS(8, 4, 0, 0);
-        ustar[i] = half * (ul[i] + (pl[i] - pstar[i]) / wl[i] + ur[i] -
-                           (pr[i] - pstar[i]) / wr[i]);
-        sgnm[i] = (ustar[i] > 0) ? 1 : -1;
-        if (sgnm[i] == 1) {
+        wl[i] = sqrt ( cl[i] * ( one + gamma6 * ( pstar[i] - pl[i] ) / pl[i] ) );
+        wr[i] = sqrt ( cr[i] * ( one + gamma6 * ( pstar[i] - pr[i] ) / pr[i] ) );
+        MFLOPS ( 8, 4, 0, 0 );
+        ustar[i] = half * ( ul[i] + ( pl[i] - pstar[i] ) / wl[i] + ur[i] -
+                            ( pr[i] - pstar[i] ) / wr[i] );
+        sgnm[i] = ( ustar[i] > 0 ) ? 1 : -1;
+        if ( sgnm[i] == 1 ) {
             ro[i] = rl[i];
             uo[i] = ul[i];
             po[i] = pl[i];
@@ -110,67 +109,67 @@ riemann(double *RESTRICT qleft, double *RESTRICT qright,
             po[i] = pr[i];
             wo[i] = wr[i];
         }
-        co[i] = MAX(Hsmallc, sqrt(DABS(Hgamma * po[i] / ro[i])));
-        rstar[i] = ro[i] / (one + ro[i] * (po[i] - pstar[i]) / Square(wo[i]));
-        rstar[i] = MAX(rstar[i], Hsmallr);
-        cstar[i] = MAX(Hsmallc, sqrt(DABS(Hgamma * pstar[i] / rstar[i])));
+        co[i] = MAX ( Hsmallc, sqrt ( DABS ( Hgamma * po[i] / ro[i] ) ) );
+        rstar[i] = ro[i] / ( one + ro[i] * ( po[i] - pstar[i] ) / Square ( wo[i] ) );
+        rstar[i] = MAX ( rstar[i], Hsmallr );
+        cstar[i] = MAX ( Hsmallc, sqrt ( DABS ( Hgamma * pstar[i] / rstar[i] ) ) );
         spout[i] = co[i] - sgnm[i] * uo[i];
         spin[i] = cstar[i] - sgnm[i] * ustar[i];
         ushock[i] = wo[i] / ro[i] - sgnm[i] * uo[i];
-        if (pstar[i] >= po[i]) {
+        if ( pstar[i] >= po[i] ) {
             spin[i] = ushock[i];
             spout[i] = ushock[i];
         }
         scr[i] =
-            MAX((double) (spout[i] - spin[i]),
-                (double) (Hsmallc + DABS(spout[i] + spin[i])));
-        frac[i] = (one + (spout[i] + spin[i]) / scr[i]) * half;
-        frac[i] = MAX(zero, (double) (MIN(one, frac[i])));
-        MFLOPS(24, 10, 8, 0);
-        qgdnv[IHVW(i, ID)] = frac[i] * rstar[i] + (one - frac[i]) * ro[i];
-        if (spout[i] < zero) {
-            qgdnv[IHVW(i, ID)] = ro[i];
+            MAX ( ( double ) ( spout[i] - spin[i] ),
+                  ( double ) ( Hsmallc + DABS ( spout[i] + spin[i] ) ) );
+        frac[i] = ( one + ( spout[i] + spin[i] ) / scr[i] ) * half;
+        frac[i] = MAX ( zero, ( double ) ( MIN ( one, frac[i] ) ) );
+        MFLOPS ( 24, 10, 8, 0 );
+        qgdnv[IHVW ( i, ID )] = frac[i] * rstar[i] + ( one - frac[i] ) * ro[i];
+        if ( spout[i] < zero ) {
+            qgdnv[IHVW ( i, ID )] = ro[i];
         }
-        if (spin[i] > zero) {
-            qgdnv[IHVW(i, ID)] = rstar[i];
+        if ( spin[i] > zero ) {
+            qgdnv[IHVW ( i, ID )] = rstar[i];
         }
-        MFLOPS(4, 0, 0, 0);
-        qgdnv[IHVW(i, IU)] = frac[i] * ustar[i] + (one - frac[i]) * uo[i];
-        if (spout[i] < zero) {
-            qgdnv[IHVW(i, IU)] = uo[i];
+        MFLOPS ( 4, 0, 0, 0 );
+        qgdnv[IHVW ( i, IU )] = frac[i] * ustar[i] + ( one - frac[i] ) * uo[i];
+        if ( spout[i] < zero ) {
+            qgdnv[IHVW ( i, IU )] = uo[i];
         }
-        if (spin[i] > zero) {
-            qgdnv[IHVW(i, IU)] = ustar[i];
+        if ( spin[i] > zero ) {
+            qgdnv[IHVW ( i, IU )] = ustar[i];
         }
-        MFLOPS(4, 0, 0, 0);
-        qgdnv[IHVW(i, IP)] = frac[i] * pstar[i] + (one - frac[i]) * po[i];
-        if (spout[i] < zero) {
-            qgdnv[IHVW(i, IP)] = po[i];
+        MFLOPS ( 4, 0, 0, 0 );
+        qgdnv[IHVW ( i, IP )] = frac[i] * pstar[i] + ( one - frac[i] ) * po[i];
+        if ( spout[i] < zero ) {
+            qgdnv[IHVW ( i, IP )] = po[i];
         }
-        if (spin[i] > zero) {
-            qgdnv[IHVW(i, IP)] = pstar[i];
+        if ( spin[i] > zero ) {
+            qgdnv[IHVW ( i, IP )] = pstar[i];
         }
-        MFLOPS(4, 0, 0, 0);
+        MFLOPS ( 4, 0, 0, 0 );
         // transverse velocity
-        if (sgnm[i] == 1) {
-            qgdnv[IHVW(i, IV)] = qleft[IHVW(i, IV)];
+        if ( sgnm[i] == 1 ) {
+            qgdnv[IHVW ( i, IV )] = qleft[IHVW ( i, IV )];
         }
-        if (sgnm[i] != 1) {
-            qgdnv[IHVW(i, IV)] = qright[IHVW(i, IV)];
+        if ( sgnm[i] != 1 ) {
+            qgdnv[IHVW ( i, IV )] = qright[IHVW ( i, IV )];
         }
     }
 
     // other passive variables
-    if (Hnvar > IP+1) {
-        for (invar = IP + 1; invar < Hnvar; invar++) {
-            for (i = 0; i < nface; i++) {
-                if (sgnm[i] == 1) {
-                    qgdnv[IHVW(i, invar)] = qleft[IHVW(i, invar)];
+    if ( Hnvar > IP+1 ) {
+        for ( invar = IP + 1; invar < Hnvar; invar++ ) {
+            for ( i = 0; i < nface; i++ ) {
+                if ( sgnm[i] == 1 ) {
+                    qgdnv[IHVW ( i, invar )] = qleft[IHVW ( i, invar )];
                 }
             }
-            for (i = 0; i < nface; i++) {
-                if (sgnm[i] != 1) {
-                    qgdnv[IHVW(i, invar)] = qright[IHVW(i, invar)];
+            for ( i = 0; i < nface; i++ ) {
+                if ( sgnm[i] != 1 ) {
+                    qgdnv[IHVW ( i, invar )] = qright[IHVW ( i, invar )];
                 }
             }
         }
