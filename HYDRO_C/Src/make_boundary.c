@@ -164,30 +164,18 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv)
 					** Copy the last two layers of the neighboring computational domain
 					** into our extra layer.
 					*/
-					for (k = jmin+ExtraLayer; k < jmax-ExtraLayer)
+					for (k = H.jmin+ExtraLayer; k < H.jmax-ExtraLayer;k++)
 					{
-							MPI_Irecv(values, 1, MPI_DOUBLE, H.iProc-1, tag, MPI_COMM_WORLD, req);
+		//					MPI_Irecv(values, 1, MPI_DOUBLE, H.iProc-1, tag, MPI_COMM_WORLD, req);
 					}
 					/* Done. */
-
-
-
-                	sign = 1.0;
-	                if (H.boundary_left == 1) {
-   						i0 = ExtraLayerTot - i - 1;
-						if (ivar == IU) {
-							sign = -1.0;
-						}
-                } else if (H.boundary_left == 2) {
-                    i0 = 2;
-                } else {
-                    i0 = H.nx + i;
-                }
-                for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
-                    Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
-                    MFLOPS(1, 0, 0, 0);
-                }
-            }
+               		for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++)
+					{
+   	                	Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
+   	                	MFLOPS(1, 0, 0, 0);
+					}
+            	}
+			}
         }
 	/* fprintf(stderr,"PFL H.nvar %d H.nx %d\n",H.nvar,H.nx);
 	fprintf(stderr,"PFL ExtraLayer %d ExtraLayerTot %d\n",ExtraLayer,ExtraLayerTot);
@@ -260,7 +248,33 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv)
             }
         }
     }
-}                               // make_boundary
+}                               // MPI_get_boundary_start
 
+void
+MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv)
+{
+	/*
+	** Make sure that all boundary cells have been successfully exchanged between
+	** the processes before we continue.
+	*/
+	MPI_Status *status;
+
+	//MPI_Waitall(count, reqs, status);
+}                               // MPI_get_boundary_end
+
+void
+MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
+{
+	/*
+	** Exchange the boundary conditions with neighboring domains that are on
+	** different processes. 
+	*/
+
+	// Initiate send and receive requests
+	MPI_get_boundary_start(idim, H, Hv);
+
+	// Make sure the data was successfully exchanged before we continue.
+	MPI_get_boundary_end(idim, H, Hv);
+}                               // MPI_get_boundary
 
 //EOF
