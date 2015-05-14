@@ -1,9 +1,0 @@
-MPI: 4 processes initialized.
-Process 0: Sending data to process 3 (N = 1000)
-Rank 3 [Sun Apr 26 11:31:55 2015] [c1-0c0s0n1] Fatal error in MPI_Recv: Invalid argument, error stack:
-MPI_Recv(196): MPI_Recv(buf=0x7fffffff8584, count=1, MPI_INT, src=0, tag=100, MPI_COMM_WORLD, status=(nil)) failed
-MPI_Recv(95).: Null pointer in parameter status
-_pmiu_daemon(SIGCHLD): [NID 00193] [c1-0c0s0n1] [Sun Apr 26 11:31:55 2015] PE RANK 3 exit signal Aborted
-[NID 00193] 2015-04-26 11:31:55 Apid 1058210: initiated application termination
-Application 1058210 exit codes: 134
-Application 1058210 resources: utime ~0s, stime ~0s, Rss ~19904, inblocks ~5897, outblocks ~14685

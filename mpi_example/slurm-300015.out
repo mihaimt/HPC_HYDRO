@@ -1,9 +1,0 @@
-MPI_Init: 0 process 0 of 3
-MPI_Init: 0 process 3 of 3
-MPI_Init: 0 process 1 of 3
-MPI_Init: 0 process 2 of 3
-MPI_Finalize: 0 process 3 of 3
-MPI_Finalize: 0 process 1 of 3
-MPI_Finalize: 0 process 2 of 3
-MPI_Finalize: 0 process 0 of 3
-Application 1048058 resources: utime ~0s, stime ~0s, Rss ~3940, inblocks ~6265, outblocks ~14675
