@@ -257,8 +257,16 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv)
 	** Make sure that all boundary cells have been successfully exchanged between
 	** the processes before we continue.
 	*/
+	int count;
 	MPI_Status *status;
-
+	
+	if (H.iProc == 0 || H.iProc == H.iNProc-1)
+	{
+		// For the most outer domains we have less b.c. to exchange.
+		count = H.ny;
+	} else {
+		count = 2*H.ny;
+	}
 	//MPI_Waitall(count, reqs, status);
 }                               // MPI_get_boundary_end
 
