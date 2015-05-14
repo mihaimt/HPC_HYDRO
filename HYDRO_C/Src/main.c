@@ -35,23 +35,21 @@ main(int argc, char **argv)
 	double start_iter = 0, end_iter = 0;
 	double elaps = 0;
 
-	/*
-	** The smallest possible time step for the entire computational
-	** domain.
-	*/
+	// The smallest possible time step for the entire computational
+	// domain.
 	double dtmin = 0.0;
 	
-	/* MPI not yet initialized. */
+	// MPI not yet initialized.
 	H.bInit = 0;
 
 	start_time = cclock();
 
-	/* Initialize MPI library (and allocate memory for the MPI variables). */
+	// Initialize MPI library (and allocate memory for the MPI variables).
 	MPI_init(&H, &argc, &argv);
 
 	process_args(argc, argv, &H);
 	
-	/* Initialize the hydro variables and set initial conditions. */
+	// Initialize the hydro variables and set initial conditions.
 	MPI_hydro_init(&H, &Hv);
 	PRINTUOLD(H, &Hv);
 
@@ -65,9 +63,7 @@ main(int argc, char **argv)
 		next_output_time = next_output_time + H.dtoutput;
 	}
 
-	/*
-	 ** The main loop.
-	 */
+	// The main loop.
 	while ((H.t < H.tend) && (H.nstep < H.nstepmax)) 
 	{
 //		fprintf(stderr,"Main loop: nstep = %i \n",H.nstep);	
@@ -76,19 +72,19 @@ main(int argc, char **argv)
 		flops = 0;
 		if ((H.nstep % 2) == 0)
 		{
-			/* We calculate the new time step for every even step. */
+			// We calculate the new time step for every even step.
 			compute_deltat(&dt, H, &Hw, &Hv, &Hvw);
 			if (H.nstep == 0) {
 				dt = dt / 2.0;
 			}
 				
-			/* Get the smallest possible time step for all processes. */
-			H.iMPIError = MPI_Allreduce(&dt,&dtmin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
+			// Get the smallest possible time step for all processes.
+			H.iMPIError = MPI_Allreduce(&dt, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
 //			fprintf(stderr,"Process %i: dt = %g dtmin = %g\n",H.iProc,dt,dtmin);
 			dt = dtmin;
 		}
 		
-		/* This is the acutal calculation */
+		// This is the acutal calculation
 		if ((H.nstep % 2) == 0) {
 			MPI_hydro_godunov(1, dt, H, &Hv, &Hw, &Hvw);
 			MPI_hydro_godunov(2, dt, H, &Hv, &Hw, &Hvw); 
