@@ -38,7 +38,8 @@ ehthumbs.db
 Icon?
 Thumbs.db
 .spyderproject
+.directory
 __MACOSX/
-/HYDRO_C/.kateproject.d
+*/.kateproject.d
 
 
