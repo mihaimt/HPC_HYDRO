@@ -21,7 +21,7 @@ The binary is in `HYDRO_C/Bin`. You can use `mpirun` to run the program, or use 
 
 ###proper call:
 
-python multi_output_to_movies.py <path to output directory> <number of steps> <delay between movie frames>
+python multi_output_to_movies.py (path to output directory) (number of steps) (delay for movie frames)
 
 ###example:
 
