@@ -12,9 +12,13 @@ typedef struct _hydroparam {
     long noutput;
     double dtoutput;
 
-    // dimensions
+    // dimensions (local)
     long imin, imax, jmin, jmax, nx, ny;
     long nxt, nyt, nxyt;
+
+	// Global domain
+	long nxdomain, nydomain;
+
     long arSz, arVarSz;          // taille des buffers alloues
 
     /*
