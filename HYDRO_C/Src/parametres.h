@@ -12,9 +12,13 @@ typedef struct _hydroparam {
     long noutput;
     double dtoutput;
 
-    // dimensions
+    // dimensions (local)
     long imin, imax, jmin, jmax, nx, ny;
     long nxt, nyt, nxyt;
+
+	// Global domain
+	long nxdomain, nydomain;
+
     long arSz, arVarSz;          // taille des buffers alloues
 
     /*
@@ -52,6 +56,8 @@ typedef struct _hydroparam {
     int iNProc;
     int iMPIError;
     int bInit;
+    MPI_Datatype MPI_Hydro_vars;
+    MPI_Request *MPI_req;
     MPI_Status *MPIStatus;
 } hydroparam_t;
 

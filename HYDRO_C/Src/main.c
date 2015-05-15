@@ -52,6 +52,9 @@ main ( int argc, char **argv ) {
 
     process_args ( argc, argv, &H );
 
+	// Domain decomposition
+	MPI_domain_decomp( &H );
+
     // Initialize the hydro variables and set initial conditions.
     MPI_hydro_init ( &H, &Hv );
     PRINTUOLD ( H, &Hv );

@@ -159,6 +159,8 @@ MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
             MPI_Isend(values, count, datatype, dest, tag, comm, req)
             H.iMPIError = MPI_Isend(Hv, 1, columntype, H.iProc-1, tag, MPI_COMM_WORLD,MPI_Request *request);
             */
+			
+			MPI_Irecv( values, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req );
 
             for ( ivar = 0; ivar < H.nvar; ivar++ ) {
                 // For each variable
@@ -177,13 +179,28 @@ MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
                     }
                 }
             }
-        }
-
-        /*
-        fprintf(stderr,"PFL H.nvar %d H.nx %d\n",H.nvar,H.nx);
-        fprintf(stderr,"PFL ExtraLayer %d ExtraLayerTot %d\n",ExtraLayer,ExtraLayerTot);
-        fprintf(stderr,"PFL H.jmin %d H.jmax %d\n",H.jmin,H.jmax);
-        */
+        } else {
+			// Set physical boundary conditions
+	        for ( ivar = 0; ivar < H.nvar; ivar++ ) {
+				for ( i = 0; i < ExtraLayer; i++ ) {
+   	            	sign = 1.0;
+                	if ( H.boundary_left == 1 ) {
+                    	i0 = ExtraLayerTot - i - 1;
+                   		if ( ivar == IU ) {
+                        	sign = -1.0;
+                    	}
+                	} else if ( H.boundary_left == 2 ) {
+                    	i0 = 2;
+                	} else {
+                    	i0 = H.nx + i;
+                	}
+                	for ( j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++ ) {
+                		Hv->uold[IHv ( i, j, ivar )] = Hv->uold[IHv ( i0, j, ivar )] * sign;
+                   		MFLOPS ( 1, 0, 0, 0 );
+                	}
+            	}
+        	}
+		}
 
 
         // Get values from the right domain.
@@ -271,11 +288,11 @@ MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t* Hv ) {
 
     if ( H.iProc == 0 || H.iProc == H.iNProc-1 ) {
         // For the most outer domains we have less b.c. to exchange.
-        count = H.ny;
+        count = 1;
     } else {
-        count = 2*H.ny;
+        count = 2;
     }
-    //MPI_Waitall(count, reqs, status);
+    //MPI_Waitall(count, H->MPI_req, H->MPIStatus);
 }
 
 

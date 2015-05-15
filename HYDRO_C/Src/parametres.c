@@ -26,8 +26,12 @@ default_values ( hydroparam_t * H ) {
     fprintf ( stderr,"Setting default values ...\n" );
     // Default values should be given
     H->prt = 0;                 // no printing of internal arrays
-    H->nx = 2;
-    H->ny = 2;
+	// global
+	H->nxdomain = 2;
+	H->nydomain = 2;
+	// local (has to be set in MPI_domain_decomp)
+    H->nx = 0;
+    H->ny = 0;
     H->nvar = IP + 1;
     H->dx = 1.0;
     H->t = 0.0;
@@ -97,11 +101,11 @@ process_input ( char *datafile, hydroparam_t * H ) {
             continue;
         }
         if ( strcmp ( pkey, "nx" ) == 0 ) {
-            sscanf ( pval, "%ld", &H->nx );
+            sscanf ( pval, "%ld", &H->nxdomain );
             continue;
         }
         if ( strcmp ( pkey, "ny" ) == 0 ) {
-            sscanf ( pval, "%ld", &H->ny );
+            sscanf ( pval, "%ld", &H->nydomain );
             continue;
         }
         if ( strcmp ( pkey, "boundary_left" ) == 0 ) {
