@@ -157,6 +157,10 @@ MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     // Make sure we did the domain decomposition.
     assert ( H->nx > 0 && H->ny > 0 );
 
+	// Define a new MPI data type
+	MPI_Type_vector( H->nvar*H->nyt*ExtraLayer, ExtraLayer, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
+   	MPI_Type_commit( &H->MPI_Hydro_vars );
+
     // *WARNING* : we will use 0 based arrays everywhere since it is C code!
     H->imin = H->jmin = 0;
 
@@ -212,6 +216,8 @@ hydro_finish ( const hydroparam_t H, hydrovar_t * Hv ) {
 void
 MPI_hydro_finish ( hydroparam_t *H, hydrovar_t * Hv ) {
     // (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here??
+
+   	MPI_Type_free( &H->MPI_Hydro_vars );
 
     // Finalize MPI library
     if ( H->MPIStatus != NULL ) MPI_finish ( H );

@@ -56,6 +56,8 @@ typedef struct _hydroparam {
     int iNProc;
     int iMPIError;
     int bInit;
+    MPI_Datatype MPI_Hydro_vars;
+    MPI_Request *MPI_req;
     MPI_Status *MPIStatus;
 } hydroparam_t;
 
