@@ -24,9 +24,9 @@ The binary is in `HYDRO_C/Bin`. You can use `mpirun` to run the program, or use 
 python multi_output_to_movies.py (path to output directory) (number of steps) (delay for movie frames)
 
 ###example:
-
+```
 python multi_output_to_movies.py ~/git/HPC_Hydro/HYDRO_C/Output/Input_sedov_100x10 10 100
-
+```
 .png and .mpg files will be created in the same directory as the analysed output files
 
 
