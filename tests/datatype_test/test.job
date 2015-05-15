@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH -J test
+#SBATCH --time=1-0:00:00
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=1 
+#SBATCH --partition=zbox
+
+FILE="test"
+
+#sbatch --dependency=afterany:$SLURM_JOB_ID $FILE.job
+
+#aprun -B gasoline.i_hmax_cond_mpi_dora +restart $FILE.par
+srun test
+

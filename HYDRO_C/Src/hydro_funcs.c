@@ -61,6 +61,41 @@ MPI_finish ( hydroparam_t *H ) {
     H->bInit = 0;
 }
 
+/*
+ * Do a domain decomposition. Very simple in our case.
+ */
+void
+MPI_domain_decomp ( hydroparam_t * H ) {
+	int i,j;
+	// Dont change ny
+	H->ny = H->nydomain;
+
+	
+	
+	float frac;
+	int lo, up;
+
+	frac = 1.0 * H->nxdomain / H->iNProc;
+	// casting to int equals floor
+	lo = (int)(frac * H->iProc);
+	up = (int)(frac * (H->iProc+1));
+
+	H->nx = up - lo;
+		
+/*	i = H->nxdomain/H->iNProc;
+	j = H->ndomain % H->iNProc;
+	
+	assert( H->iNProc*i + j == H->nxdomain );
+
+	if (H->iProc < H->iNProc-1)
+	{
+		H->nx = i;
+	} else {
+		H->nx = i + j;
+	}
+*/
+}                               // MPI_domain_decomp
+
 void
 hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
 
@@ -119,6 +154,13 @@ MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     // Make sure that MPI is initialized before we use it.
     assert ( H->bInit );
 
+    // Make sure we did the domain decomposition.
+    assert ( H->nx > 0 && H->ny > 0 );
+
+	// Define a new MPI data type
+	MPI_Type_vector( H->nvar*H->nyt*ExtraLayer, ExtraLayer, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
+   	MPI_Type_commit( &H->MPI_Hydro_vars );
+
     // *WARNING* : we will use 0 based arrays everywhere since it is C code!
     H->imin = H->jmin = 0;
 
@@ -174,6 +216,8 @@ hydro_finish ( const hydroparam_t H, hydrovar_t * Hv ) {
 void
 MPI_hydro_finish ( hydroparam_t *H, hydrovar_t * Hv ) {
     // (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here??
+
+   	MPI_Type_free( &H->MPI_Hydro_vars );
 
     // Finalize MPI library
     if ( H->MPIStatus != NULL ) MPI_finish ( H );
