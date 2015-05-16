@@ -43,22 +43,22 @@ typedef struct _hydroparam {
     long scheme;
     long boundary_right, boundary_left, boundary_down, boundary_up;
 
-    /*
-    ** Variables needed for the MPI.
-    **
-    ** iProc: rank of the current process
-    ** iNProc: total number of processes in MPI_COMM_WORLD
-    ** iMPIError: error returned from an MPI call
-    ** bInit: is the MPI library initialized
-    ** MPIStatus: status of an MPI call
-    */
-    int iProc;
-    int iNProc;
-    int iMPIError;
-    int bInit;
-    MPI_Datatype MPI_Hydro_vars;
-    MPI_Request *MPI_req;
-    MPI_Status *MPIStatus;
+	/*
+	** Variables needed for the MPI.
+	**
+	** iProc: rank of the current process
+	** iNProc: total number of processes in MPI_COMM_WORLD
+	** iMPIError: error returned from an MPI call
+	** bInit: is the MPI library initialized
+	** MPIStatus: status of an MPI call
+	*/
+	int iProc;
+	int iNProc;
+	int iMPIError;
+	int bInit;
+	MPI_Datatype MPI_Hydro_vars;
+	MPI_Request *MPI_req;
+	MPI_Status *MPIStatus;
 } hydroparam_t;
 
 #define HSCHEME_MUSCL 1
@@ -100,7 +100,7 @@ typedef struct _hydrowork {
     double *ro, *uo, *po, *co, *wo;
     double *rstar, *ustar, *pstar, *cstar;
     long *sgnm;
-    double *spin, *spout, *ushock;
+	double *spin, *spout, *ushock;
     double *frac, *scr, *delp, *pold;
     long *ind, *ind2;
 } hydrowork_t;
@@ -113,16 +113,16 @@ typedef struct _hydrowork {
 
 // useful constants to force double promotion
 #ifdef pourfairepropre
-static const double zero = ( double ) 0.0;
-static const double one = ( double ) 1.0;
-static const double two = ( double ) 2.0;
-static const double three = ( double ) 3.0;
-static const double hundred = ( double ) 100.0;
-static const double two3rd = ( double ) 2.0 / ( double ) 3.0;
-static const double half = ( double ) 1.0 / ( double ) 2.0;
-static const double third = ( double ) 1.0 / ( double ) 3.0;
-static const double forth = ( double ) 1.0 / ( double ) 4.0;
-static const double sixth = ( double ) 1.0 / ( double ) 6.0;
+static const double zero = (double) 0.0;
+static const double one = (double) 1.0;
+static const double two = (double) 2.0;
+static const double three = (double) 3.0;
+static const double hundred = (double) 100.0;
+static const double two3rd = (double) 2.0 / (double) 3.0;
+static const double half = (double) 1.0 / (double) 2.0;
+static const double third = (double) 1.0 / (double) 3.0;
+static const double forth = (double) 1.0 / (double) 4.0;
+static const double sixth = (double) 1.0 / (double) 6.0;
 
 // conservative variables with C indexing
 static const long ID = 1 - 1;
@@ -152,7 +152,7 @@ static const long ExtraLayerTot = 2 * 2;
 #define ExtraLayer    (2)
 #define ExtraLayerTot (2 * 2)
 #endif /*  */
-void process_args ( long argc, char **argv, hydroparam_t * H );
+void process_args(long argc, char **argv, hydroparam_t * H);
 
 #ifndef MFLOPS
 #if defined(FLOPS) && !defined(HMPP)
@@ -165,7 +165,7 @@ void process_args ( long argc, char **argv, hydroparam_t * H );
 */
 #define MFLOPS(simple, reciproque, maxmin, transcendant) do { flops += ((simple) + (maxmin) + 4 * (reciproque) + 8 * (transcendant)); } while (0)
 #else
-#define MFLOPS(simple, reciproque, maxmin, transcendant)
+#define MFLOPS(simple, reciproque, maxmin, transcendant) 
 // do { } while (0)
 #endif
 #endif

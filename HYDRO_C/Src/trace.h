@@ -2,10 +2,10 @@
 #define TRACE_H_INCLUDED
 
 
-void trace ( double *RESTRICT q, double *RESTRICT dq,
-             double *RESTRICT c, double *RESTRICT qxm,
-             double *RESTRICT qxp,
-             const double dtdx, const long n, const long Hscheme,
-             const long Hnvar, const long Hnxyt );
+void trace(double *RESTRICT q, double *RESTRICT dq,
+           double *RESTRICT c, double *RESTRICT qxm,
+           double *RESTRICT qxp,
+           const double dtdx, const long n, const long Hscheme,
+           const long Hnvar, const long Hnxyt);
 
 #endif // TRACE_H_INCLUDED

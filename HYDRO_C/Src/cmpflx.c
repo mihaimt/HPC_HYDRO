@@ -17,38 +17,39 @@
 #include "cmpflx.h"
 
 void
-cmpflx ( double *RESTRICT qgdnv, double *RESTRICT flux, const long narray,
-         const long Hnxyt, const long Hnvar, const double Hgamma ) {
+cmpflx(double *RESTRICT qgdnv, double *RESTRICT flux, const long narray,
+       const long Hnxyt, const long Hnvar, const double Hgamma)
+{
     long nface, i, IN;
     double entho, ekin, etot;
     const long nxyt = Hnxyt;
-    WHERE ( "cmpflx" );
+    WHERE("cmpflx");
 
 #define IHVW(i,v) ((i) + (v) * nxyt)
     nface = narray;
-    entho = one / ( Hgamma - one );
+    entho = one / (Hgamma - one);
 
     // Compute fluxes
-    for ( i = 0; i < nface; i++ ) {
+    for (i = 0; i < nface; i++) {
         // Mass density
-        flux[IHVW ( i, ID )] = qgdnv[IHVW ( i, ID )] * qgdnv[IHVW ( i, IU )];
+        flux[IHVW(i, ID)] = qgdnv[IHVW(i, ID)] * qgdnv[IHVW(i, IU)];
         // Normal momentum
-        flux[IHVW ( i, IU )] = flux[IHVW ( i, ID )] * qgdnv[IHVW ( i, IU )] + qgdnv[IHVW ( i, IP )];
+        flux[IHVW(i, IU)] = flux[IHVW(i, ID)] * qgdnv[IHVW(i, IU)] + qgdnv[IHVW(i, IP)];
         // Transverse momentum 1
-        flux[IHVW ( i, IV )] = flux[IHVW ( i, ID )] * qgdnv[IHVW ( i, IV )];
+        flux[IHVW(i, IV)] = flux[IHVW(i, ID)] * qgdnv[IHVW(i, IV)];
         // Total energy
         ekin =
-            half * qgdnv[IHVW ( i, ID )] * ( Square ( qgdnv[IHVW ( i, IU )] ) +
-                                             Square ( qgdnv[IHVW ( i, IV )] ) );
-        etot = qgdnv[IHVW ( i, IP )] * entho + ekin;
-        flux[IHVW ( i, IP )] = qgdnv[IHVW ( i, IU )] * ( etot + qgdnv[IHVW ( i, IP )] );
+            half * qgdnv[IHVW(i, ID)] * (Square(qgdnv[IHVW(i, IU)]) +
+                                         Square(qgdnv[IHVW(i, IV)]));
+        etot = qgdnv[IHVW(i, IP)] * entho + ekin;
+        flux[IHVW(i, IP)] = qgdnv[IHVW(i, IU)] * (etot + qgdnv[IHVW(i, IP)]);
     }
 
     // Other advected quantities
-    if ( Hnvar > IP+1 ) {
-        for ( IN = IP + 1; IN < Hnvar; IN++ ) {
-            for ( i = 0; i < nface; i++ ) {
-                flux[IHVW ( i, IN )] = flux[IHVW ( i, IN )] * qgdnv[IHVW ( i, IN )];
+    if (Hnvar > IP+1) {
+        for (IN = IP + 1; IN < Hnvar; IN++) {
+            for (i = 0; i < nface; i++) {
+                flux[IHVW(i, IN)] = flux[IHVW(i, IN)] * qgdnv[IHVW(i, IN)];
             }
         }
     }
