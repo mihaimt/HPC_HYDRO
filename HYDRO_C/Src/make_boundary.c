@@ -139,6 +139,8 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv)
     double sign;
     WHERE("MPI_get_boundary_start");
 	
+	// Allocate H->MPI_req !!!
+
 	/*
 	** (CR) We communicate each cell of the array separately. This should be improved at some point!
 	*/
@@ -152,7 +154,8 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv)
 		if (H.iProc > 0)
 		{
 			/* Dont do this for the most left domain. */
-//			MPI_Irecv( values, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req );
+			MPI_Irecv( H, 2, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+LEFT_GHOST_CELLS );
+			MPI_Isend( H+2+, 2, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+LEFT_GHOST_CELLS );
 		} else {
 	        // Set physical boundary conditions
    			for (ivar = 0; ivar < H.nvar; ivar++) {

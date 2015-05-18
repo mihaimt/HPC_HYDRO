@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH -J dtype_inplace
+#SBATCH --account=uzh4
+#SBATCH --time=1-0:00:00
+#SBATCH --ntasks=3
+#SBATCH --cpus-per-task=1 
+#SBATCH --comment="Simple MPI program to understand how MPI works."
+
+FILE="dtype_inplace"
+
+#sbatch --dependency=afterany:$SLURM_JOB_ID $FILE.job
+
+#aprun -B gasoline.i_hmax_cond_mpi_dora +restart $FILE.par
+aprun -B $FILE
+
