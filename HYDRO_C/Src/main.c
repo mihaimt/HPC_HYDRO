@@ -47,7 +47,12 @@ main(int argc, char **argv)
 	// Initialize MPI library (and allocate memory for the MPI variables).
 	MPI_init(&H, &argc, &argv);
 
+	// (CR) Debug stuff
+	fprintf(stderr,"MPI init done. Processing args\n");
 	process_args(argc, argv, &H);
+
+	// (CR) Debug stuff
+	fprintf(stderr,"Processing args done. Do domain decomposition.\n");
 
 	// Domain decomposition
 	MPI_domain_decomp(&H);
