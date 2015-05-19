@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "parametres.h"
 #include "make_boundary.h"
@@ -133,7 +134,7 @@ make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 */
 
 void
-MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv)
+MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Request *MPI_req)
 {
     long i, ivar, i0, j, j0, k;
     double sign;
@@ -149,17 +150,17 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv)
  
 	if (idim == 1) {
 		// Make sure MPI_req is allocated
-		assert( H->MPI_req != NULL);
+		assert(MPI_req != NULL);
 
 		/* Get values from the left domain. */
 		if (H.iProc > 0)
 		{
 			/* Dont do this for the most left domain. */
-			MPI_Irecv( H, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req );
-			MPI_Irecv( H+1, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+1 );
+			MPI_Irecv( Hv->uold, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req );
+			MPI_Irecv( Hv->uold+1, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+1 );
 
-			MPI_Isend( H+2, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+2 );
-			MPI_Isend( H+3, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+3 );
+			MPI_Isend( Hv->uold+2, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+2 );
+			MPI_Isend( Hv->uold+3, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+3 );
 		} else {
 			// Set physical boundary conditions
 			for (ivar = 0; ivar < H.nvar; ivar++) {
@@ -187,12 +188,11 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv)
 		if (H.iProc < H.iNProc - 1)
 		{
 			/* Dont do this for the most right domain. */
-			MPI_Irecv( H, H->nxt-ExtraLayer, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+4 );
-			MPI_Irecv( H+1, H->nxt-ExtraLayer+1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+5 );
+			MPI_Irecv( Hv->uold, H.nxt-ExtraLayer, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+4 );
+			MPI_Irecv( Hv->uold+1, H.nxt-ExtraLayer+1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+5 );
 
-			MPI_Isend( H+2, H->nxt-ExtraLayer-2, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+6 );
-			MPI_Isend( H+3, H->nxt-ExtraLayer-1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+7 );
-//		MPI_Irecv( values, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req );
+			MPI_Isend( Hv->uold+2, H.nxt-ExtraLayer-2, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+6 );
+			MPI_Isend( Hv->uold+3, H.nxt-ExtraLayer-1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+7 );
 		} else {
 			// Set physical boundary conditions 
 	        for (ivar = 0; ivar < H.nvar; ivar++) {
@@ -266,7 +266,7 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv)
 }                               // MPI_get_boundary_start
 
 void
-MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv)
+MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Request *MPI_req)
 {
 	/*
 	** Make sure that all boundary cells have been successfully exchanged between
@@ -283,7 +283,7 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv)
 		} else {
 			count = 2;
 		}
-		//MPI_Waitall(count, H.MPI_req, H.MPIStatus);
+		//MPI_Waitall(count, MPI_req, H.MPIStatus);
 	}
 }                               // MPI_get_boundary_end
 
@@ -295,16 +295,17 @@ MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 	** different processes. 
 	*/
 	// Allocate H->MPI_req !!!
-	H->MPI_req = malloc(8*sizeof(MPI_Request))
+	MPI_Request *MPI_req;
+	MPI_req = malloc(8*sizeof(MPI_Request));
 
 	// Initiate send and receive requests
-	MPI_get_boundary_start(idim, H, Hv);
+	MPI_get_boundary_start(idim, H, Hv, MPI_req);
 
 	// Make sure the data was successfully exchanged before we continue.
-	MPI_get_boundary_end(idim, H, Hv);
+	MPI_get_boundary_end(idim, H, Hv, MPI_req);
 
 	// Free MPI_req
-	free(H.MPI_req);
+	Free(MPI_req);
 }                               // MPI_get_boundary
 
 //EOF
