@@ -27,7 +27,10 @@ MPI_init(hydroparam_t * H, int * argc, char *** argv)
 
    	/* We need to allocate memory for this variable! */
 	H->MPIStatus = malloc(sizeof(MPI_Status));
-	
+
+	// Allocate H->MPI_req !!!
+	H->MPI_req = malloc(8*sizeof(MPI_Request));	
+
 	/* Initialize MPI library */
 	H->iMPIError = MPI_Init(argc,argv);
 	
@@ -50,6 +53,8 @@ MPI_finish(hydroparam_t *H)
 	H->iMPIError = MPI_Finalize();
 
 	Free(H->MPIStatus);
+	// Free MPI_req
+	Free(H->MPI_req);
 
 	if (H->iMPIError != 0)
 	{

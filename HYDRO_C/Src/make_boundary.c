@@ -138,9 +138,7 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv)
     long i, ivar, i0, j, j0, k;
     double sign;
     WHERE("MPI_get_boundary_start");
-	
-	// Allocate H->MPI_req !!!
-
+		
 	/*
 	** (CR) We communicate each cell of the array separately. This should be improved at some point!
 	*/
@@ -149,55 +147,67 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv)
 //	MPI_Isend(values, count, datatype, dest, tag, comm, req)
 //	H.iMPIError = MPI_Isend(Hv, 1, columntype, H.iProc-1, tag, MPI_COMM_WORLD,MPI_Request *request);
  
-    if (idim == 1) {
+	if (idim == 1) {
+		// Make sure MPI_req is allocated
+		assert( H->MPI_req != NULL);
+
 		/* Get values from the left domain. */
 		if (H.iProc > 0)
 		{
 			/* Dont do this for the most left domain. */
-			MPI_Irecv( H, 2, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+LEFT_GHOST_CELLS );
-			MPI_Isend( H+2+, 2, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+LEFT_GHOST_CELLS );
+			MPI_Irecv( H, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req );
+			MPI_Irecv( H+1, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+1 );
+
+			MPI_Isend( H+2, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+2 );
+			MPI_Isend( H+3, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+3 );
 		} else {
-	        // Set physical boundary conditions
-   			for (ivar = 0; ivar < H.nvar; ivar++) {
+			// Set physical boundary conditions
+			for (ivar = 0; ivar < H.nvar; ivar++) {
 				for (i = 0; i < ExtraLayer; i++) {
 					sign = 1.0;
 	                if (H.boundary_left == 1) {
-    	                i0 = ExtraLayerTot - i - 1;
-       	             if (ivar == IU) {
-       	                 sign = -1.0;
-       				}
-				} else if (H.boundary_left == 2) {
-                	i0 = 2;
-                } else {
-                    i0 = H.nx + i;
-                }
-                for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
-                    Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
-                    MFLOPS(1, 0, 0, 0);
-                }
-            }
-        }
-	}
-	/* Get values from the right domain. */
-	if (H.iProc < H.iNProc - 1)
-	{
-		/* Dont do this for the most right domain. */
+						i0 = ExtraLayerTot - i - 1;
+	       	            if (ivar == IU) {
+    						sign = -1.0;
+       					}
+					} else if (H.boundary_left == 2) {
+						i0 = 2;
+					} else {
+						i0 = H.nx + i;
+					}
+                	for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
+                    	Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
+						MFLOPS(1, 0, 0, 0);
+                	}
+            	}
+        	}
+		}
+
+		/* Get values from the right domain. */
+		if (H.iProc < H.iNProc - 1)
+		{
+			/* Dont do this for the most right domain. */
+			MPI_Irecv( H, H->nxt-ExtraLayer, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+4 );
+			MPI_Irecv( H+1, H->nxt-ExtraLayer+1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+5 );
+
+			MPI_Isend( H+2, H->nxt-ExtraLayer-2, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+6 );
+			MPI_Isend( H+3, H->nxt-ExtraLayer-1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req+7 );
 //		MPI_Irecv( values, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, H->MPI_req );
-	} else {
-		// Set physical boundary conditions 
-        for (ivar = 0; ivar < H.nvar; ivar++) {
-            for (i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++) {
-                sign = 1.0;
-                if (H.boundary_right == 1) {
-                    i0 = 2 * H.nx + ExtraLayerTot - i - 1;
-                    if (ivar == IU) {
-                        sign = -1.0;
-                    }
-                } else if (H.boundary_right == 2) {
-                    i0 = H.nx + ExtraLayer;
-                } else {
-                    i0 = i - H.nx;
-                }
+		} else {
+			// Set physical boundary conditions 
+	        for (ivar = 0; ivar < H.nvar; ivar++) {
+   				for (i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++) {
+					sign = 1.0;
+					if (H.boundary_right == 1) {
+						i0 = 2 * H.nx + ExtraLayerTot - i - 1;
+	                    if (ivar == IU) {
+    	                    sign = -1.0;
+        	            }
+            	    } else if (H.boundary_right == 2) {
+                	    i0 = H.nx + ExtraLayer;
+					} else {
+                 	   i0 = i - H.nx;
+                	}
                 for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
 		  /* fprintf(stderr,"PFL %d %d\n",i,j); */ 
                     Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
@@ -284,12 +294,17 @@ MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 	** Exchange the boundary conditions with neighboring domains that are on
 	** different processes. 
 	*/
+	// Allocate H->MPI_req !!!
+	H->MPI_req = malloc(8*sizeof(MPI_Request))
 
 	// Initiate send and receive requests
 	MPI_get_boundary_start(idim, H, Hv);
 
 	// Make sure the data was successfully exchanged before we continue.
 	MPI_get_boundary_end(idim, H, Hv);
+
+	// Free MPI_req
+	free(H.MPI_req);
 }                               // MPI_get_boundary
 
 //EOF
