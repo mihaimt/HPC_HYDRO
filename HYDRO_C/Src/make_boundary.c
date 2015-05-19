@@ -288,7 +288,7 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 }                               // MPI_get_boundary_end
 
 void
-MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
+MPI_make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 {
 	/*
 	** Exchange the boundary conditions with neighboring domains that are on
