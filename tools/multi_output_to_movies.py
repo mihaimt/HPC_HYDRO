@@ -1,26 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+#
+
 
 import os
 from sys import argv
 import numpy
 from matplotlib import pyplot
 
-def add_zeros(step):
-    
-    if int(step) < 10:
-        outt = '0000'+str(step)
-    elif int(step) < 100:
-        outt = '000' +str(step)
-    elif int(step) < 1000:
-        outt = '00' + str(step)
-    elif int(step) < 10000:
-        outt = '0'  + str(step)
-    else:
-        outt = str(step)
-    
-    return outt
+
+import sys
+import numpy as np
+from matplotlib import pyplot as plt
+import glob
+import xml.etree.ElementTree as etree
+
+
+
 
 print "="*40
 print "proper call:"
@@ -31,12 +28,12 @@ print "python multi_output_to_movies.py ~/git/HPC_Hydro/HYDRO_C/Output/Input_sed
 print "="*40
 
 
+
 script, pathh, nsteps, delay = argv
 
 
 
 
-import xml.etree.ElementTree as etree
 
 # maps variable names in vts file to python variable / key names
 valnamemap = {
@@ -128,66 +125,29 @@ class VtsReader():
     
             self.values[valname] = data
 
-
-
-
 '''
-def read_vtk(filename):
-
-    values = {}
-
-    tree = etree.parse(filename)
-
-    root = tree.getroot()
-
-    # get the number of cell edge points per dimension
-    extent = map(int, root[0][0].attrib['Extent'].strip().split())
-    ex = extent[1] - extent[0] + 1
-    ey = extent[3] - extent[2] + 1
-
-    # get the number of cell midpoints per dimension
-    nx = ex-1
-    ny = ey-1
-
-    # get the edge points
-    points = root[0][0][0]
-    coords = points[0].text.strip().split('\n')
-    coords = [map(float, _.split(' ')) for _ in coords]
-
-    # calculate midpoints 
-    coordsMPnts = []
-    cXL = []
-    cYL = []
-    for i in range(nx):
-        for j in range(ny):
-            px = (coords[i+j*ex][0] + coords[(i+1)+j*ex][0])*0.5
-            py = (coords[i+j*ex][1] + coords[i+(j+1)*ex][1])*0.5
-            coordsMPnts.append((px, py))
-            cXL.append(px)
-            cYL.append(py)
-
-    celldata = root[0][0][1]
-
-    values['coordsEdges'] = numpy.array(coords)
-    values['coordsMidPoints'] = numpy.array(coordsMPnts)
-    values['coordsMidPointsX'] = numpy.array(cXL)
-    values['coordsMidPointsY'] = numpy.array(cYL)
-
-    for c in celldata:
-        valname = c.attrib["Name"]
-        valname = valnamemap.get(valname, valname)
-        data = map(float, c.text.strip().split())
-
-        values[valname] = data
-    return values, nx, ny, filename
-
+looks at the first step and checks how many files, aka cores are around
 '''
+def getNSteps(dirr):
+
+    lst = glob.glob(os.path.join(dirr, fn_tmpl2 % 1)) # check with step nr 1
+
+    return len(lst)
 
 
 
+#
+# This assumes that files are numbered like this:
+# outputvtk_001_000001.vts
+# where the first 3 digits are the nr of the core (and thus domain)
+# and the second 6 digits the step
+# this is the template:
+fn_tmpl  = "outputvtk_%03i_%06i.vts"
+fn_tmpl2 = "outputvtk_???_%06i.vts" # this one is used for the globing only
 
 
-fn_tmpl = "outputvtk_%4i_%6i.vts"
+
+nsteps = getNSteps(d)
 
 
 
