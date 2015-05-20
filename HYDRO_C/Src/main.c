@@ -44,6 +44,7 @@ main(int argc, char **argv)
 
 	start_time = cclock();
 
+	fprintf(stderr,"MPI init\n");
 	// Initialize MPI library (and allocate memory for the MPI variables).
 	MPI_init(&H, &argc, &argv);
 
@@ -56,12 +57,18 @@ main(int argc, char **argv)
 
 	// Domain decomposition
 	MPI_domain_decomp(&H);
-		
+	
+	fprintf(stderr,"Domain decomposition done.\n");
+	
 	// Initialize the hydro variables and set initial conditions.
 	MPI_hydro_init(&H, &Hv);
 	PRINTUOLD(H, &Hv);
-
-	printf("Hydro starts - MPI version \n");
+	
+	if (H.iProc == 0)
+	{
+		printf("Hydro starts - MPI version \n");
+		printf("Running on %i cores \n",H.iNProc);
+	}
 
 	// vtkfile(nvtk, H, &Hv);
 	if (H.dtoutput > 0) 
@@ -130,8 +137,15 @@ main(int argc, char **argv)
 				sprintf(outnum, "%s [%04ld]", outnum, nvtk);
 			}
 		}
+		MPI_Barrier(MPI_COMM_WORLD);
+//		fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum);
+//		fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (iProc %i)\n", H.nstep, H.t, dt, outnum, H.iProc);
+		if (H.iProc == 0)
+		{
+			// Do output
+			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
+		}
 
-		fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum);
 	}   // end while loop
 		
 	/* Finalize MPI and free memory. */
