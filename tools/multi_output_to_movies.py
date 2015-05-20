@@ -46,6 +46,92 @@ valnamemap = {
     'varIP':'p',
 }
 
+class VtsReader():
+    
+    def __init__(self, filename):
+        self.fn = filename
+        self.tree = etree.parse(filename)
+        self.root = tree.getroot()
+        
+        # a (numpy) list of coordinates
+        # coords[i] == [cx[i], cy[i]]
+        # use this to assign coordinates to values
+        # value at position (row) i -> is at position cx[i] / cy[i] in
+        # the grid
+        self.coords = None
+        self.cx = None
+        self.cy = None
+        
+        # coordinate pairs for the edges
+        self.edges = None
+
+        # the dimensions of the grids and values
+        self.ex = None # the extend of the grid (#cells+1)
+        self.ey = None
+        
+        self.nx = None # the # of cells in each dimension
+        self.ny = None # also equals the number of values
+        
+        # and finally, the values as dict (key is the value name)
+        self.values = {}
+
+
+    def readDimensions(self):
+
+        # get the number of cell edge points per dimension
+        extent = map(int, self.root[0][0].attrib['Extent'].strip().split())
+        self.ex = extent[1] - extent[0] + 1
+        self.ey = extent[3] - extent[2] + 1
+    
+        # get the number of cell midpoints per dimension
+        self.nx = ex-1
+        self.ny = ey-1
+    
+
+    def readGrid(self):
+
+        if not self.nX:
+            self.readDimensions()
+
+        # get the edge points
+        points = self.root[0][0][0]
+        coords = points[0].text.strip().split('\n')
+        coords = [map(float, _.split(' ')) for _ in coords]
+    
+        # calculate midpoints 
+        coordsMPnts = []
+        cXL = []
+        cYL = []
+        for i in range(self.nx):
+            for j in range(self.ny):
+                px = (coords[i+j*ex][0] + coords[(i+1)+j*ex][0])*0.5
+                py = (coords[i+j*ex][1] + coords[i+(j+1)*ex][1])*0.5
+                coordsMPnts.append((px, py))
+                cXL.append(px)
+                cYL.append(py)
+    
+    
+        self.edges = numpy.array(coords)
+        self.coords = numpy.array(coordsMPnts)
+        self.cx = numpy.array(cXL)
+        self.cy = numpy.array(cYL)
+
+    # note: for this to run, you don't need to parse the points first!!
+    def readValues(self):
+
+        celldata = root[0][0][1]
+    
+        for c in celldata:
+            valname = c.attrib["Name"]
+            valname = valnamemap.get(valname, valname)
+            data = map(float, c.text.strip().split())
+    
+            self.values[valname] = data
+
+
+
+
+'''
 def read_vtk(filename):
 
     values = {}
@@ -94,6 +180,17 @@ def read_vtk(filename):
 
         values[valname] = data
     return values, nx, ny, filename
+
+'''
+
+
+
+
+
+fn_tmpl = "outputvtk_%4i_%6i.vts"
+
+
+
 
 
 
