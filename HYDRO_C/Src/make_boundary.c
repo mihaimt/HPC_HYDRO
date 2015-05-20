@@ -282,19 +282,29 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 	** Make sure that all boundary cells have been successfully exchanged between
 	** the processes before we continue.
 	*/
-	int count;
+	int count, offset;
 	MPI_Status *status;
+	status = malloc(8*sizeof(MPI_Status));
+
+	offset = 0;
+
 	if ( idim == 1) {
 		// Dont do this if we sweep the grid in ny direction.
 		if (H.iProc == 0 || H.iProc == H.iNProc-1)
 		{
 			// For the most outer domains we have less b.c. to exchange.
 			count = 1;
+			if ( H.iProc == 0 )
+			{
+				offset = 4;
+			}
 		} else {
 			count = 2;
 		}
-
-		MPI_Waitall(count*4, MPI_req, H.MPIStatus);
+		
+		fprintf(stderr,"iProc: %i, count: %i, offset: %i\n",H.iProc,count,offset);
+		MPI_Waitall(count*4, MPI_req+offset, status);
+		Free(status);
 	}
 }                               // MPI_get_boundary_end
 
@@ -310,7 +320,7 @@ MPI_make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 	MPI_req = malloc(8*sizeof(MPI_Request));
 
 	// (CR) Debug info
-	printf("Getting b.c. (iProc %i)\n",H.iProc);
+	fprintf(stderr,"Getting b.c. (iProc %i)\n",H.iProc);
 
 	// Initiate send and receive requests
 	MPI_get_boundary_start(idim, H, Hv, MPI_req);

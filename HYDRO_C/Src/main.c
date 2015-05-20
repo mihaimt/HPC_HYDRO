@@ -64,6 +64,8 @@ main(int argc, char **argv)
 	MPI_hydro_init(&H, &Hv);
 	PRINTUOLD(H, &Hv);
 	
+	fprintf(stderr,"MPI_hydro_init done.\n");
+
 	if (H.iProc == 0)
 	{
 		printf("Hydro starts - MPI version \n");

@@ -34,14 +34,22 @@ MPI_init(hydroparam_t * H, int * argc, char *** argv)
 	/* Initialize MPI library */
 	H->iMPIError = MPI_Init(argc,argv);
 	
-	MPI_Comm_size(MPI_COMM_WORLD,&H->iNProc);
-	MPI_Comm_rank(MPI_COMM_WORLD,&H->iProc);
-	
 	if (H->iMPIError != 0)
 	{
 		printf("MPI_Init: Error %i\n",H->iMPIError);
 		exit(1);
 	}
+	
+	printf("Comm_size\n");
+
+	MPI_Comm_size(MPI_COMM_WORLD,&H->iNProc);
+
+	printf("Comm_rank\n");
+
+	MPI_Comm_rank(MPI_COMM_WORLD,&H->iProc);
+	
+	printf("MPI_Init: done\n");
+			
 	H->bInit = 1;
 }                               // MPI_init
 
