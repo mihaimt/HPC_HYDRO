@@ -8,19 +8,19 @@ import numpy
 from matplotlib import pyplot
 
 def add_zeros(step):
-	
-	if int(step) < 10:
-		outt = '0000'+str(step)
-	elif int(step) < 100:
-		outt = '000' +str(step)
-	elif int(step) < 1000:
-		outt = '00' + str(step)
-	elif int(step) < 10000:
-		outt = '0'  + str(step)
-	else:
-		outt = str(step)
-	
-	return outt
+    
+    if int(step) < 10:
+        outt = '0000'+str(step)
+    elif int(step) < 100:
+        outt = '000' +str(step)
+    elif int(step) < 1000:
+        outt = '00' + str(step)
+    elif int(step) < 10000:
+        outt = '0'  + str(step)
+    else:
+        outt = str(step)
+    
+    return outt
 
 print "="*40
 print "proper call:"
@@ -105,9 +105,9 @@ step_list = range(int(nsteps)+1)
 
 
 if pathh[-1] == '/':
-	ppath = pathh
+    ppath = pathh
 else:
-	ppath = pathh+'/'
+    ppath = pathh+'/'
 
 print "-"*40
 print "Searching directory for numbered outputs: ", str(pathh)
@@ -120,77 +120,77 @@ step_f = [[]]*(int(nsteps)+1)
 i = 1
 
 for step in step_list:
-	step_string = add_zeros(step)
-	
-	for element in dir_list:
-		if (element.find(step_string) > 0) and (element.find('.png') < 0) and (element.find('movie') < 0):
-			step_f[i-1] = step_f[i-1] + [element]
-	i = i +1
+    step_string = add_zeros(step)
+    
+    for element in dir_list:
+        if (element.find(step_string) > 0) and (element.find('.png') < 0) and (element.find('movie') < 0):
+            step_f[i-1] = step_f[i-1] + [element]
+    i = i +1
 
 print "-"*40
 print "Grouping outputs by step number"
 print "-"*40
 
 for element in step_f[1:]:
-	element.sort()
-	print element
+    element.sort()
+    print element
 
 
 for element in step_f[1:]:
-	element.sort()
-	large_d, large_p, large_u, large_v, vtk_name = [], [], [], [], []
+    element.sort()
+    large_d, large_p, large_u, large_v, vtk_name = [], [], [], [], []
  
-	for vtk in element:
+    for vtk in element:
 
-	        f, nx, ny, filename = read_vtk(ppath+vtk)
-	        d=numpy.zeros((nx, ny))
-	        p=numpy.zeros((nx, ny))
-	        u=numpy.zeros((nx, ny))
-	        v=numpy.zeros((nx, ny))
-	        x_r = numpy.zeros((nx))
-	        y_r = numpy.zeros((ny))
-	        for i, coords in enumerate(f['coordsMidPoints']):
+            f, nx, ny, filename = read_vtk(ppath+vtk)
+            d=numpy.zeros((nx, ny))
+            p=numpy.zeros((nx, ny))
+            u=numpy.zeros((nx, ny))
+            v=numpy.zeros((nx, ny))
+            x_r = numpy.zeros((nx))
+            y_r = numpy.zeros((ny))
+            for i, coords in enumerate(f['coordsMidPoints']):
 
-	                d[i%nx,i/nx] = f['d'][i]
-	                p[i%nx,i/nx] = f['p'][i]
-	                u[i%nx,i/nx] = f['u'][i]
-	                v[i%nx,i/nx] = f['v'][i]
+                    d[i%nx,i/nx] = f['d'][i]
+                    p[i%nx,i/nx] = f['p'][i]
+                    u[i%nx,i/nx] = f['u'][i]
+                    v[i%nx,i/nx] = f['v'][i]
 
-	                if i<nx:
-	                        x_r[i] = coords[0]
+                    if i<nx:
+                            x_r[i] = coords[0]
 
-	                if i%nx == 0:
-	                        y_r[i/nx] = coords[1]
-	
-		large_d = large_d + [d.T] 
-		large_p = large_p + [p.T]
-		large_u = large_u + [u.T]
-		large_v = large_v + [v.T]
-		vtk_name = vtk_name + [vtk]	
-		outname = ppath+vtk[0:-6]
+                    if i%nx == 0:
+                            y_r[i/nx] = coords[1]
+    
+        large_d = large_d + [d.T] 
+        large_p = large_p + [p.T]
+        large_u = large_u + [u.T]
+        large_v = large_v + [v.T]
+        vtk_name = vtk_name + [vtk]    
+        outname = ppath+vtk[0:-6]
 
-	da = large_d[0]
-#	print large_d	
+    da = large_d[0]
+#    print large_d    
 
-	for element in large_d[1:]:
-	
-		dat = numpy.hstack((da, element))
-		da = dat
-
-
-	da = numpy.matrix(da)
-	pyplot.imshow(da)
-	pyplot.hot()	
-	pyplot.clim(0,5)
-	pyplot.title("d")
-	pyplot.colorbar(orientation = "horizontal")
-	pyplot.savefig(outname +"_d"+".png")
-	pyplot.cla()
-	pyplot.clf()
-	 
+    for element in large_d[1:]:
+    
+        dat = numpy.hstack((da, element))
+        da = dat
 
 
-	pa = large_p[0]
+    da = numpy.matrix(da)
+    pyplot.imshow(da)
+    pyplot.hot()    
+    pyplot.clim(0,5)
+    pyplot.title("d")
+    pyplot.colorbar(orientation = "horizontal")
+    pyplot.savefig(outname +"_d"+".png")
+    pyplot.cla()
+    pyplot.clf()
+     
+
+
+    pa = large_p[0]
         for element in large_p[1:]:
 
                 pat = numpy.hstack((pa, element))
@@ -201,14 +201,14 @@ for element in step_f[1:]:
         pyplot.imshow(pa)
         pyplot.hot()
         pyplot.clim(0,400)
-	pyplot.title("p")	
-	pyplot.colorbar(orientation = "horizontal")
+    pyplot.title("p")    
+    pyplot.colorbar(orientation = "horizontal")
         pyplot.savefig(outname +"_p"+".png")
         pyplot.cla()
         pyplot.clf()
 
 
-	ua = large_u[0]
+    ua = large_u[0]
         for element in large_u[1:]:
 
                 uat = numpy.hstack((ua, element))
@@ -219,8 +219,8 @@ for element in step_f[1:]:
         pyplot.imshow(ua)
         pyplot.hot()
         pyplot.clim(0,40)
-	pyplot.title("u")
-	pyplot.colorbar(orientation = "horizontal")
+    pyplot.title("u")
+    pyplot.colorbar(orientation = "horizontal")
         pyplot.savefig(outname +"_u"+".png")
         pyplot.cla()
         pyplot.clf()
@@ -238,8 +238,8 @@ for element in step_f[1:]:
         pyplot.imshow(va)
         pyplot.hot()
         pyplot.clim(-10,40)
-	pyplot.colorbar(orientation = "horizontal")
-	pyplot.title("v")
+    pyplot.colorbar(orientation = "horizontal")
+    pyplot.title("v")
         pyplot.savefig(outname +"_v"+".png")
         pyplot.cla()
         pyplot.clf()
@@ -247,7 +247,7 @@ for element in step_f[1:]:
 
 
 
-	#print large_d
+    #print large_d
 
 
 print "-"*40
@@ -261,10 +261,10 @@ print "-"*40
 
 
 for q in ["d", "p", "u", "v"]:
-	exec_string = "convert " + ppath+"*"+q+".png -delay "+str(int(delay)) +" "+ ppath+"movie_"+q+".mpg"
-	print exec_string
-	os.system(exec_string)
-	del exec_string
+    exec_string = "convert " + ppath+"*"+q+".png -delay "+str(int(delay)) +" "+ ppath+"movie_"+q+".mpg"
+    print exec_string
+    os.system(exec_string)
+    del exec_string
 
 
 
