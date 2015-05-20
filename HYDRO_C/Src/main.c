@@ -147,6 +147,16 @@ main(int argc, char **argv)
 			// Do output
 			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
 		}
+// Debug information
+		if (H.iProc == 1)
+		{
+			if (Hv.uold[IHv(2, 2, ID)] > 1.1)
+			{
+				printf("(CR)******************************************************************\n");
+				printf("%g \n", Hv.uold[IHv(2, 2, ID)]);
+				printf("**********************************************************************\n");
+			}
+		}
 
 	}   // end while loop
 		

@@ -40,16 +40,9 @@ MPI_init(hydroparam_t * H, int * argc, char *** argv)
 		exit(1);
 	}
 	
-	printf("Comm_size\n");
-
 	MPI_Comm_size(MPI_COMM_WORLD,&H->iNProc);
-
-	printf("Comm_rank\n");
-
 	MPI_Comm_rank(MPI_COMM_WORLD,&H->iProc);
 	
-	printf("MPI_Init: done\n");
-			
 	H->bInit = 1;
 }                               // MPI_init
 
@@ -154,7 +147,7 @@ MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv)
 	assert( H->nx > 0 && H->ny > 0);
 
 	// Define a new MPI data type
-	MPI_Type_vector( H->nvar*H->nyt*ExtraLayer, ExtraLayer, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
+	MPI_Type_vector( H->nvar*H->nyt, 1, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
 	MPI_Type_commit ( & H->MPI_Hydro_vars );	
     // *WARNING* : we will use 0 based arrays everywhere since it is C code!
     H->imin = H->jmin = 0;
