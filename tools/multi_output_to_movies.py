@@ -7,6 +7,9 @@
 import os
 from sys import argv
 import numpy
+
+import matplotlib
+matplotlib.use('agg')
 from matplotlib import pyplot
 
 
@@ -15,17 +18,52 @@ import numpy as np
 from matplotlib import pyplot as plt
 import glob
 import xml.etree.ElementTree as etree
+import argparse
+
+#
+# This assumes that files are numbered like this:
+# outputvtk_001_000001.vts
+# where the first 3 digits are the nr of the core (and thus domain)
+# and the second 6 digits the step
+# this is the template:
+fn_tmpl  = "outputvtk_%03i_%06i.vts"
+fn_tmpl2 = "outputvtk_???_%06i.vts" # this one is used for the globing only
+
+
+tmpdir = '_tmp'
 
 
 
 
-print "="*40
-print "proper call:"
-print "python multi_output_to_movies.py <path to output directory> <number of steps> <delay between movie frames>"
-print "-"*40
-print "example:"
-print "python multi_output_to_movies.py ~/git/HPC_Hydro/HYDRO_C/Output/Input_sedov_100x10 10 100"
-print "="*40
+parser = argparse.ArgumentParser(description='Convert the output of a sim (vts files) to a movie via pngs')
+parser.add_argument('-i', '--input', type=str, required=True,
+                    metavar='vts_files/',
+                    help='a relative path to the output folder of the simulation')
+parser.add_argument('-o', '--output', type=str,required=False, default='movie.mpg',
+                    metavar='movie.mpg',
+                    help='the relative path to the output movie')
+parser.add_argument('-n', '--nsteps', type=int, required=False, default=-1,
+                    help='the number of timesteps to actually use [default = -1 = all]')
+parser.add_argument('-d', '--delay', type=int, required=False, default=100,
+                    help='the delay between frames in ms')
+parser.add_argument('--dpi', type=int, required=False, default=100,
+                    help='the resolution (dots per inch)')
+parser.add_argument('--sx', type=float, required=False, default=8.0,
+                    help='x size of the movie in inch')
+parser.add_argument('--sy', type=float, required=False, default=6.0,
+                    help='y size of the movie in inch')
+
+
+args = parser.parse_args()
+print os.path.abspath(args.input)
+
+try:
+    args.input = os.path.abspath(args.input)
+    if not os.path.isdir(args.input):
+        raise KeyError
+except:
+    parser.error("--input is not a valid path")
+
 
 
 
@@ -42,6 +80,8 @@ valnamemap = {
     'varIV':'v',
     'varIP':'p',
 }
+
+vals = valnamemap.values()
 
 class VtsReader():
     
@@ -125,212 +165,96 @@ class VtsReader():
     
             self.values[valname] = data
 
-'''
-looks at the first step and checks how many files, aka cores are around
-'''
-def getNSteps(dirr):
 
-    lst = glob.glob(os.path.join(dirr, fn_tmpl2 % 1)) # check with step nr 1
+'''looks at the first step and checks how many files, aka cores are around'''
+def getNCores():
+
+    lst = glob.glob(os.path.join(args.input, fn_tmpl2 % 1)) # check with step nr 1
+
+    return len(lst)
+
+
+'''looks at the first core and checks how many files, aka steps are around'''
+def getNSteps():
+
+    lst = glob.glob(os.path.join(args.input, fn_tmpl2 % 1)) # check with step nr 1
 
     return len(lst)
 
 
 
-#
-# This assumes that files are numbered like this:
-# outputvtk_001_000001.vts
-# where the first 3 digits are the nr of the core (and thus domain)
-# and the second 6 digits the step
-# this is the template:
-fn_tmpl  = "outputvtk_%03i_%06i.vts"
-fn_tmpl2 = "outputvtk_???_%06i.vts" # this one is used for the globing only
-
-
-
-nsteps = getNSteps(d)
-
-
-
-
-
-
-
-
-dir_list = os.listdir(str(pathh))
-
-step_list = range(int(nsteps)+1)
-
-
-if pathh[-1] == '/':
-    ppath = pathh
-else:
-    ppath = pathh+'/'
-
-print "-"*40
-print "Searching directory for numbered outputs: ", str(pathh)
-print "-"*40
-
-print dir_list
-
-step_f = [[]]*(int(nsteps)+1)
-
-i = 1
-
-for step in step_list:
-    step_string = add_zeros(step)
+def doPlot(data, step):
     
-    for element in dir_list:
-        if (element.find(step_string) > 0) and (element.find('.png') < 0) and (element.find('movie') < 0):
-            step_f[i-1] = step_f[i-1] + [element]
-    i = i +1
-
-print "-"*40
-print "Grouping outputs by step number"
-print "-"*40
-
-for element in step_f[1:]:
-    element.sort()
-    print element
-
-
-for element in step_f[1:]:
-    element.sort()
-    large_d, large_p, large_u, large_v, vtk_name = [], [], [], [], []
- 
-    for vtk in element:
-
-            f, nx, ny, filename = read_vtk(ppath+vtk)
-            d=numpy.zeros((nx, ny))
-            p=numpy.zeros((nx, ny))
-            u=numpy.zeros((nx, ny))
-            v=numpy.zeros((nx, ny))
-            x_r = numpy.zeros((nx))
-            y_r = numpy.zeros((ny))
-            for i, coords in enumerate(f['coordsMidPoints']):
-
-                    d[i%nx,i/nx] = f['d'][i]
-                    p[i%nx,i/nx] = f['p'][i]
-                    u[i%nx,i/nx] = f['u'][i]
-                    v[i%nx,i/nx] = f['v'][i]
-
-                    if i<nx:
-                            x_r[i] = coords[0]
-
-                    if i%nx == 0:
-                            y_r[i/nx] = coords[1]
+    fig = plt.figure()
     
-        large_d = large_d + [d.T] 
-        large_p = large_p + [p.T]
-        large_u = large_u + [u.T]
-        large_v = large_v + [v.T]
-        vtk_name = vtk_name + [vtk]    
-        outname = ppath+vtk[0:-6]
-
-    da = large_d[0]
-#    print large_d    
-
-    for element in large_d[1:]:
-    
-        dat = numpy.hstack((da, element))
-        da = dat
-
-
-    da = numpy.matrix(da)
-    pyplot.imshow(da)
-    pyplot.hot()    
-    pyplot.clim(0,5)
-    pyplot.title("d")
-    pyplot.colorbar(orientation = "horizontal")
-    pyplot.savefig(outname +"_d"+".png")
-    pyplot.cla()
-    pyplot.clf()
-     
-
-
-    pa = large_p[0]
-        for element in large_p[1:]:
-
-                pat = numpy.hstack((pa, element))
-                pa = pat
-
-
-        pa = numpy.matrix(pa)
-        pyplot.imshow(pa)
-        pyplot.hot()
-        pyplot.clim(0,400)
-    pyplot.title("p")    
-    pyplot.colorbar(orientation = "horizontal")
-        pyplot.savefig(outname +"_p"+".png")
-        pyplot.cla()
-        pyplot.clf()
-
-
-    ua = large_u[0]
-        for element in large_u[1:]:
-
-                uat = numpy.hstack((ua, element))
-                ua = uat
-
-
-        ua = numpy.matrix(ua)
-        pyplot.imshow(ua)
-        pyplot.hot()
-        pyplot.clim(0,40)
-    pyplot.title("u")
-    pyplot.colorbar(orientation = "horizontal")
-        pyplot.savefig(outname +"_u"+".png")
-        pyplot.cla()
-        pyplot.clf()
+    for i, val in enumerate(vals):
+        ax = fig.add_subplot(4,1,i)
+        ax.set_title('variable %s' % val, fontsize=14)
+        
+        im = ax.imshow(data[val], cmap=plt.get_cmap('hot'))
+        im.set_clim([0,5])
+        
+    fig.savefig(os.path.join(args.input, tmpdir,'img_%06i.png'%step), dpi=args.dpi)
+    plt.close(fig)
 
 
 
-        va = large_v[0]
-        for element in large_v[1:]:
+def doMovie():
+    pngfiles = os.path.join(args.input, tmpdir, 'img_*.png')
 
-                vat = numpy.hstack((va, element))
-                va = vat
+    exec_string = "convert %s -delay %i %s" % (pngfiles, args.delay, args.output)
 
-
-        va = numpy.matrix(va)
-        pyplot.imshow(va)
-        pyplot.hot()
-        pyplot.clim(-10,40)
-    pyplot.colorbar(orientation = "horizontal")
-    pyplot.title("v")
-        pyplot.savefig(outname +"_v"+".png")
-        pyplot.cla()
-        pyplot.clf()
-
-
-
-
-    #print large_d
-
-
-print "-"*40
-print "Created plots"
-print "-"*40
-
-
-print "-"*40
-print "Creating movies"
-print "-"*40
-
-
-for q in ["d", "p", "u", "v"]:
-    exec_string = "convert " + ppath+"*"+q+".png -delay "+str(int(delay)) +" "+ ppath+"movie_"+q+".mpg"
     print exec_string
     os.system(exec_string)
-    del exec_string
 
 
 
-print "-"*40
-print "Done"
-print "-"*40
 
-print "="*40
-print "The files have been placed in the directory: "
-print  ppath
-print "="*40
+nsteps_avail = getNSteps()
+args.ncores = getNCores()
+
+if args.nsteps <= 0 or args.nsteps > nsteps_avail:
+    args.nsteps = nsteps_avail
+
+
+
+# get the dimensions of the total grid once (expect those not to change)
+# for the step nr 1
+nx = 0
+ny = 0
+offsets = [] # at witch x=offset[i] offset start the values of core i 
+subdims = [] # how many clumns have the values of core i (nx = sum_i subdims[i])
+for core in range(args.ncores):
+    vts = VtsReader(fn_tmpl % (core, 1))
+    vts.readDimensions()
+    if ny>0 and ny != vts.ny:
+        raise ValueError("the files have inconsitent dimensions along the y axis!!")
+
+    offsets.append(nx)
+    subdims.append(vts.nx)
+    nx = nx + vts.nx
+    ny = vts.ny
+
+
+# for each step (fortran counters...)
+for step in range(1, args.nsteps+1):
+    
+    data = {}
+    
+    for val in vals:
+        data[val] = np.zeros((0, ny))
+    
+    for core in range(args.ncores):
+        vts = VtsReader(fn_tmpl % (core, step))
+        vts.readValues()
+        
+        for val in vals:
+            tmp = vts.values[val].reshape((subdims[core], ny))
+            data[val] = np.hstack((data[val], tmp))
+            
+    doPlot(data, step, val)
+
+
+doMovie()
+
 
