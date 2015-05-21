@@ -28,6 +28,7 @@ import argparse
 # this is the template:
 fn_tmpl  = "outputvtk_%03i_%06i.vts"
 fn_tmpl2 = "outputvtk_???_%06i.vts" # this one is used for the globing only
+fn_tmpl3 = "outputvtk_%03i_*.vts" # this one is used for the globing only
 
 
 tmpdir = '_tmp'
@@ -65,11 +66,10 @@ except:
     parser.error("--input is not a valid path")
 
 
-
-
-script, pathh, nsteps, delay = argv
-
-
+try:
+    os.makedirs(os.path.join(args.input, tmpdir))
+except OSError:
+    pass
 
 
 
@@ -86,9 +86,10 @@ vals = valnamemap.values()
 class VtsReader():
     
     def __init__(self, filename):
+        #print 'vtsr init'
         self.fn = filename
         self.tree = etree.parse(filename)
-        self.root = tree.getroot()
+        self.root = self.tree.getroot()
         
         # a (numpy) list of coordinates
         # coords[i] == [cx[i], cy[i]]
@@ -114,6 +115,7 @@ class VtsReader():
 
 
     def readDimensions(self):
+        #print 'vtsr rdim'
 
         # get the number of cell edge points per dimension
         extent = map(int, self.root[0][0].attrib['Extent'].strip().split())
@@ -121,11 +123,12 @@ class VtsReader():
         self.ey = extent[3] - extent[2] + 1
     
         # get the number of cell midpoints per dimension
-        self.nx = ex-1
-        self.ny = ey-1
+        self.nx = self.ex-1
+        self.ny = self.ey-1
     
 
     def readGrid(self):
+        #print 'vtsr rgrid'
 
         if not self.nX:
             self.readDimensions()
@@ -141,8 +144,8 @@ class VtsReader():
         cYL = []
         for i in range(self.nx):
             for j in range(self.ny):
-                px = (coords[i+j*ex][0] + coords[(i+1)+j*ex][0])*0.5
-                py = (coords[i+j*ex][1] + coords[i+(j+1)*ex][1])*0.5
+                px = (coords[i+j*self.ex][0] + coords[(i+1)+j*self.ex][0])*0.5
+                py = (coords[i+j*self.ex][1] + coords[i+(j+1)*self.ex][1])*0.5
                 coordsMPnts.append((px, py))
                 cXL.append(px)
                 cYL.append(py)
@@ -155,21 +158,23 @@ class VtsReader():
 
     # note: for this to run, you don't need to parse the points first!!
     def readValues(self):
+        #print 'vtsr rval'
 
-        celldata = root[0][0][1]
+        celldata = self.root[0][0][1]
     
         for c in celldata:
             valname = c.attrib["Name"]
             valname = valnamemap.get(valname, valname)
             data = map(float, c.text.strip().split())
     
-            self.values[valname] = data
+            self.values[valname] = np.array(data).T
 
 
 '''looks at the first step and checks how many files, aka cores are around'''
 def getNCores():
-
+    print "getNCores"
     lst = glob.glob(os.path.join(args.input, fn_tmpl2 % 1)) # check with step nr 1
+    print lst
 
     return len(lst)
 
@@ -177,7 +182,7 @@ def getNCores():
 '''looks at the first core and checks how many files, aka steps are around'''
 def getNSteps():
 
-    lst = glob.glob(os.path.join(args.input, fn_tmpl2 % 1)) # check with step nr 1
+    lst = glob.glob(os.path.join(args.input, fn_tmpl3 % 1)) # check with step nr 1
 
     return len(lst)
 
@@ -189,10 +194,10 @@ def doPlot(data, step):
     
     for i, val in enumerate(vals):
         ax = fig.add_subplot(4,1,i)
-        ax.set_title('variable %s' % val, fontsize=14)
+        ax.set_title('variable %s' % val, fontsize=10)
         
-        im = ax.imshow(data[val], cmap=plt.get_cmap('hot'))
-        im.set_clim([0,5])
+        im = ax.imshow(data[val].T, cmap=plt.get_cmap('hot'))
+        im.set_clim([-3,3])
         
     fig.savefig(os.path.join(args.input, tmpdir,'img_%06i.png'%step), dpi=args.dpi)
     plt.close(fig)
@@ -202,8 +207,9 @@ def doPlot(data, step):
 def doMovie():
     pngfiles = os.path.join(args.input, tmpdir, 'img_*.png')
 
-    exec_string = "convert %s -delay %i %s" % (pngfiles, args.delay, args.output)
-
+    #exec_string = "convert %s -delay %i %s" % (pngfiles, args.delay, args.output)
+    exec_string = "avconv -i %s -framerate %i -c:v libx264 -r 30 -pix_fmt yuv420p %s" % (pngfiles, args.delay, args.output)
+    
     print exec_string
     os.system(exec_string)
 
@@ -224,6 +230,7 @@ nx = 0
 ny = 0
 offsets = [] # at witch x=offset[i] offset start the values of core i 
 subdims = [] # how many clumns have the values of core i (nx = sum_i subdims[i])
+print "start dim detect"
 for core in range(args.ncores):
     vts = VtsReader(fn_tmpl % (core, 1))
     vts.readDimensions()
@@ -235,9 +242,15 @@ for core in range(args.ncores):
     nx = nx + vts.nx
     ny = vts.ny
 
+print 'stat2:'
+print args
+print nx, ny, offsets, subdims
 
 # for each step (fortran counters...)
+print "start loop"
 for step in range(1, args.nsteps+1):
+
+    print "step: %06i (%3i%%)" % (step, 100 *step / args.nsteps)
     
     data = {}
     
@@ -250,9 +263,10 @@ for step in range(1, args.nsteps+1):
         
         for val in vals:
             tmp = vts.values[val].reshape((subdims[core], ny))
-            data[val] = np.hstack((data[val], tmp))
+            #print tmp.shape, data[val].shape
+            data[val] = np.vstack((data[val], tmp))
             
-    doPlot(data, step, val)
+    doPlot(data, step)
 
 
 doMovie()
