@@ -399,26 +399,29 @@ MPI_make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 	MPI_Barrier( MPI_COMM_WORLD );
 
 	// (CR) Now compare Hold and Hv
-	// Only one variable this time
-	nvar = 0;
 	if ( H.iProc == 0 )
 	{
-//	for ( nvar = 0; nvar < H.nvar; nvar++) {
-		for (j = 0; j < H.nyt; j++) {
-			for (i = 0; i < H.nxt; i++) {
-				if( fabs(Hold->uold[IHv(i, j, nvar)]- Hv->uold[IHv(i, j, nvar)]) > 10e-8)
-				{
-//					fprintf(stdout, "i: %i j: %i var: %i are different.\n",i,j,nvar);
-					fprintf(stdout, "%i ",1);
-				} else {
-					fprintf(stdout, "%i ",0);
+		// Only one variable this time
+		nvar = 0;
+//		for ( nvar = 0; nvar < H.nvar; nvar++) {
+			fprintf(stdout, "****************************\n");
+			fprintf(stdout, "iProc %i nvar: %i idim: %i \n", H.iProc, nvar, idim);
+			fprintf(stdout, "****************************\n");
+			for (j = 0; j < H.nyt; j++) {
+				for (i = 0; i < H.nxt; i++) {
+					if( fabs(Hold->uold[IHv(i, j, nvar)]- Hv->uold[IHv(i, j, nvar)]) > 10e-8)
+					{
+//						fprintf(stdout, "i: %i j: %i var: %i are different.\n",i,j,nvar);
+						fprintf(stdout, "%i ",1);
+					} else {
+						fprintf(stdout, "%i ",0);
+					}
 				}
+				fprintf(stdout, "\n");
 			}
-		fprintf(stdout, "\n");
+			fprintf(stdout, "\n");
 //		}
-	}
 		fprintf(stdout, "\n");
-
 	}
 	Free(Hold);
 

@@ -149,16 +149,16 @@ main(int argc, char **argv)
 		{
 			// Do output
 //			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
-			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
-			MPI_print_column(H, &Hv, H.nxt-ExtraLayer,ID);
+//			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
+//			MPI_print_column(H, &Hv, H.nxt-ExtraLayer,ID);
 
 		}
 		if (H.iProc == 1)
 		{
 			// Do output
 //			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
-			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
-			MPI_print_column(H, &Hv, 2,ID);
+//			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
+//			MPI_print_column(H, &Hv, 2,ID);
 		}
 
 		MPI_Barrier(MPI_COMM_WORLD);
