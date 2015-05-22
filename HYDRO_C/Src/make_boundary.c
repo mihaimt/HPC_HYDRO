@@ -319,6 +319,7 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 	offset = 0;
 
 	if ( idim == 1) {
+/*
 		// Dont do this if we sweep the grid in ny direction.
 		if (H.iProc == 0 || H.iProc == H.iNProc-1)
 		{
@@ -335,6 +336,28 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 		fprintf(stderr,"iProc: %i, count: %i, offset: %i\n",H.iProc,count,offset);
 		assert( MPI_Waitall(count*4, MPI_req+offset, status) == 0 );
 		Free(status);
+*/
+		if ( H.iProc == 0 )
+		{
+			assert( MPI_Wait(MPI_req+4, status) == 0 );
+			assert( MPI_Wait(MPI_req+5, status) == 0 );
+			assert( MPI_Wait(MPI_req+6, status) == 0 );
+			assert( MPI_Wait(MPI_req+7, status) == 0 );
+		} else if ( H.iProc == H.iNProc-1 ) {
+			assert( MPI_Wait(MPI_req, status) == 0 );
+			assert( MPI_Wait(MPI_req+1, status) == 0 );
+			assert( MPI_Wait(MPI_req+2, status) == 0 );
+			assert( MPI_Wait(MPI_req+3, status) == 0 );
+		} else {
+			assert( MPI_Wait(MPI_req, status) == 0 );
+			assert( MPI_Wait(MPI_req+1, status) == 0 );
+			assert( MPI_Wait(MPI_req+2, status) == 0 );
+			assert( MPI_Wait(MPI_req+3, status) == 0 );
+			assert( MPI_Wait(MPI_req+4, status) == 0 );
+			assert( MPI_Wait(MPI_req+5, status) == 0 );
+			assert( MPI_Wait(MPI_req+6, status) == 0 );
+			assert( MPI_Wait(MPI_req+7, status) == 0 );
+		}
 	}
 }                               // MPI_get_boundary_end
 
@@ -345,12 +368,28 @@ MPI_make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 	** Exchange the boundary conditions with neighboring domains that are on
 	** different processes. 
 	*/
+	int i, j, nvar;
+	hydrovar_t *Hold;
+	
 	// Allocate H->MPI_req !!!
 	MPI_Request *MPI_req;
+	
 	MPI_req = malloc(8*sizeof(MPI_Request));
+	Hold = malloc(8*sizeof(MPI_Request));
+    Hold->uold = (double *) calloc(H.nvar * H.nxt * H.nyt, sizeof(double));
 
 	// (CR) Debug info
 	fprintf(stderr,"Getting b.c. (iProc %i)\n",H.iProc);
+
+	// (CR) Copy the whole domain to a backup
+	for ( nvar = 0; nvar < H.nvar; nvar++) {
+		for (j = 0; j < H.nyt; j++) {
+			for (i = 0; i < H.nxt; i++) {
+				Hold->uold[IHv(i, j, nvar)] = Hv->uold[IHv(i, j, nvar)];
+			}
+		}
+	}
+
 
 	// Initiate send and receive requests
 	MPI_get_boundary_start(idim, H, Hv, MPI_req);
@@ -358,6 +397,31 @@ MPI_make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 	// Make sure the data was successfully exchanged before we continue.
 	MPI_get_boundary_end(idim, H, Hv, MPI_req);
 	MPI_Barrier( MPI_COMM_WORLD );
+
+	// (CR) Now compare Hold and Hv
+	// Only one variable this time
+	nvar = 0;
+	if ( H.iProc == 0 )
+	{
+//	for ( nvar = 0; nvar < H.nvar; nvar++) {
+		for (j = 0; j < H.nyt; j++) {
+			for (i = 0; i < H.nxt; i++) {
+				if( fabs(Hold->uold[IHv(i, j, nvar)]- Hv->uold[IHv(i, j, nvar)]) > 10e-8)
+				{
+//					fprintf(stdout, "i: %i j: %i var: %i are different.\n",i,j,nvar);
+					fprintf(stdout, "%i ",1);
+				} else {
+					fprintf(stdout, "%i ",0);
+				}
+			}
+		fprintf(stdout, "\n");
+//		}
+	}
+		fprintf(stdout, "\n");
+
+	}
+	Free(Hold);
+
 	// Free MPI_req
 	Free(MPI_req);
 }                               // MPI_get_boundary
