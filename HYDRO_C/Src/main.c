@@ -71,6 +71,9 @@ main(int argc, char **argv)
 		printf("Hydro starts - MPI version \n");
 		printf("Running on %i cores \n",H.iNProc);
 	}
+	
+//	MPI_print_column(H, &Hv, H.nxt-ExtraLayer+1,ID);
+//	exit(0);
 
 	// vtkfile(nvtk, H, &Hv);
 	if (H.dtoutput > 0) 
@@ -145,16 +148,30 @@ main(int argc, char **argv)
 		if (H.iProc == 0)
 		{
 			// Do output
+//			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
 			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
+			MPI_print_column(H, &Hv, H.nxt-ExtraLayer,ID);
+
 		}
+		if (H.iProc == 1)
+		{
+			// Do output
+//			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
+			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
+			MPI_print_column(H, &Hv, 2,ID);
+		}
+
+		MPI_Barrier(MPI_COMM_WORLD);
+//		exit(0);
+
 // Debug information
 		if (H.iProc == 1)
 		{
 			if (Hv.uold[IHv(2, 2, ID)] > 1.1)
 			{
-				printf("(CR)******************************************************************\n");
-				printf("%g \n", Hv.uold[IHv(2, 2, ID)]);
-				printf("**********************************************************************\n");
+//				printf("(CR)******************************************************************\n");
+//				printf("%g \n", Hv.uold[IHv(2, 2, ID)]);
+//				printf("**********************************************************************\n");
 			}
 		}
 

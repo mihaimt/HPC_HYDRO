@@ -14,6 +14,12 @@
 #include "parametres.h"
 #include "make_boundary.h"
 #include "utils.h"
+
+
+#ifdef NDEBUG
+#error We require assert to be non-empty
+#endif
+
 void
 make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 {
@@ -153,21 +159,11 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
 		// Make sure MPI_req is allocated
 		assert(MPI_req != NULL);
 		// (CR) Debug info
-		printf("Sweep: %i (iProc %i)\n",idim,H.iProc);
+//		printf("Sweep: %i (iProc %i)\n",idim,H.iProc);
 
 		/* Get values from the left domain. */
-		if (H.iProc > 0)
+		if (H.iProc == 0)
 		{
-			// (CR) Debug info
-			printf("Getting ghost cells left (iProc %i)\n",H.iProc);
-			assert(H.iProc != 0);
-			/* Dont do this for the most left domain. */
-			MPI_Irecv( Hv->uold, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req );
-			MPI_Irecv( Hv->uold+1, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+1 );
-
-			MPI_Isend( Hv->uold+2, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+2 );
-			MPI_Isend( Hv->uold+3, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+3 );
-		} else {
 			// Set physical boundary conditions
 			for (ivar = 0; ivar < H.nvar; ivar++) {
 				for (i = 0; i < ExtraLayer; i++) {
@@ -188,46 +184,80 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
                 	}
             	}
         	}
+		} else { 
+			// (CR) Debug info
+//			printf("Getting ghost cells left (iProc %i)\n",H.iProc);
+			assert(H.iProc != 0);
+			/* Dont do this for the most left domain. */
+/*			MPI_Irecv( Hv->uold, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req );
+			MPI_Irecv( Hv->uold+1, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+1 );
+
+			MPI_Isend( Hv->uold+2, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+2 );
+			MPI_Isend( Hv->uold+3, 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+3 );*/
+
+			if (H.iProc == 1)
+				fprintf(stdout, "Receiving: %i and %i \n", 0, 1);
+
+			assert( MPI_Irecv( &Hv->uold[ IHv( 0, 0, ID ) ], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req ) == 0 );
+			assert( MPI_Irecv( &Hv->uold[ IHv( 1, 0, ID ) ], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+1 ) == 0 );
+
+			if (H.iProc == 1)
+				fprintf(stdout, "Sending: %i and %i \n", 2, 3);
+
+			assert( MPI_Isend( &Hv->uold[ IHv( 2, 0, ID ) ], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+2 ) == 0 );
+			assert( MPI_Isend( &Hv->uold[ IHv( 3, 0, ID ) ], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+3 ) == 0 );
 		}
 
 		/* Get values from the right domain. */
-		if (H.iProc < H.iNProc - 1)
+		if (H.iProc == H.iNProc - 1)
 		{
-			// (CR) Debug info
-			printf("Getting ghost cells right (iProc %i)\n",H.iProc);
-			assert(H.iProc != H.iNProc - 1);
-
-			/* Dont do this for the most right domain. */
-			MPI_Irecv( Hv->uold+H.nxt-ExtraLayer, 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+4 );
-			MPI_Irecv( Hv->uold+H.nxt-ExtraLayer+1, 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+5 );
-
-			MPI_Isend( Hv->uold+H.nxt-ExtraLayer-2, 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+6 );
-			MPI_Isend( Hv->uold+H.nxt-ExtraLayer-1, 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+7 );
-		} else {
 			// Set physical boundary conditions 
 	        for (ivar = 0; ivar < H.nvar; ivar++) {
-   				for (i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++) {
+				for (i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++) {
 					sign = 1.0;
 					if (H.boundary_right == 1) {
 						i0 = 2 * H.nx + ExtraLayerTot - i - 1;
-	                    if (ivar == IU) {
-    	                    sign = -1.0;
-        	            }
-            	    } else if (H.boundary_right == 2) {
-                	    i0 = H.nx + ExtraLayer;
+						if (ivar == IU) {
+							sign = -1.0;
+						}
+					} else if (H.boundary_right == 2) {
+						i0 = H.nx + ExtraLayer;
 					} else {
-                 	   i0 = i - H.nx;
-                	}
-                for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
-		  /* fprintf(stderr,"PFL %d %d\n",i,j); */ 
-                    Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
-		    /*		  fprintf(stderr,"PFL \n"); */
+						i0 = i - H.nx;
+					}
+					for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
+						Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
+						MFLOPS(1, 0, 0, 0);
+					}
+            	}
+        	}
+		}  else {
+			// (CR) Debug info
+//			printf("Getting ghost cells right (iProc %i)\n",H.iProc);
+			assert(H.iProc != H.iNProc - 1);
 
-                    MFLOPS(1, 0, 0, 0);
-                }
-            }
-        }
-	}
+			/* Dont do this for the most right domain. */
+/*			MPI_Irecv( Hv->uold+H.nxt-ExtraLayer, 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+4 );
+			MPI_Irecv( Hv->uold+H.nxt-ExtraLayer+1, 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+5 );
+
+			MPI_Isend( Hv->uold+H.nxt-ExtraLayer-2, 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+6 );
+			MPI_Isend( Hv->uold+H.nxt-ExtraLayer-1, 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+7 ); */
+
+//			Hv->uold[IHv(x, y, ivar)]
+			if (H.iProc == 0)
+				fprintf(stdout, "Receiving: %i and %i \n", H.nx+ExtraLayer, H.nx+ExtraLayer+1);
+
+			assert( MPI_Irecv( &Hv->uold[ IHv( H.nx+ExtraLayer, 0, ID ) ], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+4 ) == 0 );
+			assert( MPI_Irecv( &Hv->uold[ IHv( H.nx+ExtraLayer+1, 0, ID ) ], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+5 ) == 0 );
+
+			if (H.iProc == 0)
+				fprintf(stdout, "Sending: %i and %i \n", H.nx+ExtraLayer-2, H.nx+ExtraLayer-1);
+
+			assert( MPI_Isend( &Hv->uold[ IHv( H.nx+ExtraLayer-2, 0, ID ) ], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+6 ) == 0 );
+			assert( MPI_Isend( &Hv->uold[ IHv( H.nx+ExtraLayer-1, 0, ID ) ], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+7 ) == 0 );
+
+//			printf("b.c. right done: %g\n",Hv->uold+H.nxt-ExtraLayer);
+		}
     } else {
 
         // Lower boundary
@@ -303,7 +333,7 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 		}
 		
 		fprintf(stderr,"iProc: %i, count: %i, offset: %i\n",H.iProc,count,offset);
-		MPI_Waitall(count*4, MPI_req+offset, status);
+		assert( MPI_Waitall(count*4, MPI_req+offset, status) == 0 );
 		Free(status);
 	}
 }                               // MPI_get_boundary_end
@@ -327,7 +357,7 @@ MPI_make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 
 	// Make sure the data was successfully exchanged before we continue.
 	MPI_get_boundary_end(idim, H, Hv, MPI_req);
-
+	MPI_Barrier( MPI_COMM_WORLD );
 	// Free MPI_req
 	Free(MPI_req);
 }                               // MPI_get_boundary

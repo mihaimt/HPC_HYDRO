@@ -85,6 +85,17 @@ MPI_domain_decomp(hydroparam_t *H)
 	up = (int)(frac * (H->iProc+1));
 
 	H->nx = up-lo;
+
+	// Also set boundary_left and boundary_right
+	if ( H->iProc == 0 )
+	{
+		H->boundary_right = 0;
+	} else if ( H->iProc == H->iNProc-1) {
+		H->boundary_left = 0;
+	} else {
+		H->boundary_right = 0;
+		H->boundary_left = 0;
+	}
 }                               // MPI_domain_decomp			
 
 void
@@ -147,6 +158,7 @@ MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv)
 	assert( H->nx > 0 && H->ny > 0);
 
 	// Define a new MPI data type
+	// Stride = nxt 
 	MPI_Type_vector( H->nvar*H->nyt, 1, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
 	MPI_Type_commit ( & H->MPI_Hydro_vars );	
     // *WARNING* : we will use 0 based arrays everywhere since it is C code!
@@ -182,7 +194,6 @@ MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv)
      printf("PFL %d %d\n", x, y);
      Hv->uold[IHvP(x, y, IP)] = one / H->dx / H->dx;*/
     // point explosion at corner (top,left)
-	// (CR) Bottom left??
 	if (H->iProc == 0)
 	{
 		/* Only in the domain of process zero we have the initial explosion. */
