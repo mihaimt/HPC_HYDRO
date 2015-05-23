@@ -31,6 +31,7 @@ void printarrayi(long *a, long n, const char *nom);
 void printarrayv(double *a, long n, const char *nom, const hydroparam_t H);
 void timeToString(char *buf, const double timeInS);
 double cclock(void);
+void MPI_print_column(const hydroparam_t H, hydrovar_t * Hv, int column, int nvar);
 
 #ifndef PRINTUOLD
 #define PRINTUOLD(x, y) if ((x).prt) { printuold((x), (y)); }

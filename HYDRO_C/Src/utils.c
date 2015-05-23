@@ -173,6 +173,14 @@ cclock(void)
         wall_time = (double) (tp.tv_sec - start) + micro * (tp.tv_usec - startu);
     return wall_time;
 }
+void
+MPI_print_column(const hydroparam_t H, hydrovar_t * Hv, int column, int nvar)
+{
+    long i;
+	for (i = 0; i < H.nxt; i++) {
+			fprintf(stdout, "iProc %i column %i nvar %i: %10.3e \n", H.iProc, column, nvar, Hv->uold[IHv(i, column, nvar)]);
+	}
+}
 
 
 //EOF

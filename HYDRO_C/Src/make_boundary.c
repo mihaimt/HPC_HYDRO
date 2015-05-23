@@ -294,13 +294,143 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 	}
 }                               // MPI_get_boundary_end
 
+/*
+** Here we use MPI_sendrecv rather than more complicated stuff.
+*/
+void
+MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
+{
+    long i, ivar, i0, j, j0, k;
+    double sign;
+	MPI_Status status;
+    WHERE("MPI_get_boundary");
+		
+	// MPI_Sendrecv( sendbuff, sendcount, sendtype, dest, sendtag,
+	//				 recvbuff, recvcount, recvtype, source, recvtag, comm, status);
+	if (idim == 1) {
+		// Get values from the left domain.
+		if (H.iProc == 0)
+		{
+			// Set physical boundary conditions
+			for (ivar = 0; ivar < H.nvar; ivar++) {
+				for (i = 0; i < ExtraLayer; i++) {
+					sign = 1.0;
+	                if (H.boundary_left == 1) {
+						i0 = ExtraLayerTot - i - 1;
+	       	            if (ivar == IU) {
+    						sign = -1.0;
+       					}
+					} else if (H.boundary_left == 2) {
+						i0 = 2;
+					} else {
+						i0 = H.nx + i;
+					}
+                	for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
+                    	Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
+						MFLOPS(1, 0, 0, 0);
+                	}
+            	}
+        	}
+		} else 	{
+			// Exchange MPI boundary conditions
+
+			// Exchange the first ghost and copy layer
+			MPI_Sendrecv( &Hv->uold[IHv(2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0,
+					      &Hv->uold[IHv(0, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 1, MPI_COMM_WORLD, &status);
+
+			// Exchange the second ghost and copy layer
+			MPI_Sendrecv( &Hv->uold[IHv(3, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0,
+					      &Hv->uold[IHv(1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 1, MPI_COMM_WORLD, &status);
+		}
+
+		/* Get values from the right domain. */
+		if (H.iProc < H.iNProc - 1)
+		{
+			// Set physical boundary conditions 
+			for (ivar = 0; ivar < H.nvar; ivar++) {
+				for (i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++) {
+					sign = 1.0;
+					if (H.boundary_right == 1) {
+						i0 = 2 * H.nx + ExtraLayerTot - i - 1;
+						if (ivar == IU) {
+							sign = -1.0;
+						}
+					} else if (H.boundary_right == 2) {
+						i0 = H.nx + ExtraLayer;
+					} else {
+						i0 = i - H.nx;
+					}
+					for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
+						/* fprintf(stderr,"PFL %d %d\n",i,j); */ 
+						Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
+						/* fprintf(stderr,"PFL \n"); */
+						MFLOPS(1, 0, 0, 0);
+					}
+				}
+			}
+		} else {
+			// Exchange the first ghost and copy layer
+			MPI_Sendrecv( &Hv->uold[IHv(H.nx+ExtraLayer-2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0,
+					      &Hv->uold[IHv(H.nx+ExtraLayer, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 1, MPI_COMM_WORLD, &status);
+
+			// Exchange the second ghost and copy layer
+			MPI_Sendrecv( &Hv->uold[IHv(H.nx+ExtraLayer-1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0,
+					      &Hv->uold[IHv(H.nx+ExtraLayer+1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 1, MPI_COMM_WORLD, &status);
+		}
+		// (CR) Debug
+		fprintf(stdout,"All layers exchanged\n");
+    } else {
+        // Lower boundary
+        j0 = 0;
+        for (ivar = 0; ivar < H.nvar; ivar++) {
+            for (j = 0; j < ExtraLayer; j++) {
+                sign = 1.0;
+                if (H.boundary_down == 1) {
+                    j0 = ExtraLayerTot - j - 1;
+                    if (ivar == IV) {
+                        sign = -1.0;
+                    }
+                } else if (H.boundary_down == 2) {
+                    j0 = ExtraLayerTot;
+                } else {
+                    j0 = H.ny + j;
+                }
+                for (i = H.imin + ExtraLayer; i < H.imax - ExtraLayer; i++) {
+                    Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i, j0, ivar)] * sign;
+                    MFLOPS(1, 0, 0, 0);
+                }
+            }
+        }
+
+        // Upper boundary
+        for (ivar = 0; ivar < H.nvar; ivar++) {
+            for (j = H.ny + ExtraLayer; j < H.ny + ExtraLayerTot; j++) {
+                sign = 1.0;
+                if (H.boundary_up == 1) {
+                    j0 = 2 * H.ny + ExtraLayerTot - j - 1;
+                    if (ivar == IV) {
+                        sign = -1.0;
+                    }
+                } else if (H.boundary_up == 2) {
+                    j0 = H.ny + 1;
+                } else {
+                    j0 = j - H.ny;
+                }
+                for (i = H.imin + ExtraLayer; i < H.imax - ExtraLayer; i++) {
+                    Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i, j0, ivar)] * sign;
+                    MFLOPS(1, 0, 0, 0);
+                }
+            }
+        }
+    }
+}                               // MPI_get_boundary_start
+/*
+** Exchange the boundary conditions with neighboring domains that are on
+** different processes. 
+*/
 void
 MPI_make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 {
-	/*
-	** Exchange the boundary conditions with neighboring domains that are on
-	** different processes. 
-	*/
 	// Allocate H->MPI_req !!!
 	MPI_Request *MPI_req;
 	MPI_req = malloc(8*sizeof(MPI_Request));
