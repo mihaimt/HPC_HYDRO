@@ -263,13 +263,13 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
     }
 }                               // MPI_get_boundary_start
 
+/*
+** Make sure that all boundary cells have been successfully exchanged between
+** the processes before we continue.
+*/
 void
 MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Request *MPI_req)
 {
-	/*
-	** Make sure that all boundary cells have been successfully exchanged between
-	** the processes before we continue.
-	*/
 	int count, offset, MPIError;
 	MPI_Status *status;
 
