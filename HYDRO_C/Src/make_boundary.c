@@ -184,7 +184,7 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
 			MPI_Isend( &Hv->uold[IHv(3, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+3 );
 		}
 
-		/* Get values from the right domain. */
+		// Get values from the right domain.
 		if (H.iProc < H.iNProc - 1)
 		{
 			// Set physical boundary conditions 
@@ -210,7 +210,7 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
 				}
 			}
 		} else {
-			/* Dont do this for the most right domain. */
+			// Dont do this for the most right domain.
 			MPI_Irecv( &Hv->uold[IHv(H.nx+ExtraLayer, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+4 );
 			MPI_Irecv( &Hv->uold[IHv(H.nx+ExtraLayer+1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+5 );
 
@@ -304,14 +304,21 @@ MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
     double sign;
 	MPI_Status status;
     WHERE("MPI_get_boundary");
+	// (CR) Debug	
+	// fprintf(stderr," MPI_get_boundary() start.\n");
 		
 	// MPI_Sendrecv( sendbuff, sendcount, sendtype, dest, sendtag,
 	//				 recvbuff, recvcount, recvtype, source, recvtag, comm, status);
 	if (idim == 1) {
-		// Get values from the left domain.
+		// (CR) Debug
+		fprintf(stderr,"Rank %i: Send copy layer to the right and receive ghost layer from the left\n", H.iProc);
+		/////////////////////////////////////////////////////////////////////////////////////////
+		// Send copy layer to the right domain and receive ghost layer from from the left domain.
+		/////////////////////////////////////////////////////////////////////////////////////////
 		if (H.iProc == 0)
 		{
-			// Set physical boundary conditions
+			// Rank 0 (most left domain)
+			// Set physical boundary conditions for the left ghost cells
 			for (ivar = 0; ivar < H.nvar; ivar++) {
 				for (i = 0; i < ExtraLayer; i++) {
 					sign = 1.0;
@@ -331,22 +338,53 @@ MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
                 	}
             	}
         	}
-		} else 	{
+			// Send copy cells to the right domain (but dont receive ghost cells from the left).
+			// Still have to think about how to best do this
+			// (CR) Debug
+			fprintf(stderr, "iProc %i: Sending right copy layer to iProc %i\n", H.iProc, H.iProc+1);
+			// MPI_Send( buf, count, datatype, dest, tag, comm)
+			MPI_Send( &Hv->uold[IHv(H.nx+ExtraLayer-2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD);
+			MPI_Send( &Hv->uold[IHv(H.nx+ExtraLayer-1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 1, MPI_COMM_WORLD);
+			fprintf(stderr, "iProc %i: Sending right copy layer to iProc %i. Done\n", H.iProc, H.iProc+1);
+		} else if ( H.iProc == H.iNProc-1) {
+			// Rank iNProc-1 (most right domain)
+			// Receive ghost cells from the left domain (but dont send copy cells to the right).
+			// (CR) Debug
+			fprintf(stderr, "iProc %i: Receiving left ghost layer from iProc %i\n", H.iProc, H.iProc-1);
+			// MPI_Recv( buf, count, datatype, source, tag, comm, status)
+			MPI_Recv( &Hv->uold[IHv(0, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, &status);
+			MPI_Recv( &Hv->uold[IHv(1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 1, MPI_COMM_WORLD, &status);
+			fprintf(stderr, "iProc %i: Receiving left ghost layer from iProc %i. Done\n", H.iProc, H.iProc-1);
+		} else {
 			// Exchange MPI boundary conditions
-
-			// Exchange the first ghost and copy layer
-			MPI_Sendrecv( &Hv->uold[IHv(2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0,
+			// (CR) Debug
+			fprintf(stderr, "iProc %i: Sendrecv() 1\n", H.iProc);
+			// Send the first right copy layer (nx+ExtraLayer-2) and receive the first left ghost layer (0)
+			MPI_Sendrecv( &Hv->uold[IHv(H.nx+ExtraLayer-2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0,
 					      &Hv->uold[IHv(0, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 1, MPI_COMM_WORLD, &status);
 
-			// Exchange the second ghost and copy layer
-			MPI_Sendrecv( &Hv->uold[IHv(3, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0,
+			fprintf(stderr, "iProc %i: Sendrecv() 2\n", H.iProc);
+			// Send the second right copy layer (nx+ExtraLayer-1) and receive the second left ghost layer (1) 
+			MPI_Sendrecv( &Hv->uold[IHv(H.nx+ExtraLayer-1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0,
 					      &Hv->uold[IHv(1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 1, MPI_COMM_WORLD, &status);
 		}
+		
+		MPI_Barrier( MPI_COMM_WORLD );
+		// (CR) Debug
+		fprintf(stderr,"Rank %i: Send copy layer to the left and receive ghost layer from the right\n", H.iProc);
 
-		/* Get values from the right domain. */
-		if (H.iProc < H.iNProc - 1)
+		// Receive ghost cells from the right domain and send copy cells to the left domain.
+		if (H.iProc == 0)
 		{
-			// Set physical boundary conditions 
+			// Rank: 0 (most left domain)
+			// Receive ghost cells from the right domain (but dont send copy cells to the left).
+//			fprintf(stderr, "Sending right copy layer for iProc %i\n", H.iProc);
+			// MPI_Recv( buf, count, datatype, source, tag, comm, status)
+			MPI_Recv( &Hv->uold[IHv(H.nx+ExtraLayer, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, &status);
+			MPI_Recv( &Hv->uold[IHv(H.nx+ExtraLayer+1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, &status);
+		} else if (H.iProc == H.iNProc - 1) {
+			// Rank: iNProc-1 (most right domain)
+			// Set physical boundary conditions for the right ghost cells 
 			for (ivar = 0; ivar < H.nvar; ivar++) {
 				for (i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++) {
 					sign = 1.0;
@@ -368,13 +406,22 @@ MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 					}
 				}
 			}
+			// Still have to send copy later to iNProc-2
+			// (CR) Debug
+			// fprintf(stderr, "Sending left copy layer for iProc %i\n", H.iProc);
+			// Send copy cells to the left domain (but dont receive ghost cells from the right).
+			// (CR) Debug
+			MPI_Send( &Hv->uold[IHv(2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD);
+			MPI_Send( &Hv->uold[IHv(3, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD);
 		} else {
-			// Exchange the first ghost and copy layer
-			MPI_Sendrecv( &Hv->uold[IHv(H.nx+ExtraLayer-2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0,
+			// Exchange MPI boundary conditions
+
+			// Send the first left copy layer (2) and receive the first right ghost layer (nx+ExtraLayer)
+			MPI_Sendrecv( &Hv->uold[IHv(2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0,
 					      &Hv->uold[IHv(H.nx+ExtraLayer, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 1, MPI_COMM_WORLD, &status);
 
-			// Exchange the second ghost and copy layer
-			MPI_Sendrecv( &Hv->uold[IHv(H.nx+ExtraLayer-1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0,
+			// Send the second left copy layer (3) and receive the second right ghost layer (nx+ExtraLayer+1)
+			MPI_Sendrecv( &Hv->uold[IHv(3, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0,
 					      &Hv->uold[IHv(H.nx+ExtraLayer+1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 1, MPI_COMM_WORLD, &status);
 		}
 		// (CR) Debug
@@ -423,7 +470,7 @@ MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
             }
         }
     }
-}                               // MPI_get_boundary_start
+}                               // MPI_get_boundary
 /*
 ** Exchange the boundary conditions with neighboring domains that are on
 ** different processes. 
@@ -445,6 +492,6 @@ MPI_make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 	MPI_Barrier( MPI_COMM_WORLD );
 	// Free MPI_req
 	Free(MPI_req);
-}                               // MPI_get_boundary
+}                               // MPI_make_boundary
 
 //EOF

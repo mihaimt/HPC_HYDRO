@@ -56,12 +56,21 @@ main(int argc, char **argv)
 
 	// Domain decomposition
 	MPI_domain_decomp(&H);
-		
+	fprintf(stderr,"Do domain decomposition done.\n");
+	
+	fprintf(stderr,"MPI_hydro_init():\n");
 	// Initialize the hydro variables and set initial conditions.
 	MPI_hydro_init(&H, &Hv);
+	fprintf(stderr,"Done.\n");
 	PRINTUOLD(H, &Hv);
+	
+	// Synchronize all processes
+	MPI_Barrier( MPI_COMM_WORLD );
 
-	printf("Hydro starts - MPI version \n");
+	if ( H.iProc == 0 )
+	{
+		printf("Hydro starts - MPI version \n");
+	}
 
 	// vtkfile(nvtk, H, &Hv);
 	if (H.dtoutput > 0) 
@@ -130,8 +139,10 @@ main(int argc, char **argv)
 				sprintf(outnum, "%s [%04ld]", outnum, nvtk);
 			}
 		}
-
-		fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum);
+		if ( H.iProc == 0 )
+		{
+			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum);
+		}
 	}   // end while loop
 		
 	/* Finalize MPI and free memory. */
