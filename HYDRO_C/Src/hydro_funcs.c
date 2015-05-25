@@ -139,20 +139,17 @@ MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv)
     long i, j;
     long x, y;
 
-	/* Make sure that MPI is initialized before we use it. */
-	assert(H->bInit);
-	
-	/* Make sure that we did the domain decomposition. */
-	assert( H->nx > 0 && H->ny > 0);
+    /* Make sure that MPI is initialized before we use it. */
+    assert(H->bInit);
+    
+    /* Make sure that we did the domain decomposition. */
+    assert( H->nx > 0 && H->ny > 0);
 
-	// Define a new MPI data type
-<<<<<<< HEAD
-	MPI_Type_vector( H->nvar*H->nyt, 1, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
-	MPI_Type_commit ( & H->MPI_Hydro_vars );	
-=======
-	MPI_Type_vector( H->nvar*H->nyt*ExtraLayer, ExtraLayer, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
-	MPI_Type_commit( & H->MPI_Hydro_vars );	
->>>>>>> master
+    // Define a new MPI data type
+    //MPI_Type_vector( H->nvar*H->nyt, 1, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
+    MPI_Type_vector( H->nvar*H->nyt*ExtraLayer, ExtraLayer, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
+    MPI_Type_commit( & H->MPI_Hydro_vars );	
+
     // *WARNING* : we will use 0 based arrays everywhere since it is C code!
     H->imin = H->jmin = 0;
 
