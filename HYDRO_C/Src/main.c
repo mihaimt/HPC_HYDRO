@@ -35,6 +35,8 @@ main ( int argc, char **argv ) {
     double elaps = 0;
 
     start_time = cclock();
+    
+    mpi_init();
     process_args ( argc, argv, &H );
     hydro_init ( &H, &Hv );
     PRINTUOLD ( H, &Hv );
