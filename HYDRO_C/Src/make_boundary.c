@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <stdio.h>
+#include <mpi.h>
 
 #include "parametres.h"
 #include "make_boundary.h"
@@ -25,27 +26,57 @@ make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
     long i, ivar, i0, j, j0;
     double sign;
     WHERE("make_boundary");
+    
+    //dbg_Print("make boundary\n");
 
  
     if (idim == 1) {
 
         // Left boundary
-        for (ivar = 0; ivar < H.nvar; ivar++) {
-            for (i = 0; i < ExtraLayer; i++) {
-                sign = 1.0;
-                if (H.boundary_left == 1) {
-                    i0 = ExtraLayerTot - i - 1;
-                    if (ivar == IU) {
-                        sign = -1.0;
+        //dbg_sPrint("rk %03i: left boundary\n", H.rank);
+
+        if ( H.rank == 0 ) { // this is the left most domain
+            printf("rk %03i: most left\n", H.rank);
+            for (ivar = 0; ivar < H.nvar; ivar++) {
+                for (i = 0; i < ExtraLayer; i++) {
+                    sign = 1.0;
+                    if (H.boundary_left == 1) {
+                        i0 = ExtraLayerTot - i - 1;
+                        if (ivar == IU) {
+                            sign = -1.0;
+                        }
+                    } else if (H.boundary_left == 2) {
+                        i0 = 2;
+                    } else {
+                        i0 = H.nx + i;
                     }
-                } else if (H.boundary_left == 2) {
-                    i0 = 2;
-                } else {
-                    i0 = H.nx + i;
+                    for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
+                        Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
+                        MFLOPS(1, 0, 0, 0);
+                    }
                 }
-                for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
-                    Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
-                    MFLOPS(1, 0, 0, 0);
+            }
+        }
+        else {
+            printf("rk %03i: not most left\n", H.rank);
+            // get the values from left neighboring domain
+            // send values to left
+            MPI_Status stat;
+            MPI_Request req;
+            double buf = 600.0;
+            
+            for (ivar = 0; ivar < H.nvar; ivar++) {
+                for (i = 0; i < ExtraLayer; i++) {
+                    for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
+                        
+                        
+                        MPI_Recv( &buf, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
+                        Hv->uold[IHv(i, j, ivar)] = buf;
+                        
+                        //MPI_Send( &Hv->uold[IHv(i+ExtraLayer, j, ivar)], 1, MPI_DOUBLE, H.rank-1, 0, MPI_COMM_WORLD );
+
+                        //Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
+                    }
                 }
             }
         }
@@ -55,28 +86,61 @@ make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 	fprintf(stderr,"PFL H.jmin %d H.jmax %d\n",H.jmin,H.jmax); */
 
         // Right boundary
-        for (ivar = 0; ivar < H.nvar; ivar++) {
-            for (i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++) {
-                sign = 1.0;
-                if (H.boundary_right == 1) {
-                    i0 = 2 * H.nx + ExtraLayerTot - i - 1;
-                    if (ivar == IU) {
-                        sign = -1.0;
-                    }
-                } else if (H.boundary_right == 2) {
-                    i0 = H.nx + ExtraLayer;
-                } else {
-                    i0 = i - H.nx;
-                }
-                for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
-		  /* fprintf(stderr,"PFL %d %d\n",i,j); */ 
-                    Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
-		    /*		  fprintf(stderr,"PFL \n"); */
+        //dbg_sPrint("rk %03i: right boundary\n", H.rank);
+        
+        if ( H.rank == H.n_procs-1 ) { // this is the right most domain
+            printf("rk %03i: right most\n", H.rank);
 
-                    MFLOPS(1, 0, 0, 0);
+            for (ivar = 0; ivar < H.nvar; ivar++) {
+                for (i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++) {
+                    sign = 1.0;
+                    if (H.boundary_right == 1) {
+                        i0 = 2 * H.nx + ExtraLayerTot - i - 1;
+                        if (ivar == IU) {
+                            sign = -1.0;
+                        }
+                    } else if (H.boundary_right == 2) {
+                        i0 = H.nx + ExtraLayer;
+                    } else {
+                        i0 = i - H.nx;
+                    }
+                    for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
+                        /* fprintf(stderr,"PFL %d %d\n",i,j); */ 
+                        Hv->uold[IHv(i, j, ivar)] = Hv->uold[IHv(i0, j, ivar)] * sign;
+                        /* fprintf(stderr,"PFL \n"); */
+
+                        MFLOPS(1, 0, 0, 0);
+                    }
                 }
             }
         }
+        else { // get the values from right neigbouring domain
+            printf("rk %03i: not right most\n", H.rank);
+
+            MPI_Status stat;
+            MPI_Request req;
+            double buf = 0.0;
+
+            for (ivar = 0; ivar < H.nvar; ivar++) {
+                for (i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++) {
+                    for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
+
+                        MPI_Send( &Hv->uold[IHv(i-ExtraLayer, j, ivar)], 1, MPI_DOUBLE, H.rank+1, 0, MPI_COMM_WORLD);
+
+                        //MPI_Recv( &buf, 1, MPI_DOUBLE, H.rank + 1, 0, MPI_COMM_WORLD, &stat);
+                        Hv->uold[IHv(i, j, ivar)] = buf;
+                        
+                        
+                    }
+                }
+            }
+        }
+            
+
+        
+        
+        
+        
     } else {
 
         // Lower boundary
