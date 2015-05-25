@@ -39,9 +39,13 @@ typedef struct _hydroparam {
     long scheme;
     long boundary_right, boundary_left, boundary_down, boundary_up;
     
+    // newly added by mpi'alisation
     int mpi_is_init;
     int n_procs;
     int rank;
+
+    int nx_domain;
+    int ny_domain;
     
 } hydroparam_t;
 

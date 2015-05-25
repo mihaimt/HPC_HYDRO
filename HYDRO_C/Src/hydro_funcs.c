@@ -17,6 +17,7 @@
 
 
 void mpi_init ( hydroparam_t* H, int* argc, char*** argv ) {
+    
 
     int status;
 
@@ -30,9 +31,9 @@ void mpi_init ( hydroparam_t* H, int* argc, char*** argv ) {
         printf ( "MPI_Init: Error %i\n", status );
         exit ( 1 );
     } else {
-        dbg_prnt ( "MPI_Init: successful\n" );
-        dbg_prnt ( "          found %i n_procs\n", H->n_procs );
-        dbg_sprnt("process %03i reporting: ok\n", H->rank);
+        dbg_print ( "MPI_Init: successful\n" );
+        dbg_print ( "          found %i n_procs\n", H->n_procs );
+        dbg_sprint( "process %03i reporting: ok\n", H->rank );
     }
 
     H->mpi_is_init = 1;
@@ -41,7 +42,7 @@ void mpi_init ( hydroparam_t* H, int* argc, char*** argv ) {
     // debug: test if mpi is really working:
     
     if ( DEBUG ) {
-        dbg_prnt ( "testing mpi: simple rend recv\n" );
+        dbg_print ( "testing mpi: simple rend recv\n" );
         
         int num = 5434; //random int to test sending
         int recv = 0;
@@ -61,7 +62,7 @@ void mpi_init ( hydroparam_t* H, int* argc, char*** argv ) {
             assert ( num == recv );
         }
         MPI_Barrier ( MPI_COMM_WORLD );
-        dbg_prnt ( "test complete\n" );
+        dbg_print ( "test complete\n" );
     }
     
 }
@@ -72,6 +73,28 @@ void mpi_finish ( hydroparam_t* H ) {
     MPI_Finalize ( ); 
     
 }
+
+
+/*
+ * Does the domain decompostition
+ */
+void domain_decomp ( hydroparam_t* H ) {
+    
+    dbg_print ( "Domain decomp\n" );
+    
+    float frac;
+    int lo, hi;
+    
+    H->ny = H->ny_domain;
+    frac = 1.0 * H->nx_domain / H->n_procs;
+    lo = (int)(frac * H->rank);
+    hi = (int)(frac * (H->rank+1));
+    H->nx = hi-lo;
+    
+    dbg_print ( "whole domain: %i x %i\n", H->nx_domain, H->ny_domain );
+    dbg_sprint ( "rank %03i: nx:%06i ny:%06i hi:%06i lo:%06i frac:%6.4f\n", H->rank, H->nx, H->ny, hi, lo, frac );
+}
+
 
 
 void hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {

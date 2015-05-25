@@ -38,14 +38,16 @@ int main ( int argc, char **argv ) {
 
     start_time = cclock();
     
-    
     mpi_init ( &H, &argc, &argv );
 
     process_args ( argc, argv, &H );
+    
+    domain_decomp ( &H );
+    
     hydro_init ( &H, &Hv );
     PRINTUOLD ( H, &Hv );
 
-    printf ( "Hydro starts - sequential version \n" );
+    printf ( "Hydro starts - mpi testing version \n" );
 
     // vtkfile(nvtk, H, &Hv);
     if ( H.dtoutput > 0 ) {

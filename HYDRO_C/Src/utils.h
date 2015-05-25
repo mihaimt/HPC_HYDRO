@@ -20,11 +20,11 @@
 #define DEBUG 1
 
 // only print on rank0
-#define dbg_prnt(...)           if (DEBUG && H->rank==0) { printf(__VA_ARGS__); }; MPI_Barrier(MPI_COMM_WORLD); usleep(100);
+#define dbg_print(...)           if (DEBUG && H->rank==0) { printf(__VA_ARGS__); }; MPI_Barrier(MPI_COMM_WORLD); usleep(100);
 // rank to print on is first arg
-#define dbg_rprnt(rank, ...)    if (DEBUG && H->rank==rank) { printf(__VA_ARGS__); }; MPI_Barrier(MPI_COMM_WORLD); usleep(100);
+#define dbg_rprint(rank, ...)    if (DEBUG && H->rank==rank) { printf(__VA_ARGS__); }; MPI_Barrier(MPI_COMM_WORLD); usleep(100);
 // print on all, but in turns
-#define dbg_sprnt(...)          if (DEBUG) {                                        \
+#define dbg_sprint(...)          if (DEBUG) {                                        \
                                     int i_i=0;                                          \
                                     for ( i_i = 0; i_i < H->n_procs; ++i_i) {             \
                                         MPI_Barrier ( MPI_COMM_WORLD );                    \
