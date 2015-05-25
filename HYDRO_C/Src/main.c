@@ -20,8 +20,10 @@ hydrovarwork_t Hvw;             // nvar
 hydrowork_t Hw;
 unsigned long flops = 0;
 
-int
-main ( int argc, char **argv ) {
+
+
+int main ( int argc, char **argv ) {
+
     int nb_th=1;
     double dt = 0;
     long nvtk = 0;
@@ -36,7 +38,9 @@ main ( int argc, char **argv ) {
 
     start_time = cclock();
     
-    mpi_init();
+    
+    mpi_init ( &H, &argc, &argv );
+
     process_args ( argc, argv, &H );
     hydro_init ( &H, &Hv );
     PRINTUOLD ( H, &Hv );
@@ -97,7 +101,10 @@ main ( int argc, char **argv ) {
         }
         fprintf ( stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum );
     }   // end while loop
+    
     hydro_finish ( H, &Hv );
+    mpi_finish ( &H ) ;
+    
     end_time = cclock();
     elaps = ( double ) ( end_time - start_time );
     timeToString ( outnum, elaps );

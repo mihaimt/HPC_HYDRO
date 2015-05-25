@@ -16,25 +16,31 @@
 #include "hydro_funcs.h"
 
 
-void mpi_init ( hydroparam_t * H, int argc, char **argv ) {
-    
-    MPI_Status status;
-    
-    H->mpi_is_init = false;
-    
-    status = MPI_Init ( &argc, &argv );
+void mpi_init ( hydroparam_t* H, int* argc, char*** argv ) {
+
+    int status;
+
+    H->mpi_is_init = 0;
+
+    status = MPI_Init ( argc, argv );
     MPI_Comm_size ( MPI_COMM_WORLD, &H->n_procs );
     MPI_Comm_rank ( MPI_COMM_WORLD, &H->rank );
 
-    if ( status != 0 ) {
-        printf ( "MPI_Init: Error %i\n", status);
-        exit(1);
+    if ( status != 0 ) {
+        printf ( "MPI_Init: Error %i\n", status );
+        exit ( 1 );
     }
-    
-    H->mpi_is_init = true;
+
+    H->mpi_is_init = 1;
 
 }
 
+
+void mpi_finish ( hydroparam_t* H ) {
+    
+    MPI_Finalize ( ); 
+    
+}
 
 
 void hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
@@ -81,17 +87,17 @@ void hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
 
 
 void hydro_finish ( const hydroparam_t H, hydrovar_t * Hv ) {
-    
+
     Free ( Hv->uold );
-    
+
 }                               // hydro_finish
 
 
 
 void allocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
-    
+
     WHERE ( "allocate_work_space" );
-    
+
     Hvw->u = DMalloc ( H.arVarSz );
     Hvw->q = DMalloc ( H.arVarSz );
     Hvw->dq = DMalloc ( H.arVarSz );

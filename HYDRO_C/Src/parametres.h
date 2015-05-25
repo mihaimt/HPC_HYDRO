@@ -38,7 +38,11 @@ typedef struct _hydroparam {
     // char scheme[20];
     long scheme;
     long boundary_right, boundary_left, boundary_down, boundary_up;
-    bool mpi_is_init;
+    
+    int mpi_is_init;
+    int n_procs;
+    int rank;
+    
 } hydroparam_t;
 
 #define HSCHEME_MUSCL 1
