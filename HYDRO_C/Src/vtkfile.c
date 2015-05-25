@@ -21,7 +21,7 @@ vtkfile(long step, const hydroparam_t H, hydrovar_t * Hv)
     long i, j, nv;
 
     WHERE("vtkfile");
-    sprintf(name, "outputvtk_%05ld.vts", step);
+    sprintf(name, "outputvtk_%03i_%06i.vts", H.rank, step);
     fic = fopen(name, "w");
     if (fic == NULL) {
         fprintf(stderr, "Ouverture du fichier %s impossible\n", name);
