@@ -135,7 +135,12 @@ void hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
      printf("PFL %d %d\n", x, y);
      Hv->uold[IHvP(x, y, IP)] = one / H->dx / H->dx;*/
     // point explosion at corner (top,left)
-    Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;
+    // Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;
+    
+    // point explosion at the most left domain, top/left corner
+    if ( H->rank == 0 ) {
+        Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;
+    }
 }                               // hydro_init
 
 
