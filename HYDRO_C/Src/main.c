@@ -69,7 +69,7 @@ int main ( int argc, char **argv ) {
             }
             
             // MPI: sync the time
-            //TODO: make this inplace maybe?
+            //TODO: make this inplace maybe? 
             MPI_Allreduce ( &dt, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
             dt = dtmin;
         }
