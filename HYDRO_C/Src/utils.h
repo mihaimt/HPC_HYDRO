@@ -15,7 +15,12 @@
 #endif /*  */
 
 
-/* DEBUG FUNCTIONS */
+/*
+ * DEBUG FUNCTIONS
+ * 
+ * use the ones with small p for pointer like adressing H->rank
+ * and the ones wih captital P for direct access H.rank
+ */
 
 #define DEBUG 1
 
@@ -32,6 +37,18 @@
                                             printf (__VA_ARGS__);                                  \
                                 }};  MPI_Barrier ( MPI_COMM_WORLD ); usleep(100); }
 
+// only print on rank0
+#define dbg_Print(...)           if (DEBUG && H.rank==0) { printf(__VA_ARGS__); }; MPI_Barrier(MPI_COMM_WORLD); usleep(100);
+// rank to print on is first arg
+#define dbg_rPrint(rank, ...)    if (DEBUG && H.rank==rank) { printf(__VA_ARGS__); }; MPI_Barrier(MPI_COMM_WORLD); usleep(100);
+// print on all, but in turns
+#define dbg_sPrint(...)          if (DEBUG) {                                        \
+                                    int i_i=0;                                          \
+                                    for ( i_i = 0; i_i < H.n_procs; ++i_i) {             \
+                                        MPI_Barrier ( MPI_COMM_WORLD );                    \
+                                        if ( i_i == H.rank ) {                         \
+                                            printf (__VA_ARGS__);                                  \
+                                }};  MPI_Barrier ( MPI_COMM_WORLD ); usleep(100); }
 
 
 

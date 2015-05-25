@@ -6,6 +6,7 @@
 */
 #include <stdio.h>
 #include <time.h>
+#include <mpi.h>
 
 #include "parametres.h"
 #include "hydro_funcs.h"
@@ -101,7 +102,12 @@ int main ( int argc, char **argv ) {
                 sprintf ( outnum, "%s [%04ld]", outnum, nvtk );
             }
         }
-        // fprintf ( stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum );
+        //fprintf ( stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum );
+        
+        if (H.nstep % 5) { //only print every x th step
+            // this will hang if one proc finishes early!!
+            dbg_sPrint ( "> rk:%03i:  step=%-4ld H.t:%12.5e, dt:%10.5e %s\n", H.rank, H.nstep, H.t, dt, outnum );
+        }
     }   // end while loop
     
     hydro_finish ( H, &Hv );
