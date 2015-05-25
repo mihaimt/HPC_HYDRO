@@ -9,9 +9,31 @@
 #include <unistd.h>
 #include <math.h>
 #include <stdio.h>
+#include <mpi.h>
+#include <assert.h>
 
 #include "utils.h"
 #include "hydro_funcs.h"
+
+
+void mpi_init ( hydroparam_t * H, int argc, char **argv ) {
+    
+    MPI_Status status;
+    
+    H->mpi_is_init = false;
+    
+    status = MPI_Init ( &argc, &argv );
+    MPI_Comm_size ( MPI_COMM_WORLD, &H->n_procs );
+    MPI_Comm_rank ( MPI_COMM_WORLD, &H->rank );
+
+    if ( status != 0 ) {
+        printf ( "MPI_Init: Error %i\n", status);
+        exit(1);
+    }
+    
+    H->mpi_is_init = true;
+
+}
 
 
 

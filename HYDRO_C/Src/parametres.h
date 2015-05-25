@@ -1,6 +1,8 @@
 #ifndef PARAMETRES_H_INCLUDED
 #define PARAMETRES_H_INCLUDED
+
 extern unsigned long flops;
+
 typedef struct _hydroparam {
     long prt;
 
@@ -36,6 +38,7 @@ typedef struct _hydroparam {
     // char scheme[20];
     long scheme;
     long boundary_right, boundary_left, boundary_down, boundary_up;
+    bool mpi_is_init;
 } hydroparam_t;
 
 #define HSCHEME_MUSCL 1
