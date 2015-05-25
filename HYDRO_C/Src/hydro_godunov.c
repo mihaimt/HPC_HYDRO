@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <strings.h>
 #include <string.h>
+#include <assert.h>
 
 #include "parametres.h"
 #include "hydro_godunov.h"
@@ -72,10 +73,9 @@ hydro_godunov(long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
 			fprintf(stdout, "godunov %ld\n", idim);
 			PRINTUOLD(H, Hv);
 	}
-	// (CR) Changed this
-//	make_boundary(idim, H, Hv);
-	fprintf(stderr,"Make boundary conditions (iProc %i).\n",H.iProc);
-	MPI_make_boundary(idim, H, Hv);
+	// (CR) Debug
+	assert(0);
+	make_boundary(idim, H, Hv);
 	PRINTUOLD(H, Hv);
 
 	// Allocate work space for 1D sweeps
@@ -253,7 +253,17 @@ MPI_hydro_godunov(long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
 			fprintf(stdout, "godunov %ld\n", idim);
 			PRINTUOLD(H, Hv);
 	}
-	MPI_make_boundary(idim, H, Hv);
+	
+//	assert(0);
+//	Get boundary conditions
+//	make_boundary(idim, H, Hv);
+//	MPI_make_boundary(idim, H, Hv);
+//	Try a simple MPI_Sendrecv()
+	fprintf(stdout,"Rank %i: MPI_get_boundary() (idim %i)\n", H.iProc, idim);
+//	MPI_get_boundary(idim, H, Hv);
+	MPI_get_boundary_simple(idim, H, Hv);
+	fprintf(stdout,"Rank %i :Done (idim %i)\n", H.iProc, idim);
+
 	PRINTUOLD(H, Hv);
 
 	// Allocate work space for 1D sweeps

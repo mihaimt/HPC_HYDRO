@@ -49,28 +49,31 @@ main(int argc, char **argv)
 	MPI_init(&H, &argc, &argv);
 
 	// (CR) Debug stuff
-	fprintf(stderr,"MPI init done. Processing args\n");
+	fprintf(stderr,"Rank %i: MPI init done. Processing args\n", H.iProc);
 	process_args(argc, argv, &H);
 
 	// (CR) Debug stuff
-	fprintf(stderr,"Processing args done. Do domain decomposition.\n");
+	fprintf(stderr,"Rank %i: Processing args done. Do domain decomposition.\n", H.iProc);
 
 	// Domain decomposition
 	MPI_domain_decomp(&H);
+	fprintf(stderr,"Rank %i: Do domain decomposition done.\n", H.iProc);
 	
-	fprintf(stderr,"Domain decomposition done.\n");
-	
+	fprintf(stderr,"Rank %i: MPI_hydro_init().\n", H.iProc);
 	// Initialize the hydro variables and set initial conditions.
 	MPI_hydro_init(&H, &Hv);
+	fprintf(stderr,"Rank %i: MPI_hydro_init() done.\n", H.iProc);
 	PRINTUOLD(H, &Hv);
 	
-	fprintf(stderr,"MPI_hydro_init done.\n");
 
-	if (H.iProc == 0)
+	if ( H.iProc == 0 )
 	{
 		printf("Hydro starts - MPI version \n");
-		printf("Running on %i cores \n",H.iNProc);
+		printf("Running on %i processes\n", H.iNProc);
 	}
+
+	// Synchronize all processes
+	MPI_Barrier( MPI_COMM_WORLD );
 
 	// vtkfile(nvtk, H, &Hv);
 	if (H.dtoutput > 0) 
@@ -139,15 +142,15 @@ main(int argc, char **argv)
 				sprintf(outnum, "%s [%04ld]", outnum, nvtk);
 			}
 		}
-		MPI_Barrier(MPI_COMM_WORLD);
+
 //		fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum);
 //		fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (iProc %i)\n", H.nstep, H.t, dt, outnum, H.iProc);
 		if (H.iProc == 0)
 		{
-			// Do output
-			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s (synchronized)\n", H.nstep, H.t, dt, outnum);
+			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum);
 		}
 // Debug information
+/*
 		if (H.iProc == 1)
 		{
 			if (Hv.uold[IHv(2, 2, ID)] > 1.1)
@@ -157,6 +160,7 @@ main(int argc, char **argv)
 				printf("**********************************************************************\n");
 			}
 		}
+*/
 
 	}   // end while loop
 		
