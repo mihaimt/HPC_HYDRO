@@ -91,6 +91,22 @@ void domain_decomp ( hydroparam_t* H ) {
     hi = (int)(frac * (H->rank+1));
     H->nx = hi-lo;
     
+    // adjust the domain border properties:
+    // remember:    0: cyclic border
+    //              1: solid border (mirror)
+    //              2: soft border (sink / damped)
+
+    // default for all domains in between
+    H->boundary_left = 2;
+    H->boundary_right = 2;
+
+    if ( H->rank == 0 ) { // left most domain
+        H->boundary_left = 1;
+    }
+    if ( H->rank+1 == H->n_procs ) { // right most domain (dont use else if in case we have only 1 proc)
+        H->boundary_right = 1;
+    }
+    
     dbg_print ( "whole domain: %i x %i\n", H->nx_domain, H->ny_domain );
     dbg_sprint ( "rank %03i: nx:%06i ny:%06i hi:%06i lo:%06i frac:%6.4f\n", H->rank, H->nx, H->ny, hi, lo, frac );
 }
