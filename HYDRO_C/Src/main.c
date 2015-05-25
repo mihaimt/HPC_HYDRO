@@ -48,29 +48,30 @@ main(int argc, char **argv)
 	MPI_init(&H, &argc, &argv);
 
 	// (CR) Debug stuff
-	fprintf(stderr,"MPI init done. Processing args\n");
+	fprintf(stderr,"Rank %i: MPI init done. Processing args\n", H.iProc);
 	process_args(argc, argv, &H);
 
 	// (CR) Debug stuff
-	fprintf(stderr,"Processing args done. Do domain decomposition.\n");
+	fprintf(stderr,"Rank %i: Processing args done. Do domain decomposition.\n", H.iProc);
 
 	// Domain decomposition
 	MPI_domain_decomp(&H);
-	fprintf(stderr,"Do domain decomposition done.\n");
+	fprintf(stderr,"Rank %i: Do domain decomposition done.\n", H.iProc);
 	
-	fprintf(stderr,"MPI_hydro_init():\n");
+	fprintf(stderr,"Rank %i: MPI_hydro_init().\n", H.iProc);
 	// Initialize the hydro variables and set initial conditions.
 	MPI_hydro_init(&H, &Hv);
-	fprintf(stderr,"Done.\n");
+	fprintf(stderr,"Rank %i: MPI_hydro_init() done.\n", H.iProc);
 	PRINTUOLD(H, &Hv);
-	
-	// Synchronize all processes
-	MPI_Barrier( MPI_COMM_WORLD );
 
 	if ( H.iProc == 0 )
 	{
 		printf("Hydro starts - MPI version \n");
+		printf("Running on %i processes\n", H.iNProc);
 	}
+
+	// Synchronize all processes
+	MPI_Barrier( MPI_COMM_WORLD );
 
 	// vtkfile(nvtk, H, &Hv);
 	if (H.dtoutput > 0) 

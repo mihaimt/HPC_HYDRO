@@ -259,9 +259,10 @@ MPI_hydro_godunov(long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
 //	make_boundary(idim, H, Hv);
 //	MPI_make_boundary(idim, H, Hv);
 //	Try a simple MPI_Sendrecv()
-//	fprintf(stdout,"MPI_get_boundary(): idim %i\n");
-	MPI_get_boundary(idim, H, Hv);
-//	fprintf(stdout,"Done: idim %i\n");
+	fprintf(stdout,"Rank %i: MPI_get_boundary() (idim %i)\n", H.iProc, idim);
+//	MPI_get_boundary(idim, H, Hv);
+	MPI_get_boundary_simple(idim, H, Hv);
+	fprintf(stdout,"Rank %i :Done (idim %i)\n", H.iProc, idim);
 
 	PRINTUOLD(H, Hv);
 
