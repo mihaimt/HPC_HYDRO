@@ -22,7 +22,7 @@ vtkfile(long step, const hydroparam_t H, hydrovar_t * Hv)
 
     WHERE("vtkfile");
 //	sprintf(name, "outputvtk_%05ld.vts", step);
-    sprintf(name, "outputvtk_%05ld_%i.vts", step, H.iProc);
+    sprintf(name, "outputvtk_%03i_%05i.vts", H.iProc, step);
 
     fic = fopen(name, "w");
     if (fic == NULL) {
