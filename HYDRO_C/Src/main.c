@@ -99,7 +99,7 @@ int main ( int argc, char **argv ) {
                 sprintf ( outnum, "%s [%04ld]", outnum, nvtk );
             }
         }
-        fprintf ( stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum );
+        // fprintf ( stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum );
     }   // end while loop
     
     hydro_finish ( H, &Hv );

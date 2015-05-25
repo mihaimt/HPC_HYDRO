@@ -29,10 +29,36 @@ void mpi_init ( hydroparam_t* H, int* argc, char*** argv ) {
     if ( status != 0 ) {
         printf ( "MPI_Init: Error %i\n", status );
         exit ( 1 );
+    } else {
+        if ( H->rank == 0 ) {
+            printf ( "MPI_Init: successful\n" );
+            printf ( "          found %i n_procs\n", H->n_procs );
+        }
     }
 
     H->mpi_is_init = 1;
 
+    
+    // debug: test if mpi is really working:
+    
+    int num = 5434; //random int to test sending
+    int recv = 0;
+    MPI_Status stat;
+    
+    if ( H->rank == 0 ) {
+        // rank0 sends sone random int
+        MPI_Send ( &num, 1, MPI_INTEGER, 1, 0, MPI_COMM_WORLD );
+        printf ( "sent: %i\n", num );
+        
+    } else if ( H->rank == 1 ) {
+
+        MPI_Recv( &recv, 1, MPI_INTEGER, 0, 0, MPI_COMM_WORLD, &stat );
+        
+        printf ( "recv: %i\n", recv );
+        assert ( num == recv );
+    }
+    MPI_Barrier ( MPI_COMM_WORLD );
+    
 }
 
 
