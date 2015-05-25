@@ -1,7 +1,5 @@
 #ifndef PARAMETRES_H_INCLUDED
 #define PARAMETRES_H_INCLUDED
-#include <mpi.h>
-
 extern unsigned long flops;
 typedef struct _hydroparam {
     long prt;
@@ -12,13 +10,9 @@ typedef struct _hydroparam {
     long noutput;
     double dtoutput;
 
-    // dimensions (local)
+    // dimensions
     long imin, imax, jmin, jmax, nx, ny;
     long nxt, nyt, nxyt;
-
-	// Global domain
-	long nxdomain, nydomain;
-
     long arSz, arVarSz;          // taille des buffers alloues
 
     /*
@@ -42,23 +36,6 @@ typedef struct _hydroparam {
     // char scheme[20];
     long scheme;
     long boundary_right, boundary_left, boundary_down, boundary_up;
-
-	/*
-	** Variables needed for the MPI.
-	**
-	** iProc: rank of the current process
-	** iNProc: total number of processes in MPI_COMM_WORLD
-	** iMPIError: error returned from an MPI call
-	** bInit: is the MPI library initialized
-	** MPIStatus: status of an MPI call
-	*/
-	int iProc;
-	int iNProc;
-	int iMPIError;
-	int bInit;
-	MPI_Datatype MPI_Hydro_vars;
-	MPI_Request *MPI_req;
-	MPI_Status *MPIStatus;
 } hydroparam_t;
 
 #define HSCHEME_MUSCL 1
