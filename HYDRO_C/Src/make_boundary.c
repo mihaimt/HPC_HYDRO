@@ -313,6 +313,35 @@ MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 	if (idim == 1) {
 		// (CR) Debug
 		fprintf(stderr,"Rank %i: Send copy layer to the right and receive ghost layer from the left\n", H.iProc);
+		
+		//
+		// (CR) Print debug information.
+		//
+
+/*		for (ivar = 0; ivar < H.nvar; ivar++) {
+			for (j = 0; j < H.nyt; j++) {
+				for (i = 0; i < H.nxt; i++) {
+					fprintf(stdout, "%10.3e ", Hv->uold[IHv(i, j, nvar)]);
+               	}
+            }
+        }*/
+
+		hydrovar_t *Hold;
+		Hold->uold = (double *) calloc(H->nvar * H->nxt * H->nyt, sizeof(double));
+
+		if ( H.iProc == 1 )
+		{
+			i = H.nx+ExtraLayer;
+			fprintf(stdout, "Rank %i: i = %i\n", H.iProc, i);
+			for (j = 0; j < H.nyt; j++) {
+				for (i = 0; i < H.nxt; i++) {
+//					fprintf(stdout, "%1.1e ", Hv->uold[IHv(i, j, ID)]);
+					fprintf(stdout, "%i ", (int) Hv->uold[IHv(i, j, ID)]);
+				}
+				fprintf(stdout, "\n");
+			}
+		}
+        
 		///////////////////////////////////////////////////////////////////////////////////////////////
 		// Send right copy layer to the right domain and receive left ghost layer from the left domain.
 		///////////////////////////////////////////////////////////////////////////////////////////////
@@ -433,7 +462,11 @@ MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 					      &Hv->uold[IHv(H.nx+ExtraLayer+1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 1, MPI_COMM_WORLD, &status);
 		}
 		// (CR) Debug
+
+
 		fprintf(stdout,"All layers exchanged\n");
+		Free( Hold );
+
     } else {
         // Lower boundary
         j0 = 0;
