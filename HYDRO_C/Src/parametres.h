@@ -44,8 +44,8 @@ typedef struct _hydroparam {
     int n_procs;
     int rank;
 
-    int nx_domain;
-    int ny_domain;
+    long nx_domain;
+    long ny_domain;
     
 } hydroparam_t;
 

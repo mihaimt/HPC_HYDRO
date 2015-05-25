@@ -9,26 +9,32 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <mpi.h>
 
 #include "parametres.h"
-static void
-usage(void)
-{
+#include "utils.h"
+
+
+static void usage(void) {
+
     fprintf(stderr, "options possibles du programme hydro");
     fprintf(stderr, "--help");
     fprintf(stderr, "-i input");
     fprintf(stderr, "-v :: pour avoir les impressions internes");
     fprintf(stderr, "------------------------------------");
     exit(1);
-} static void
 
-default_values(hydroparam_t * H)
-{
+}
+
+
+static void default_values(hydroparam_t * H) {
 
     // Default values should be given
     H->prt = 0;                 // no printing of internal arrays
     H->nx = 2;
     H->ny = 2;
+    H->nx_domain = 2;
+    H->ny_domain = 2;
     H->nvar = IP + 1;
     H->dx = 1.0;
     H->t = 0.0;
@@ -51,9 +57,11 @@ default_values(hydroparam_t * H)
     H->noutput = 1000000;
     H->nstepmax = 1000000;
     H->dtoutput = 0.0;
-} static void
-keyval(char *buffer, char **pkey, char **pval)
-{
+}
+
+
+static void keyval(char *buffer, char **pkey, char **pval) {
+
     char *ptr;
     *pkey = buffer;
     *pval = buffer;
@@ -79,9 +87,11 @@ keyval(char *buffer, char **pkey, char **pval)
         *ptr = 0;
     }
 }
-static void
-process_input(char *datafile, hydroparam_t * H)
-{
+
+
+
+static void process_input(char *datafile, hydroparam_t * H) {
+
     FILE *fd = NULL;
     char buffer[1024];
     char *pval, *pkey;
@@ -99,11 +109,11 @@ process_input(char *datafile, hydroparam_t * H)
             continue;
         }
         if (strcmp(pkey, "nx") == 0) {
-            sscanf(pval, "%ld", &H->nx);
+            sscanf(pval, "%ld", &H->nx_domain);
             continue;
         }
         if (strcmp(pkey, "ny") == 0) {
-            sscanf(pval, "%ld", &H->ny);
+            sscanf(pval, "%ld", &H->ny_domain);
             continue;
         }
         if (strcmp(pkey, "boundary_left") == 0) {
@@ -183,21 +193,25 @@ process_input(char *datafile, hydroparam_t * H)
     fclose(fd);
     // petit resume de la situation
 
-    printf("+-------------------+\n");
-    printf("|nx=%-7ld         |\n", H->nx);
-    printf("|ny=%-7ld         |\n", H->ny);
-    printf("|tend=%-10.3f    |\n", H->tend);
-    printf("|nstepmax=%-7ld   |\n", H->nstepmax);
-    printf("|noutput=%-7ld    |\n", H->noutput);
-    printf("|dtoutput=%-10.3f|\n", H->dtoutput);
-    printf("+-------------------+\n");
+//     printf("+-------------------+\n");
+//     printf("|nx=%-7ld         |\n", H->nx);
+//     printf("|ny=%-7ld         |\n", H->ny);
+//     printf("|tend=%-10.3f    |\n", H->tend);
+//     printf("|nstepmax=%-7ld   |\n", H->nstepmax);
+//     printf("|noutput=%-7ld    |\n", H->noutput);
+//     printf("|dtoutput=%-10.3f|\n", H->dtoutput);
+//     printf("+-------------------+\n");
+    
+    dbg_print ( "read input files finished..\n" );
+    dbg_sprint ( "rank %03i: nx_d:%i ny_d:%i tend:%-10.3f nstepmax:%i noutput:%i dtoutput:%-10.3f\n", H->rank, H->nx_domain, H->ny_domain, H->tend, H->nstepmax, H->noutput, H->dtoutput );
 
     //exit(0);
 }
 
-void
-process_args(long argc, char **argv, hydroparam_t * H)
-{
+
+
+void process_args(long argc, char **argv, hydroparam_t * H) {
+
     long n = 1;
     char donnees[512];
     default_values(H);
@@ -219,13 +233,13 @@ process_args(long argc, char **argv, hydroparam_t * H)
             n++;
             continue;
         }
-        fprintf(stderr, "Clef %s inconnue\n", argv[n]);
+        fprintf(stderr, "key %s unknown\n", argv[n]);
         n++;
     }
     if (donnees != NULL) {
         process_input(donnees, H);
     } else {
-        fprintf(stderr, "Option -i donnees manquantes\n");
+        fprintf(stderr, "option -i is needed\n");
         exit(1);
     }
 }
