@@ -27,6 +27,7 @@ int main ( int argc, char **argv ) {
 
     int nb_th=1;
     double dt = 0;
+    double dtmin = 0.0; // required minimal timestep over the whole domain
     long nvtk = 0;
     char outnum[80];
     long time_output = 0;
@@ -66,6 +67,11 @@ int main ( int argc, char **argv ) {
             if ( H.nstep == 0 ) {
                 dt = dt / 2.0;
             }
+            
+            // MPI: sync the time
+            //TODO: make this inplace maybe?
+            MPI_Allreduce ( &dt, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+            dt = dtmin;
         }
 
         if ( ( H.nstep % 2 ) == 0 ) {
