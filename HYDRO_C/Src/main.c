@@ -39,13 +39,13 @@ int main ( int argc, char **argv ) {
     double elaps = 0;
 
     start_time = cclock();
-    
+
     mpi_init ( &H, &argc, &argv );
 
     process_args ( argc, argv, &H );
-    
+
     domain_decomp ( &H );
-    
+
     hydro_init ( &H, &Hv );
     PRINTUOLD ( H, &Hv );
 
@@ -67,9 +67,9 @@ int main ( int argc, char **argv ) {
             if ( H.nstep == 0 ) {
                 dt = dt / 2.0;
             }
-            
+
             // MPI: sync the time
-            //TODO: make this inplace maybe? 
+            //TODO: make this inplace maybe?
             MPI_Allreduce ( &dt, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
             dt = dtmin;
         }
@@ -109,16 +109,16 @@ int main ( int argc, char **argv ) {
             }
         }
         //fprintf ( stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum );
-        
+
         if (!(H.nstep%5)) { //only print every x th step
             // this will hang if one proc finishes early!!
             dbg_sPrint ( "> rk:%03i:  step=%-4ld H.t:%12.5e, dt:%10.5e %s\n", H.rank, H.nstep, H.t, dt, outnum );
         }
     }   // end while loop
-    
+
     hydro_finish ( H, &Hv );
     mpi_finish ( &H ) ;
-    
+
     end_time = cclock();
     elaps = ( double ) ( end_time - start_time );
     timeToString ( outnum, elaps );
