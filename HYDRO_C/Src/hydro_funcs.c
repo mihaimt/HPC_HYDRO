@@ -41,7 +41,7 @@ void mpi_init ( hydroparam_t* H, int* argc, char*** argv ) {
 
     // debug: test if mpi is really working:
 
-    if ( DEBUG ) {
+    if ( DEBUG && H->n_procs > 1) {
         dbg_print ( "testing mpi: simple rend recv\n" );
 
         int num = 5434; //random int to test sending
