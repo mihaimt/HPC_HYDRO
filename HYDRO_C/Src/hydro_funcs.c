@@ -17,7 +17,7 @@
 
 
 void mpi_init ( hydroparam_t* H, int* argc, char*** argv ) {
-    
+
 
     int status;
 
@@ -33,45 +33,45 @@ void mpi_init ( hydroparam_t* H, int* argc, char*** argv ) {
     } else {
         dbg_print ( "MPI_Init: successful\n" );
         dbg_print ( "          found %i n_procs\n", H->n_procs );
-        dbg_sprint( "process %03i reporting: ok\n", H->rank );
+        dbg_sprint ( "process %03i reporting: ok\n", H->rank );
     }
 
     H->mpi_is_init = 1;
 
-    
+
     // debug: test if mpi is really working:
-    
+
     if ( DEBUG ) {
         dbg_print ( "testing mpi: simple rend recv\n" );
-        
+
         int num = 5434; //random int to test sending
         int recv = 0;
         MPI_Status stat;
-        
+
         if ( H->rank == 0 ) {
             // rank0 sends sone random int
-            
+
             MPI_Send ( &num, 1, MPI_INTEGER, 1, 0, MPI_COMM_WORLD );
             printf ( "sent: %i\n", num );
-            
+
         } else if ( H->rank == 1 ) {
 
-            MPI_Recv( &recv, 1, MPI_INTEGER, 0, 0, MPI_COMM_WORLD, &stat );
-            
+            MPI_Recv ( &recv, 1, MPI_INTEGER, 0, 0, MPI_COMM_WORLD, &stat );
+
             printf ( "recv: %i\n", recv );
             assert ( num == recv );
         }
         MPI_Barrier ( MPI_COMM_WORLD );
         dbg_print ( "test complete\n" );
     }
-    
+
 }
 
 
 void mpi_finish ( hydroparam_t* H ) {
-    
-    MPI_Finalize ( ); 
-    
+
+    MPI_Finalize ( );
+
 }
 
 
@@ -79,18 +79,18 @@ void mpi_finish ( hydroparam_t* H ) {
  * Does the domain decompostition
  */
 void domain_decomp ( hydroparam_t* H ) {
-    
+
     dbg_print ( "Domain decomp\n" );
-    
+
     float frac;
     int lo, hi;
-    
+
     H->ny = H->ny_domain;
     frac = 1.0 * H->nx_domain / H->n_procs;
-    lo = (int)(frac * H->rank);
-    hi = (int)(frac * (H->rank+1));
+    lo = ( int ) ( frac * H->rank );
+    hi = ( int ) ( frac * ( H->rank+1 ) );
     H->nx = hi-lo;
-    
+
     // adjust the domain border properties:
     // remember:    0: cyclic border
     //              1: solid border (mirror)
@@ -106,7 +106,7 @@ void domain_decomp ( hydroparam_t* H ) {
     if ( H->rank+1 == H->n_procs ) { // right most domain (dont use else if in case we have only 1 proc)
         H->boundary_right = 1;
     }
-    
+
     dbg_print ( "whole domain: %i x %i\n", H->nx_domain, H->ny_domain );
     dbg_sprint ( "rank %03i: nx:%06i ny:%06i hi:%06i lo:%06i frac:%6.4f\n", H->rank, H->nx, H->ny, hi, lo, frac );
 }
@@ -152,7 +152,7 @@ void hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
      Hv->uold[IHvP(x, y, IP)] = one / H->dx / H->dx;*/
     // point explosion at corner (top,left)
     // Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;
-    
+
     // point explosion at the most left domain, top/left corner
     if ( H->rank == 0 ) {
         Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;

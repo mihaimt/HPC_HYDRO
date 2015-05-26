@@ -14,9 +14,10 @@
 #include "parametres.h"
 #include "make_boundary.h"
 #include "utils.h"
-void
-make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
-{
+
+
+
+void make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv) {
 
     // - - - - - - - - - - - - - - - - - - -
     // Cette portion de code est à vérifier
@@ -81,9 +82,11 @@ make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
             }
         }
 
-	/* fprintf(stderr,"PFL H.nvar %d H.nx %d\n",H.nvar,H.nx);
-	fprintf(stderr,"PFL ExtraLayer %d ExtraLayerTot %d\n",ExtraLayer,ExtraLayerTot);
-	fprintf(stderr,"PFL H.jmin %d H.jmax %d\n",H.jmin,H.jmax); */
+        /*
+        fprintf(stderr,"PFL H.nvar %d H.nx %d\n",H.nvar,H.nx);
+        fprintf(stderr,"PFL ExtraLayer %d ExtraLayerTot %d\n",ExtraLayer,ExtraLayerTot);
+        fprintf(stderr,"PFL H.jmin %d H.jmax %d\n",H.jmin,H.jmax);
+        */
 
         // Right boundary
         //dbg_sPrint("rk %03i: right boundary\n", H.rank);
@@ -186,7 +189,5 @@ make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
             }
         }
     }
-}                               // make_boundary
+} // make_boundary
 
-
-//EOF
