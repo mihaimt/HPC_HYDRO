@@ -39,6 +39,9 @@ main(int argc, char **argv)
 	// domain.
 	double dtmin = 0.0;
 	
+	// The maximal time used to run
+	double tmax = 0.0;
+
 	// MPI not yet initialized.
 	H.bInit = 0;
 
@@ -47,21 +50,13 @@ main(int argc, char **argv)
 	// Initialize MPI library (and allocate memory for the MPI variables).
 	MPI_init(&H, &argc, &argv);
 
-	// (CR) Debug stuff
-	fprintf(stderr,"Rank %i: MPI init done. Processing args\n", H.iProc);
 	process_args(argc, argv, &H);
-
-	// (CR) Debug stuff
-	fprintf(stderr,"Rank %i: Processing args done. Do domain decomposition.\n", H.iProc);
 
 	// Domain decomposition
 	MPI_domain_decomp(&H);
-	fprintf(stderr,"Rank %i: Do domain decomposition done.\n", H.iProc);
 	
-	fprintf(stderr,"Rank %i: MPI_hydro_init().\n", H.iProc);
 	// Initialize the hydro variables and set initial conditions.
 	MPI_hydro_init(&H, &Hv);
-	fprintf(stderr,"Rank %i: MPI_hydro_init() done.\n", H.iProc);
 	PRINTUOLD(H, &Hv);
 
 	if ( H.iProc == 0 )
@@ -69,9 +64,6 @@ main(int argc, char **argv)
 		printf("Hydro starts - MPI version \n");
 		printf("Running on %i processes\n", H.iNProc);
 	}
-
-	// Synchronize all processes
-	MPI_Barrier( MPI_COMM_WORLD );
 
 	// vtkfile(nvtk, H, &Hv);
 	if (H.dtoutput > 0) 
@@ -92,19 +84,19 @@ main(int argc, char **argv)
 		flops = 0;
 		if ((H.nstep % 2) == 0)
 		{
-			/* We calculate the new time step for every even step. */
+			// We calculate the new time step for every even step.
 			compute_deltat(&dt, H, &Hw, &Hv, &Hvw);
 			if (H.nstep == 0) {
 				dt = dt / 2.0;
 			}
 				
-			/* Get the smallest possible time step for all processes. */
+			// Get the smallest possible time step for all processes.
 			H.iMPIError = MPI_Allreduce(&dt,&dtmin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
 //			fprintf(stderr,"Process %i: dt = %g dtmin = %g\n",H.iProc,dt,dtmin);
 			dt = dtmin;
 		}
 		
-		/* This is the acutal calculation */
+		// This is the acutal calculation
 		if ((H.nstep % 2) == 0) {
 			MPI_hydro_godunov(1, dt, H, &Hv, &Hw, &Hvw);
 			MPI_hydro_godunov(2, dt, H, &Hv, &Hw, &Hvw); 
@@ -140,19 +132,36 @@ main(int argc, char **argv)
 				sprintf(outnum, "%s [%04ld]", outnum, nvtk);
 			}
 		}
+			
+		// Synchronize all processes
+		MPI_Barrier( MPI_COMM_WORLD );
+
 		if ( H.iProc == 0 )
 		{
 			fprintf(stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum);
 		}
 	}   // end while loop
 		
-	/* Finalize MPI and free memory. */
-	MPI_hydro_finish(&H, &Hv);
 	end_time = cclock();
 	elaps = (double) (end_time - start_time);
-	timeToString(outnum, elaps); 
 
-	fprintf(stdout, "Hydro ends in %ss (%.3lf).\n", outnum, elaps);
+
+
+	// Get the largest time for all processes.
+	H.iMPIError = MPI_Allreduce(&elaps,&tmax,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
+
+	if ( H.iProc == 0 )
+	{
+		if ( elaps < tmax)
+		{
+			elaps = tmax;
+		}
+		timeToString(outnum, elaps); 
+		fprintf(stdout, "Hydro ends in %ss (%.3lf).\n", outnum, elaps);
+	}
+
+	// Finalize MPI and free memory.
+	MPI_hydro_finish(&H, &Hv);
 
 	return 0;
 }
