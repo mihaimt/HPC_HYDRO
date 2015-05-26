@@ -140,9 +140,6 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
     double sign;
     WHERE("MPI_get_boundary_start");
 		
-	/*
-	** (CR) We communicate each cell of the array separately. This should be improved at some point!
-	*/
 //	MPI_Irecv(values, count, type, source, tag, comm, req)
 //	H.iMPIError = MPI_Irecv(Hv, 1, columntype, H.iProc-1, tag, MPI_COMM_WORLD,req);
 //	MPI_Isend(values, count, datatype, dest, tag, comm, req)
@@ -152,7 +149,7 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
 		// Make sure MPI_req is allocated
 		assert(MPI_req != NULL);
 
-		/* Get values from the left domain. */
+		// Get values from the left domain.
 		if (H.iProc == 0)
 		{
 			// Set physical boundary conditions
@@ -446,8 +443,6 @@ MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 				}
 			}
 			// Send left copy layer to the left domain (but dont receive the right ghost layer from the right).
-			// (CR) Debug
-			// fprintf(stderr, "Sending left copy layer for iProc %i\n", H.iProc);
 			MPI_Send( &Hv->uold[IHv(2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD);
 			MPI_Send( &Hv->uold[IHv(3, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 1, MPI_COMM_WORLD);
 		} else {
@@ -461,10 +456,6 @@ MPI_get_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 			MPI_Sendrecv( &Hv->uold[IHv(3, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0,
 					      &Hv->uold[IHv(H.nx+ExtraLayer+1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 1, MPI_COMM_WORLD, &status);
 		}
-		// (CR) Debug
-
-
-		fprintf(stdout,"All layers exchanged\n");
 		Free( Hold );
 
     } else {
