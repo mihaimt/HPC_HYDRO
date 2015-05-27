@@ -182,7 +182,7 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
 		}
 
 		// Get values from the right domain.
-		if (H.iProc < H.iNProc - 1)
+		if (H.iProc == H.iNProc-1)
 		{
 			// Set physical boundary conditions 
 			for (ivar = 0; ivar < H.nvar; ivar++) {
@@ -700,7 +700,7 @@ MPI_get_boundary_simple(long idim, const hydroparam_t H, hydrovar_t * Hv)
 void
 MPI_make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 {
-	// Allocate H->MPI_req !!!
+	// Allocate MPI_req !!!
 	MPI_Request *MPI_req;
 	MPI_req = malloc(8*sizeof(MPI_Request));
 
