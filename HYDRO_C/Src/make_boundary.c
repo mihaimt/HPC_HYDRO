@@ -316,8 +316,8 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 			MPI_Wait( MPI_req+6, status);
 			MPI_Wait( MPI_req+7, status);
 		}
-
-		Free( status );
+	}
+	Free( status );
 }                               // MPI_get_boundary_end
 
 /*
