@@ -1,15 +1,15 @@
 #!/bin/bash
 #SBATCH -J hydro_mpi
-#SBATCH --account=uzh4
 #SBATCH --time=1-0:00:00
 #SBATCH --ntasks=4
 #SBATCH --cpus-per-task=1 
-#SBATCH --comment="A simple set of IC to debug hydro_mpi."
+#SBATCH --comment="Try a 1000x10 grid."
+#SBATCH --partition=zbox
 
-FILE="input_sedov_1000x10.nml"
+FILE="input_sedov_100x10.nml"
 
 #sbatch --dependency=afterany:$SLURM_JOB_ID $FILE.job
 
 #aprun -B gasoline.i_hmax_cond_mpi_dora +restart $FILE.par
-aprun -B ../../Bin/hydro_mpi -i $FILE
+srun ../../Bin/hydro_lmpi -i $FILE
 

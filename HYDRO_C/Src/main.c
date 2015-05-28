@@ -54,11 +54,17 @@ main(int argc, char **argv)
 
 	// Domain decomposition
 	MPI_domain_decomp(&H);
-	
+
+	int nxtotal=0.0;
+	// (CR) Debug	
+	 MPI_Allreduce(&H.nx,&nxtotal,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+	fprintf(stderr,"Process %i: nx = %i nxtotal = %i\n",H.iProc,H.nx,nxtotal);
+
 	// Initialize the hydro variables and set initial conditions.
 	MPI_hydro_init(&H, &Hv);
 	PRINTUOLD(H, &Hv);
 
+	fprintf(stderr,"Process %i: nxt=%i nyt=%i\n",H.iProc,H.nxt,H.nyt);
 	if ( H.iProc == 0 )
 	{
 		printf("Hydro starts - MPI version \n");

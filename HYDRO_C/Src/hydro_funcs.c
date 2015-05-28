@@ -84,6 +84,8 @@ MPI_domain_decomp(hydroparam_t *H)
 	up = (int)(frac * (H->iProc+1));
 
 	H->nx = up-lo;
+	// (CR) Debug
+	fprintf(stderr,"Rank %i: nx=%i ny=%i nxdomain=%i nydomain=%i\n", H->iProc, H->nx, H->ny, H->nxdomain, H->nydomain);
 }                               // MPI_domain_decomp			
 
 void
