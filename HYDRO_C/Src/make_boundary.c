@@ -296,25 +296,25 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 		if (H.iProc == 0 )
 		{
 			// Only exchanged cells with the right layer
-			MPI_Wait(, MPI_req+4, status);
-			MPI_Wait(, MPI_req+5, status);
-			MPI_Wait(, MPI_req+6, status);
-			MPI_Wait(, MPI_req+7, status);
+			MPI_Wait( MPI_req+4, status);
+			MPI_Wait( MPI_req+5, status);
+			MPI_Wait( MPI_req+6, status);
+			MPI_Wait( MPI_req+7, status);
 		} else if ( H.iProc == H.iNProc-1 ) {
 			// Only exchanged cells with the left layer
-			MPI_Wait(, MPI_req, status);
-			MPI_Wait(, MPI_req+1, status);
-			MPI_Wait(, MPI_req+2, status);
-			MPI_Wait(, MPI_req+3, status);
+			MPI_Wait( MPI_req, status);
+			MPI_Wait( MPI_req+1, status);
+			MPI_Wait( MPI_req+2, status);
+			MPI_Wait( MPI_req+3, status);
 		} else {
-			MPI_Wait(, MPI_req, status);
-			MPI_Wait(, MPI_req+1, status);
-			MPI_Wait(, MPI_req+2, status);
-			MPI_Wait(, MPI_req+3, status);
-			MPI_Wait(, MPI_req+4, status);
-			MPI_Wait(, MPI_req+5, status);
-			MPI_Wait(, MPI_req+6, status);
-			MPI_Wait(, MPI_req+7, status);
+			MPI_Wait( MPI_req, status);
+			MPI_Wait( MPI_req+1, status);
+			MPI_Wait( MPI_req+2, status);
+			MPI_Wait( MPI_req+3, status);
+			MPI_Wait( MPI_req+4, status);
+			MPI_Wait( MPI_req+5, status);
+			MPI_Wait( MPI_req+6, status);
+			MPI_Wait( MPI_req+7, status);
 		}
 
 		Free( status );
