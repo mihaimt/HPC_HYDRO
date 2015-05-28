@@ -152,7 +152,7 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
 		// Get values from the left domain.
 		if (H.iProc == 0)
 		{
-			// Set physical boundary conditions
+			// Set physical boundary conditions for the left ghost layer
 			for (ivar = 0; ivar < H.nvar; ivar++) {
 				for (i = 0; i < ExtraLayer; i++) {
 					sign = 1.0;
@@ -184,7 +184,7 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
 		// Get values from the right domain.
 		if (H.iProc == H.iNProc-1)
 		{
-			// Set physical boundary conditions 
+			// Set physical boundary conditions for the right ghost layer 
 			for (ivar = 0; ivar < H.nvar; ivar++) {
 				for (i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++) {
 					sign = 1.0;
@@ -272,7 +272,7 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 
 	status = malloc(8*sizeof(status));
 	offset = 0;
-
+/*
 	if ( idim == 1) {
 		// Dont do this if we sweep the grid in ny direction.
 		if (H.iProc == 0 || H.iProc == H.iNProc-1)
@@ -289,6 +289,35 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 		MPIError = MPI_Waitall(4*count, MPI_req+offset, status);
 		assert( MPIError == 0 );
 	}
+*/
+	// I have no idea why MPI_Waitall() doesnt work
+	if ( idim == 1) {
+		// Dont do this if we sweep the grid in ny direction.
+		if (H.iProc == 0 )
+		{
+			// Only exchanged cells with the right layer
+			MPI_Wait(, MPI_req+4, status);
+			MPI_Wait(, MPI_req+5, status);
+			MPI_Wait(, MPI_req+6, status);
+			MPI_Wait(, MPI_req+7, status);
+		} else if ( H.iProc == H.iNProc-1 ) {
+			// Only exchanged cells with the left layer
+			MPI_Wait(, MPI_req, status);
+			MPI_Wait(, MPI_req+1, status);
+			MPI_Wait(, MPI_req+2, status);
+			MPI_Wait(, MPI_req+3, status);
+		} else {
+			MPI_Wait(, MPI_req, status);
+			MPI_Wait(, MPI_req+1, status);
+			MPI_Wait(, MPI_req+2, status);
+			MPI_Wait(, MPI_req+3, status);
+			MPI_Wait(, MPI_req+4, status);
+			MPI_Wait(, MPI_req+5, status);
+			MPI_Wait(, MPI_req+6, status);
+			MPI_Wait(, MPI_req+7, status);
+		}
+
+		Free( status );
 }                               // MPI_get_boundary_end
 
 /*
