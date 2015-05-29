@@ -22,7 +22,8 @@ vtkfile(long step, const hydroparam_t H, hydrovar_t * Hv)
 
     WHERE("vtkfile");
 //	sprintf(name, "outputvtk_%05ld.vts", step);
-    sprintf(name, "outputvtk_%05ld_%i.vts", step, H.iProc);
+//	Files are named outputvtk_rank_step.vts
+    sprintf(name, "outputvtk_%04i_%05ld.vts", H.iProc, step);
 
     fic = fopen(name, "w");
     if (fic == NULL) {
