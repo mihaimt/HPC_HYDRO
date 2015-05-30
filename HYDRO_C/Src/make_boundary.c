@@ -132,7 +132,6 @@ make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 ** we can do the computation for the most outer layer of the grid using
 ** MPI_get_boundary_end().
 */
-
 void
 MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Request *MPI_req)
 {
@@ -173,12 +172,17 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
             	}
         	}
 		} else 	{
-			// Exchange MPI boundary conditions
-			MPI_Irecv( &Hv->uold[IHv(0, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 2, MPI_COMM_WORLD, MPI_req );
-			MPI_Irecv( &Hv->uold[IHv(1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 3, MPI_COMM_WORLD, MPI_req+1 );
 
-			MPI_Isend( &Hv->uold[IHv(2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+2 );
-			MPI_Isend( &Hv->uold[IHv(3, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 1, MPI_COMM_WORLD, MPI_req+3 );
+			// Exchange MPI boundary conditions to the left (send two columns at once)
+			MPI_Irecv( &Hv->uold[IHv(0, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 2, MPI_COMM_WORLD, MPI_req );
+			MPI_Isend( &Hv->uold[IHv(2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+1 );
+
+			// Exchange MPI boundary conditions to the left (one column per call)
+//			MPI_Irecv( &Hv->uold[IHv(0, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 2, MPI_COMM_WORLD, MPI_req );
+//			MPI_Irecv( &Hv->uold[IHv(1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 3, MPI_COMM_WORLD, MPI_req+1 );
+
+//			MPI_Isend( &Hv->uold[IHv(2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+2 );
+//			MPI_Isend( &Hv->uold[IHv(3, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 1, MPI_COMM_WORLD, MPI_req+3 );
 		}
 
 		// Get values from the right domain.
@@ -207,12 +211,16 @@ MPI_get_boundary_start(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
 				}
 			}
 		} else {
-			// Dont do this for the most right domain.
-			MPI_Irecv( &Hv->uold[IHv(H.nx+ExtraLayer, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+4 );
-			MPI_Irecv( &Hv->uold[IHv(H.nx+ExtraLayer+1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 1, MPI_COMM_WORLD, MPI_req+5 );
+			// Exchange MPI boundary conditions to the right (send two columns at once)
+			MPI_Irecv( &Hv->uold[IHv(H.nx+ExtraLayer, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+2 );
+			MPI_Isend( &Hv->uold[IHv(H.nx+ExtraLayer-2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 2, MPI_COMM_WORLD, MPI_req+3 );
 
-			MPI_Isend( &Hv->uold[IHv(H.nx+ExtraLayer-2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 2, MPI_COMM_WORLD, MPI_req+6 );
-			MPI_Isend( &Hv->uold[IHv(H.nx+ExtraLayer-1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 3, MPI_COMM_WORLD, MPI_req+7 );
+			// Exchange MPI boundary conditions to the left (one column per call)
+//			MPI_Irecv( &Hv->uold[IHv(H.nx+ExtraLayer, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+4 );
+//			MPI_Irecv( &Hv->uold[IHv(H.nx+ExtraLayer+1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 1, MPI_COMM_WORLD, MPI_req+5 );
+
+//			MPI_Isend( &Hv->uold[IHv(H.nx+ExtraLayer-2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 2, MPI_COMM_WORLD, MPI_req+6 );
+//			MPI_Isend( &Hv->uold[IHv(H.nx+ExtraLayer-1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 3, MPI_COMM_WORLD, MPI_req+7 );
 		}
     } else {
         // Lower boundary
@@ -290,7 +298,28 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 		assert( MPIError == 0 );
 	}
 */
+
 	// I have no idea why MPI_Waitall() doesnt work
+	// Here we send two columns at once
+	if ( idim == 1) {
+		// Dont do this if we sweep the grid in ny direction.
+		if (H.iProc == 0 )
+		{
+			// Only exchanged cells with the right layer
+			MPI_Wait( MPI_req+2, status);
+			MPI_Wait( MPI_req+3, status);
+		} else if ( H.iProc == H.iNProc-1 ) {
+			// Only exchanged cells with the left layer
+			MPI_Wait( MPI_req, status);
+			MPI_Wait( MPI_req+1, status);
+		} else {
+			MPI_Wait( MPI_req, status);
+			MPI_Wait( MPI_req+1, status);
+			MPI_Wait( MPI_req+2, status);
+			MPI_Wait( MPI_req+3, status);
+		}
+	}
+/*
 	if ( idim == 1) {
 		// Dont do this if we sweep the grid in ny direction.
 		if (H.iProc == 0 )
@@ -317,6 +346,7 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 			MPI_Wait( MPI_req+7, status);
 		}
 	}
+*/
 	Free( status );
 }                               // MPI_get_boundary_end
 

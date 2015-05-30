@@ -85,7 +85,7 @@ MPI_domain_decomp(hydroparam_t *H)
 
 	H->nx = up-lo;
 	// (CR) Debug
-	fprintf(stderr,"Rank %i: nx=%i ny=%i nxdomain=%i nydomain=%i\n", H->iProc, H->nx, H->ny, H->nxdomain, H->nydomain);
+	// fprintf(stderr,"Rank %i: nx=%i ny=%i nxdomain=%i nydomain=%i\n", H->iProc, H->nx, H->ny, H->nxdomain, H->nydomain);
 }                               // MPI_domain_decomp			
 
 void
@@ -162,9 +162,10 @@ MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv)
     H->arVarSz = (H->nxyt + 2) * H->nvar;
 
 	// Define a new MPI data type
-//	MPI_Type_vector( H->nvar*H->nyt*ExtraLayer, ExtraLayer, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
+	MPI_Type_vector( H->nvar*H->nyt*ExtraLayer, ExtraLayer, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
+
 //	Just define one column at the moment
-	MPI_Type_vector( H->nvar*H->nyt, 1, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
+//	MPI_Type_vector( H->nvar*H->nyt, 1, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
 	MPI_Type_commit( & H->MPI_Hydro_vars );
 		
     // allocate uold for each conservative variable
