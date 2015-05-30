@@ -162,7 +162,7 @@ MPI_hydro_init(hydroparam_t * H, hydrovar_t * Hv)
     H->arVarSz = (H->nxyt + 2) * H->nvar;
 
 	// Define a new MPI data type
-	MPI_Type_vector( H->nvar*H->nyt*ExtraLayer, ExtraLayer, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
+	MPI_Type_vector( H->nvar*H->nyt, ExtraLayer, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
 
 //	Just define one column at the moment
 //	MPI_Type_vector( H->nvar*H->nyt, 1, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
