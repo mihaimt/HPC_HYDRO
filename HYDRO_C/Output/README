@@ -1,1 +1,20 @@
 We store the outputs from the simulations in ../Output/.
+
+How to run a simulation:
+
+There are in principe two possibilities:
+
+1) Allocate one (or more) nodes with salloc
+2) Submit a slurm batch job with sbatch
+
+ZBOX:
+1) Allocate with salloc --partition=zbox and run with srun -n cores hydro_lmpi
+2) sbatch example-zbox.job (see example-zbox.job in this directory for details)
+
+Important: Always compile with make lmpi and run hydro_lmpi!
+
+Dora:
+1) Allocate with salloc (no partition) and run with aprun -n cores hydro_mpi
+2) sbatch example-dora.job (see example-dora.job in this directory for details and be sure to change ACCOUNT to uzh8)
+
+Important: Always compile with make mpi and run hydro_mpi!
