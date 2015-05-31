@@ -1,0 +1,19 @@
+Runs with the new MPI_Type_vector:
+
+IO and print after each step:
+
+Input_sedov_1000x100_1: crashed. I guess our MPI code doesnt work for one core
+only.
+Input_sedov_1000x100_2:  Done: 00:31:59.781s ( 1919.781 s)
+Input_sedov_1000x100_4:  Done. 00:16:33.074s (  993.074 s)
+Input_sedov_1000x100_8:  Done: 00:08:44.073s (  524.073 s) 
+Input_sedov_1000x100_10: Done: 00:07:16.575s (  436.575 s)
+Input_sedov_1000x100_11: Done: 00:06:41.026s (  401.026 s)
+Input_sedov_1000x100_12: Done: 00:06:11.044s (  371.044 s)
+Input_sedov_1000x100_16: Done: 00:04:51.819s (  291.819 s)
+Input_sedov_1000x100_24: Done: 00:03:17.730s (  197.730 s)
+Input_sedov_1000x100_32: Done: 00:02:04.484s (  124.484 s)
+Input_sedov_1000x100_48: Done: 00:02:04.484s (  124.484 s)
+Input_sedov_1000x100_64: Done: 00:01:45.722s (  105.722 s)
+Input_sedov_1000x100_80: Done: 00:01:34.088s (   94.088 s)
+Input_sedov_1000x100_96: Done: 00:01:25.350s (   85.350 s)
