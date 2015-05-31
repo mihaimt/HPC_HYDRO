@@ -785,22 +785,13 @@ MPI_make_boundary(long idim, const hydroparam_t H, hydrovar_t * Hv)
 
 	// Initiate send and receive requests
 	MPI_get_boundary_start(idim, H, Hv, MPI_req);
-
-	// (CR) Debug
-	fprintf(stderr,"Rank %i: MPI_get_boundary_start() done. \n", H.iProc);
-	MPI_Barrier( MPI_COMM_WORLD );
-	fprintf(stderr,"Rank %i: MPI_get_boundary_start() done. \n", H.iProc);
 	
 	// Make sure the data was successfully exchanged before we continue.
 	MPI_get_boundary_end(idim, H, Hv, MPI_req);
 
-	// (CR) Debug
-	fprintf(stderr,"Rank %i: MPI_get_boundary_end() done. \n", H.iProc);
-	MPI_Barrier( MPI_COMM_WORLD );
-	fprintf(stderr,"Rank %i: MPI_get_boundary_end() done. \n", H.iProc);
 
 	// (CR) Debug
-	MPI_Barrier( MPI_COMM_WORLD );
+//	MPI_Barrier( MPI_COMM_WORLD );
 	// Free MPI_req
 	Free(MPI_req);
 }                               // MPI_make_boundary
