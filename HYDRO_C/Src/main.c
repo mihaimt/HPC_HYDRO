@@ -55,9 +55,9 @@ main(int argc, char **argv)
 	// Domain decomposition
 	MPI_domain_decomp(&H);
 
-	int nxtotal=0.0;
+	int nxtotal = 0.0;
 	// (CR) Debug	
-	 MPI_Allreduce(&H.nx,&nxtotal,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+	MPI_Allreduce(&H.nx,&nxtotal,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
 	fprintf(stderr,"Process %i: nx = %i nxtotal = %i\n",H.iProc,H.nx,nxtotal);
 
 	// Initialize the hydro variables and set initial conditions.
@@ -69,6 +69,9 @@ main(int argc, char **argv)
 	{
 		printf("Hydro starts - MPI version \n");
 		printf("Running on %i processes\n", H.iNProc);
+#ifdef MPI_NO_OUTPUT
+		printf("NOT WRITING ANY OUTPUT\n");
+#endif
 	}
 
 	// vtkfile(nvtk, H, &Hv);

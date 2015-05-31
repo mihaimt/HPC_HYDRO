@@ -303,7 +303,7 @@ MPI_get_boundary_end(long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Reque
 
 	// I have no idea why MPI_Waitall() doesnt work
 	// Here we send two columns at once
-	if ( idim == 1) {
+	if ( idim == 1 && H.iNProc > 1) {
 		// Dont do this if we sweep the grid in ny direction.
 		if (H.iProc == 0 )
 		{
