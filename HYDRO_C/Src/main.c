@@ -62,16 +62,16 @@ int main ( int argc, char **argv ) {
     int nxtotal = 0.0;
     // (CR) Debug
     MPI_Allreduce ( &H.nx,&nxtotal,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD );
-    fprintf ( stderr,"Process %i: nx = %i nxtotal = %i\n",H.iProc,H.nx,nxtotal );
+    fprintf ( stderr,"Process %i: nx = %i nxtotal = %i\n",H.rank,H.nx,nxtotal );
 
     // Initialize the hydro variables and set initial conditions.
     MPI_hydro_init ( &H, &Hv );
     PRINTUOLD ( H, &Hv );
 
-    fprintf ( stderr,"Process %i: nxt=%i nyt=%i\n",H.iProc,H.nxt,H.nyt );
-    if ( H.iProc == 0 ) {
+    fprintf ( stderr,"Process %i: nxt=%i nyt=%i\n",H.rank,H.nxt,H.nyt );
+    if ( H.rank == 0 ) {
         printf ( "Hydro starts - MPI version \n" );
-        printf ( "Running on %i processes\n", H.iNProc );
+        printf ( "Running on %i processes\n", H.n_proc );
 #ifdef MPI_NO_OUTPUT
         printf ( "NOT WRITING ANY OUTPUT\n" );
 #endif
@@ -100,7 +100,7 @@ int main ( int argc, char **argv ) {
             }
 
             // Get the smallest possible time step for all processes.
-            H.iMPIError = MPI_Allreduce ( &dt,&dtmin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD );
+            H.mpi_error = MPI_Allreduce ( &dt,&dtmin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD );
 //			fprintf(stderr,"Process %i: dt = %g dtmin = %g\n",H.iProc,dt,dtmin);
             dt = dtmin;
         }
@@ -145,7 +145,7 @@ int main ( int argc, char **argv ) {
         // Synchronize all processes
         MPI_Barrier ( MPI_COMM_WORLD );
 
-        if ( H.iProc == 0 ) {
+        if ( H.rank == 0 ) {
             fprintf ( stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum );
         }
     }   // end while loop
@@ -156,9 +156,9 @@ int main ( int argc, char **argv ) {
 
 
     // Get the largest time for all processes.
-    H.iMPIError = MPI_Allreduce ( &elaps,&tmax,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD );
+    H.mpi_error = MPI_Allreduce ( &elaps,&tmax,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD );
 
-    if ( H.iProc == 0 ) {
+    if ( H.rank == 0 ) {
         if ( elaps < tmax ) {
             elaps = tmax;
         }

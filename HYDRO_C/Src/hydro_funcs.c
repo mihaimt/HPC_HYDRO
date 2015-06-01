@@ -24,45 +24,45 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
      * is initialized and ready to use.
      */
     
-    H->bInit = 0;
+    H->mpi_is_init = 0;
 
     // Allocate Status (use one for all, overwrite old ones)
-    H->MPIStatus = malloc ( sizeof ( MPI_Status ) );
+    H->mpi_status = malloc ( sizeof ( MPI_Status ) );
 
     // Allocate Requests (need 8 because of the 8 parallel MPI calls:
     // 2 rows on each side x 2 sides (left & right) x 2 (send & recv)
-    H->MPI_req = malloc ( 8*sizeof ( MPI_Request ) );
+    H->mpi_req = malloc ( 8*sizeof ( MPI_Request ) );
 
     // Initialize MPI library
-    H->iMPIError = MPI_Init ( argc,argv );
+    H->mpi_error = MPI_Init ( argc,argv );
 
     // Get the props of the MPI world
-    MPI_Comm_size ( MPI_COMM_WORLD, &H->iNProc );
-    MPI_Comm_rank ( MPI_COMM_WORLD, &H->iProc );
+    MPI_Comm_size ( MPI_COMM_WORLD, &H->n_proc );
+    MPI_Comm_rank ( MPI_COMM_WORLD, &H->rank );
 
-    if ( H->iMPIError != 0 ) {
-        printf ( "MPI_Init: Error %i\n",H->iMPIError );
+    if ( H->mpi_error != 0 ) {
+        printf ( "MPI_Init: Error %i\n",H->mpi_error );
         exit ( 1 );
     }
-    H->bInit = 1;
+    H->mpi_is_init = 1;
 }                               // MPI_init
 
 void
 MPI_finish ( hydroparam_t *H ) {
     /* (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here?? */
     /* Finalize MPI library */
-    H->iMPIError = MPI_Finalize();
+    H->mpi_error = MPI_Finalize();
 
-    Free ( H->MPIStatus );
+    Free ( H->mpi_status );
     // Free MPI_req
-    Free ( H->MPI_req );
+    Free ( H->mpi_req );
 
-    if ( H->iMPIError != 0 ) {
-        printf ( "MPI_Finalize: Error %i\n",H->iMPIError );
+    if ( H->mpi_error != 0 ) {
+        printf ( "MPI_Finalize: Error %i\n",H->mpi_error );
         exit ( 1 );
     }
 
-    H->bInit = 0;
+    H->mpi_is_init = 0;
 }                               // MPI_finish
 
 
@@ -78,9 +78,9 @@ MPI_domain_decomp ( hydroparam_t *H ) {
     // Dont change ny (only split along the x direction)
     H->ny = H->nydomain;
 
-    frac = 1.0 * H->nxdomain / H->iNProc;
-    lo = ( int ) ( frac * H->iProc );
-    up = ( int ) ( frac * ( H->iProc+1 ) );
+    frac = 1.0 * H->nxdomain / H->n_proc;
+    lo = ( int ) ( frac * H->rank );
+    up = ( int ) ( frac * ( H->rank+1 ) );
 
     H->nx = up-lo;
     // (CR) Debug
@@ -139,7 +139,7 @@ MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     long x, y;
 
     /* Make sure that MPI is initialized before we use it. */
-    assert ( H->bInit );
+    assert ( H->mpi_is_init );
 
     /* Make sure that we did the domain decomposition. */
     assert ( H->nx > 0 && H->ny > 0 );
@@ -159,11 +159,11 @@ MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     H->arVarSz = ( H->nxyt + 2 ) * H->nvar;
 
     // Define a new MPI data type
-    MPI_Type_vector ( H->nvar*H->nyt, ExtraLayer, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
+    MPI_Type_vector ( H->nvar*H->nyt, ExtraLayer, H->nxt, MPI_DOUBLE, &H->mpi_hydro_vector_type );
 
 //	Just define one column at the moment
 //	MPI_Type_vector( H->nvar*H->nyt, 1, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
-    MPI_Type_commit ( & H->MPI_Hydro_vars );
+    MPI_Type_commit ( & H->mpi_hydro_vector_type );
 
     // allocate uold for each conservative variable
     Hv->uold = ( double * ) calloc ( H->nvar * H->nxt * H->nyt, sizeof ( double ) );
@@ -185,7 +185,7 @@ MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
      Hv->uold[IHvP(x, y, IP)] = one / H->dx / H->dx;*/
     // point explosion at corner (top,left)
     // (CR) Bottom left??
-    if ( H->iProc == 0 ) {
+    if ( H->rank == 0 ) {
         /* Only in the domain of process zero we have the initial explosion. */
         Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;
     }
@@ -201,10 +201,10 @@ MPI_hydro_finish ( hydroparam_t *H, hydrovar_t * Hv ) {
     /* (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here?? */
 
     // Free MPI data type
-    MPI_Type_free ( &H->MPI_Hydro_vars );
+    MPI_Type_free ( &H->mpi_hydro_vector_type );
 
     /* Finalize MPI library */
-    if ( H->MPIStatus != NULL ) MPI_finish ( H );
+    if ( H->mpi_status != NULL ) MPI_finish ( H );
 
     Free ( Hv->uold );
 }

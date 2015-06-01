@@ -5,30 +5,38 @@
   (C) Guillaume Colin de Verdiere : CEA/DAM -- for the C version
 */
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
 #include "parametres.h"
-static void
-usage ( void ) {
+
+
+static void usage ( void ) {
+
     fprintf ( stderr, "options possibles du programme hydro" );
     fprintf ( stderr, "--help" );
     fprintf ( stderr, "-i input" );
     fprintf ( stderr, "-v :: pour avoir les impressions internes" );
     fprintf ( stderr, "------------------------------------" );
     exit ( 1 );
-}
-static void
 
-default_values ( hydroparam_t * H ) {
+}
+
+
+static void default_values ( hydroparam_t * H ) {
+
     fprintf ( stderr,"Setting default values ...\n" );
+
     // Default values should be given
     H->prt = 0;                 // no printing of internal arrays
+
     // Global
     H->nxdomain = 2;
     H->nydomain = 2;
+    
     // local (is set in MPI_domain_decomp)
     H->nx = 0;
     H->ny = 0;
@@ -55,25 +63,30 @@ default_values ( hydroparam_t * H ) {
     H->nstepmax = 1000000;
     H->dtoutput = 0.0;
 }
-static void
-keyval ( char *buffer, char **pkey, char **pval ) {
+
+
+static void keyval ( char *buffer, char **pkey, char **pval ) {
+
     char *ptr;
     *pkey = buffer;
     *pval = buffer;
 
     // kill the newline
     *pval = strchr ( buffer, '\n' );
-    if ( *pval )
+    if ( *pval ) {
         **pval = 0;
+    }
 
     // suppress lead whites or tabs
-    while ( ( **pkey == ' ' ) || ( **pkey == '\t' ) )
+    while ( ( **pkey == ' ' ) || ( **pkey == '\t' ) ) {
         ( *pkey ) ++;
+    }
     *pval = strchr ( buffer, '=' );
     if ( *pval ) {
         **pval = 0;
         ( *pval ) ++;
     }
+
     // strip key from white or tab
     while ( ( ptr = strchr ( *pkey, ' ' ) ) != NULL ) {
         *ptr = 0;
@@ -82,8 +95,10 @@ keyval ( char *buffer, char **pkey, char **pval ) {
         *ptr = 0;
     }
 }
-static void
-process_input ( char *datafile, hydroparam_t * H ) {
+
+
+static void process_input ( char *datafile, hydroparam_t * H ) {
+
     FILE *fd = NULL;
     char buffer[1024];
     char *pval, *pkey;
@@ -92,6 +107,7 @@ process_input ( char *datafile, hydroparam_t * H ) {
         fprintf ( stderr, "Fichier de donnees illisible\n" );
         exit ( 1 );
     }
+
     while ( fgets ( buffer, 1024, fd ) == buffer ) {
         keyval ( buffer, &pkey, &pval );
 
@@ -100,7 +116,6 @@ process_input ( char *datafile, hydroparam_t * H ) {
             sscanf ( pval, "%ld", &H->nstepmax );
             continue;
         }
-        // The total size of the domain is safed in nxdomain and nydomain
         if ( strcmp ( pkey, "nx" ) == 0 ) {
             sscanf ( pval, "%ld", &H->nxdomain );
             continue;
@@ -198,8 +213,9 @@ process_input ( char *datafile, hydroparam_t * H ) {
     //exit(0);
 }
 
-void
-process_args ( long argc, char **argv, hydroparam_t * H ) {
+
+void process_args ( long argc, char **argv, hydroparam_t * H ) {
+
     long n = 1;
     char donnees[512];
     default_values ( H );
@@ -231,3 +247,11 @@ process_args ( long argc, char **argv, hydroparam_t * H ) {
         exit ( 1 );
     }
 }
+
+
+
+
+
+
+
+

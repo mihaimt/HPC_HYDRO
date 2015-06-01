@@ -2,7 +2,10 @@
 #define PARAMETRES_H_INCLUDED
 #include <mpi.h>
 
+
 extern unsigned long flops;
+
+
 typedef struct _hydroparam {
     long prt;
 
@@ -59,36 +62,44 @@ typedef struct _hydroparam {
     MPI_Datatype mpi_hydro_vector_type;
     MPI_Request* mpi_req;
     MPI_Status* mpi_status;
+
 } hydroparam_t;
+
 
 #define HSCHEME_MUSCL 1
 #define HSCHEME_PLMDE 2
 #define HSCHEME_COLLELA 3
+
 
 #ifndef IDX3D
 #define IDX3D(x, y, z, nx, ny) ( (x) + (nx) * ( (y) + (ny) * (z) ) )
 #define IDX2D(x, y, nx)        ( (x) + (nx) * ( (y) ) )
 #endif
 
+
 // Hydrovar holds the whole 2D problem for all variables
 typedef struct _hydrovar {
-    double *uold;               // nxt, nyt, nvar allocated as (nxt * nyt), nvar
+    double* uold;               // nxt, nyt, nvar allocated as (nxt * nyt), nvar
 } hydrovar_t;                   // 1:nvar
+
 #ifndef IHv
 // #define IHv(i,j,v) ((i) + (j) * H.nxt + (H.nxt * H.nyt) * (v))
 #define IHv(i,j,v) ((i) + (H.nxt * (H.nyt * (v)+ (j))))
 #define IHvP(i,j,v) ((i) + (j) * H->nxt + (H->nxt * H->nyt) * (v))
 #endif /*  */
 
+
 // work arrays along one direction for all variables
 typedef struct _hydrovarwork {
     double *u, *q, *qxm, *qxp, *dq;     // (nxt or nyt), nvar
     double *qleft, *qright, *qgdnv, *flux;      // (nx+1 or ny+1), nvar
 } hydrovarwork_t;               // 1:nvar
+
 #ifndef IHvw
 #define IHvw(i,v) ((i) + (v) * H.nxyt)
 #define IHvwP(i,v) ((i) + (v) * H->nxyt)
 #endif /*  */
+
 
 // works arrays along one direction
 typedef struct _hydrowork {
@@ -105,11 +116,13 @@ typedef struct _hydrowork {
     long *ind, *ind2;
 } hydrowork_t;
 
+
 // All variables are grouped in structs for clarity sake.
 /*
 	Warning : no global variables are declared.
 	They are passed as arguments.
 */
+
 
 // useful constants to force double promotion
 #ifdef pourfairepropre
@@ -135,6 +148,7 @@ static const long ExtraLayer = 2;
 static const long ExtraLayerTot = 2 * 2;
 
 #else /*  */
+
 #define zero   ((double) 0.0)
 #define one    ((double) 1.0)
 #define two    ((double) 2.0)
@@ -152,7 +166,10 @@ static const long ExtraLayerTot = 2 * 2;
 #define ExtraLayer    (2)
 #define ExtraLayerTot (2 * 2)
 #endif /*  */
+
+
 void process_args ( long argc, char **argv, hydroparam_t * H );
+
 
 #ifndef MFLOPS
 #if defined(FLOPS) && !defined(HMPP)
@@ -171,4 +188,9 @@ void process_args ( long argc, char **argv, hydroparam_t * H );
 #endif
 
 #endif // PARAMETRES_H_INCLUDED
-//EOF
+
+
+
+
+
+
