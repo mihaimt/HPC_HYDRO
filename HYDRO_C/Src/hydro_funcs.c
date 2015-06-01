@@ -108,7 +108,7 @@ void domain_decomp ( hydroparam_t* H ) {
     }
 
     dbg_print ( "whole domain: %i x %i\n", H->nx_domain, H->ny_domain );
-    dbg_sprint ( "rank %03i: nx:%06i ny:%06i hi:%06i lo:%06i frac:%6.4f\n", H->rank, H->nx, H->ny, hi, lo, frac );
+    dbg_sprint ( "rank %03i: nx:%06i ny:%06i hi:%06i lo:%06i frac:%6.4f bound_left:%i bound_right:%i\n", H->rank, H->nx, H->ny, hi, lo, frac, H->boundary_left, H->boundary_right );
 }
 
 
@@ -144,20 +144,19 @@ void hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
             Hv->uold[IHvP ( i, j, IP )] = 1e-5;
         }
     }
-    // point explosion at middle of the domian
-    /*    x = (H->imax - H->imin) / 2 + ExtraLayer * 0;
-    y = (H->jmax - H->jmin) / 2 + ExtraLayer * 0;
-
-     printf("PFL %d %d\n", x, y);
-     Hv->uold[IHvP(x, y, IP)] = one / H->dx / H->dx;*/
-    // point explosion at corner (top,left)
-    // Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;
 
     // point explosion at the most left domain, top/left corner
     if ( H->rank == 0 ) {
         Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;
     }
-}                               // hydro_init
+    
+    
+    MPI_Type_vector( H->nvar * H->nyt, 1, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
+    MPI_Type_commit( & H->MPI_Hydro_vars );
+    
+    
+    
+} // hydro_init
 
 
 

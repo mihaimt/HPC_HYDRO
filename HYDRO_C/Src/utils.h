@@ -3,6 +3,38 @@
 
 #include "parametres.h"
 
+
+/*
+ * http://stackoverflow.com/questions/1644868/c-define-macro-for-debug-printing
+ * http://c.learncodethehardway.org/book/ex20.html
+ */
+
+#define LOGGING_ENABLED
+#define ASSERTS_ENABLED
+#define FILEOUTPUT_ENABLED
+#define MPI_ENABLED
+#define OPENMP_ENABLED
+
+
+#ifdef LOGGING_ENABLED
+#define LOG(x)  log_message(x)
+#define LOG0(x) log_message(x)
+#define LOGN(x) log_message(x)
+#define LOGA(x) log_message(x)
+#else
+#define LOG(x)
+#endif
+
+#ifdef ASSERTS_ENABLED
+#define NDEBUG 1
+#endif
+
+
+
+
+
+
+
 #ifndef Square
 #define Square(x) ((x) * (x))
 #endif /*  */

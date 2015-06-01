@@ -47,6 +47,7 @@ int main ( int argc, char **argv ) {
     domain_decomp ( &H );
 
     hydro_init ( &H, &Hv );
+    
     PRINTUOLD ( H, &Hv );
 
     printf ( "Hydro starts - mpi testing version \n" );
@@ -117,6 +118,7 @@ int main ( int argc, char **argv ) {
     }   // end while loop
 
     hydro_finish ( H, &Hv );
+    
     mpi_finish ( &H ) ;
 
     end_time = cclock();
