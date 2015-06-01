@@ -44,21 +44,21 @@ typedef struct _hydroparam {
     long boundary_right, boundary_left, boundary_down, boundary_up;
 
     /*
-    ** Variables needed for the MPI.
-    **
-    ** iProc: rank of the current process
-    ** iNProc: total number of processes in MPI_COMM_WORLD
-    ** iMPIError: error returned from an MPI call
-    ** bInit: is the MPI library initialized
-    ** MPIStatus: status of an MPI call
-    */
-    int iProc;
-    int iNProc;
-    int iMPIError;
-    int bInit;
-    MPI_Datatype MPI_Hydro_vars;
-    MPI_Request *MPI_req;
-    MPI_Status *MPIStatus;
+     * Variables needed for the MPI.
+     *
+     * rank: rank of the current process
+     * n_proc: total number of processes in MPI_COMM_WORLD
+     * mpi_error: error returned from an MPI call
+     * mpi_is_init: is the MPI library initialized
+     * mpi_status: status of an MPI call
+     */
+    int rank;
+    int n_proc;
+    int mpi_error;
+    int mpi_is_init;
+    MPI_Datatype mpi_hydro_vector_type;
+    MPI_Request* mpi_req;
+    MPI_Status* mpi_status;
 } hydroparam_t;
 
 #define HSCHEME_MUSCL 1

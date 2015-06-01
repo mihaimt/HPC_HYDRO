@@ -15,26 +15,30 @@
 #include "utils.h"
 #include "hydro_funcs.h"
 
-void
-MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
+
+
+void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
     /*
-    ** MPI_init() initializes the MPI library and allocates memory for the
-    ** MPI variables. We need to do this before anything else so that MPI
-    ** is initialized and ready to use.
-    */
+     * MPI_init() initializes the MPI library and allocates memory for the
+     * MPI variables. We need to do this before anything else so that MPI
+     * is initialized and ready to use.
+     */
+    
     H->bInit = 0;
 
-    /* We need to allocate memory for this variable! */
+    // Allocate Status (use one for all, overwrite old ones)
     H->MPIStatus = malloc ( sizeof ( MPI_Status ) );
 
-    // Allocate H->MPI_req !!!
+    // Allocate Requests (need 8 because of the 8 parallel MPI calls:
+    // 2 rows on each side x 2 sides (left & right) x 2 (send & recv)
     H->MPI_req = malloc ( 8*sizeof ( MPI_Request ) );
 
-    /* Initialize MPI library */
+    // Initialize MPI library
     H->iMPIError = MPI_Init ( argc,argv );
 
-    MPI_Comm_size ( MPI_COMM_WORLD,&H->iNProc );
-    MPI_Comm_rank ( MPI_COMM_WORLD,&H->iProc );
+    // Get the props of the MPI world
+    MPI_Comm_size ( MPI_COMM_WORLD, &H->iNProc );
+    MPI_Comm_rank ( MPI_COMM_WORLD, &H->iProc );
 
     if ( H->iMPIError != 0 ) {
         printf ( "MPI_Init: Error %i\n",H->iMPIError );

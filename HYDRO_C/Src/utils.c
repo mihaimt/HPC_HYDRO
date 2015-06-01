@@ -169,7 +169,7 @@ void
 MPI_print_column ( const hydroparam_t H, hydrovar_t * Hv, int column, int nvar ) {
     long i;
     for ( i = 0; i < H.nxt; i++ ) {
-        fprintf ( stdout, "iProc %i column %i nvar %i: %10.3e \n", H.iProc, column, nvar, Hv->uold[IHv ( i, column, nvar )] );
+        fprintf ( stdout, "iProc %i column %i nvar %i: %10.3e \n", H.rank, column, nvar, Hv->uold[IHv ( i, column, nvar )] );
     }
 }
 
