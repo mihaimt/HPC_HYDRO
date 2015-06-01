@@ -1,7 +1,7 @@
 This namelist contains various input parameters for HYDRO runs
 
 &RUN
-nstepmax=1500
+nstepmax=1800
 tend=300.0
 noutput=5
 on_output=.true.
