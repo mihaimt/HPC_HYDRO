@@ -15,10 +15,10 @@
 #include "hydro_godunov.h"
 #include "utils.h"
 
-hydroparam_t H;
-hydrovar_t Hv;                  // nvar
-hydrovarwork_t Hvw;             // nvar
-hydrowork_t Hw;
+hydroparam_t   H;
+hydrovar_t     Hv;
+hydrovarwork_t Hvw;
+hydrowork_t    Hw;
 unsigned long flops = 0;
 
 
@@ -26,6 +26,7 @@ unsigned long flops = 0;
 int main ( int argc, char **argv ) {
 
     // DECLARE VARS
+    //------------------------------------------------------------------------
     
     int nb_th = 1;
     double dt = 0;
@@ -39,8 +40,7 @@ int main ( int argc, char **argv ) {
     double start_iter = 0, end_iter = 0;
     double elaps = 0;
 
-    // The smallest possible time step for the entire computational
-    // domain.
+    // The smallest possible time step for the entire computational domain.
     double dtmin = 0.0;
 
     // The maximal time used to run
@@ -48,12 +48,14 @@ int main ( int argc, char **argv ) {
 
     
     // INIT EVERYTHING
+    //------------------------------------------------------------------------
 
     start_time = cclock();
 
     // Initialize MPI library (and allocate memory for the MPI variables).
     MPI_init ( &H, &argc, &argv );
 
+    // Parse command line variables and input file(s)
     process_args ( argc, argv, &H );
 
     // Domain decomposition

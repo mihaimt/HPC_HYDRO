@@ -103,8 +103,9 @@ static void process_input ( char *datafile, hydroparam_t * H ) {
     char buffer[1024];
     char *pval, *pkey;
     fd = fopen ( datafile, "r" );
+    
     if ( fd == NULL ) {
-        fprintf ( stderr, "Fichier de donnees illisible\n" );
+        fprintf ( stderr, "Provided input file (-i) is not readable\n" );
         exit ( 1 );
     }
 
@@ -237,13 +238,13 @@ void process_args ( long argc, char **argv, hydroparam_t * H ) {
             n++;
             continue;
         }
-        fprintf ( stderr, "Clef %s inconnue\n", argv[n] );
+        fprintf ( stderr, "Argument %s unknown\n", argv[n] );
         n++;
     }
     if ( donnees != NULL ) {
         process_input ( donnees, H );
     } else {
-        fprintf ( stderr, "Option -i donnees manquantes\n" );
+        fprintf ( stderr, "Option -i is missing (it's mandatory!)\n" );
         exit ( 1 );
     }
 }
