@@ -70,7 +70,7 @@ main.o: parametres.h hydro_funcs.h vtkfile.h
 main.o: compute_deltat.h hydro_godunov.h utils.h debug.h
 make_boundary.o: parametres.h make_boundary.h
 make_boundary.o: utils.h
-parametres.o: parametres.h
+parametres.o: parametres.h debug.h
 qleftright.o: parametres.h utils.h qleftright.h
 riemann.o: parametres.h utils.h riemann.h
 slope.o: parametres.h utils.h slope.h
@@ -81,5 +81,5 @@ vtkfile.o: vtkfile.h
 cmpflx.o: utils.h parametres.h
 constoprim.o: utils.h parametres.h
 equation_of_state.o: utils.h parametres.h
-hydro_funcs.o: parametres.h
+hydro_funcs.o: parametres.h debug.h
 utils.o: parametres.h

@@ -12,6 +12,8 @@
 #include <mpi.h>
 #include <assert.h>
 
+#include "debug.h"
+
 #include "utils.h"
 #include "hydro_funcs.h"
 
@@ -104,14 +106,20 @@ void MPI_domain_decomp ( hydroparam_t *H ) {
     lo = ( int ) ( frac * H->rank );
     up = ( int ) ( frac * ( H->rank+1 ) );
 
-    H->nx = up-lo;
+    H->nx = up - lo;
 
     // Y DIRECTION: Dont change ny (only split along the x direction)
     H->ny = H->nydomain;
 
-    // (CR) Debug
-    // fprintf(stderr,"Rank %i: nx=%i ny=%i nxdomain=%i nydomain=%i\n", H->iProc, H->nx, H->ny, H->nxdomain, H->nydomain);
-}                               // MPI_domain_decomp
+    // (CR,RK) debug test if domain decomposition makes sense
+    if (DEBUG) {
+        int nxtotal = 0.0;
+        MPI_Allreduce ( &H->nx, &nxtotal, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
+        TRC ( H->rank, "nx=%i ny=%i nxdomain=%i nydomain=%i nxtotal=%i", H->nx, H->ny, H->nxdomain, H->nydomain, nxtotal);
+        assert ( nxtotal == H->nxdomain );
+    }
+
+} // MPI_domain_decomp
 
 
 

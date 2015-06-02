@@ -63,13 +63,6 @@ int main ( int argc, char **argv ) {
     // Domain decomposition
     MPI_domain_decomp ( &H );
 
-    // (CR,RK) debug test if domain decomposition makes sense
-    if (DEBUG) {
-        int nxtotal = 0.0;
-        MPI_Allreduce ( &H.nx, &nxtotal, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
-        DBG ( "rank %04i: nx=%i nxtotal=%i\n",H.rank,H.nx,nxtotal );
-    }
-
     // Initialize the hydro variables and set initial conditions.
     MPI_hydro_init ( &H, &Hv );
     PRINTUOLD ( H, &Hv );
@@ -169,13 +162,28 @@ int main ( int argc, char **argv ) {
             elaps = tmax;
         }
         timeToString ( outnum, elaps );
-        fprintf ( stdout, "Hydro ends in %ss (%.3lf).\n", outnum, elaps );
+        //fprintf ( stdout, "Hydro ends in %ss (%.3lf).\n", outnum, elaps );
         INF ( "Hydro ends in %ss (%.3lf).\n", outnum, elaps );
-        
     }
 
     // Finalize MPI and free memory.
     MPI_hydro_finish ( &H, &Hv );
+
+
+    // test message printing
+    if (DEBUG && ON) {
+        TRC ( H.rank, "this is a trace" );
+        TRC ( H.rank, "%s", "this is a trace" );
+        DBG ( "a debug\n" );
+        DBG ( "%s", "a debug\n" );
+        ERR ( "an error\n" );
+        ERR ( "%s", "an error\n" );
+        WRN ( "warn\n" );
+        WRN ( "%s", "warn\n" );
+        INF ( "info\n" );
+        INF ( "%s", "info\n" );
+    }
+
 
     return 0;
 }

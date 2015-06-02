@@ -11,16 +11,18 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "debug.h"
+
 #include "parametres.h"
 
 
 static void usage ( void ) {
 
-    fprintf ( stderr, "options possibles du programme hydro" );
-    fprintf ( stderr, "--help" );
-    fprintf ( stderr, "-i input" );
-    fprintf ( stderr, "-v :: pour avoir les impressions internes" );
-    fprintf ( stderr, "------------------------------------" );
+    ERR ( "options possibles du programme hydro\n" );
+    ERR ( "--help\n" );
+    ERR ( "-i input\n" );
+    ERR ( "-v :: pour avoir les impressions internes\n" );
+    ERR ( "------------------------------------\n" );
     exit ( 1 );
 
 }
@@ -28,7 +30,7 @@ static void usage ( void ) {
 
 static void default_values ( hydroparam_t * H ) {
 
-    fprintf ( stderr,"Setting default values ...\n" );
+    INF ( "Setting default values ...\n" );
 
     // Default values should be given
     H->prt = 0;                 // no printing of internal arrays
@@ -105,7 +107,7 @@ static void process_input ( char *datafile, hydroparam_t * H ) {
     fd = fopen ( datafile, "r" );
     
     if ( fd == NULL ) {
-        fprintf ( stderr, "Provided input file (-i) is not readable\n" );
+        ERR ( "Provided input file (-i) is not readable\n" );
         exit ( 1 );
     }
 
@@ -191,9 +193,7 @@ static void process_input ( char *datafile, hydroparam_t * H ) {
             } else if ( strcmp ( pval, "collela" ) == 0 ) {
                 H->scheme = HSCHEME_COLLELA;
             } else {
-                fprintf ( stderr,
-                          "Nom de schema <%s> inconnu, devrait etre l'un de [muscl,plmde,collela]\n",
-                          pval );
+                ERR ( "Nom de schema <%s> inconnu, devrait etre l'un de [muscl,plmde,collela]\n", pval );
                 exit ( 1 );
             }
             continue;
@@ -202,14 +202,14 @@ static void process_input ( char *datafile, hydroparam_t * H ) {
     fclose ( fd );
     // petit resume de la situation
 
-    printf ( "+-------------------+\n" );
-    printf ( "|nx=%-7ld         |\n", H->nx );
-    printf ( "|ny=%-7ld         |\n", H->ny );
-    printf ( "|tend=%-10.3f    |\n", H->tend );
-    printf ( "|nstepmax=%-7ld   |\n", H->nstepmax );
-    printf ( "|noutput=%-7ld    |\n", H->noutput );
-    printf ( "|dtoutput=%-10.3f|\n", H->dtoutput );
-    printf ( "+-------------------+\n" );
+    INF ( "+-------------------+\n" );
+    INF ( "|nx=%-7ld         |\n", H->nx );
+    INF ( "|ny=%-7ld         |\n", H->ny );
+    INF ( "|tend=%-10.3f    |\n", H->tend );
+    INF ( "|nstepmax=%-7ld   |\n", H->nstepmax );
+    INF ( "|noutput=%-7ld    |\n", H->noutput );
+    INF ( "|dtoutput=%-10.3f|\n", H->dtoutput );
+    INF ( "+-------------------+\n" );
 
     //exit(0);
 }
@@ -246,13 +246,13 @@ void process_args ( long argc, char **argv, hydroparam_t * H ) {
             n++;
             continue;
         }
-        fprintf ( stderr, "Argument %s unknown\n", argv[n] );
+        WRN ( "Argument %s unknown\n", argv[n] );
         n++;
     }
     if ( donnees != NULL ) {
         process_input ( donnees, H );
     } else {
-        fprintf ( stderr, "Option -i is missing (it's mandatory!)\n" );
+        ERR ( "Option -i is missing (it's mandatory!)\n" );
         exit ( 1 );
     }
 }
