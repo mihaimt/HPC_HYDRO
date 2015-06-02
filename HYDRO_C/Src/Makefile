@@ -10,6 +10,12 @@ CC = cc
 MPICC = cc
 LMPICC = mpicc
 
+
+FFLAGS_LMPI = -Ofast
+LDFLAGS_LMPI = -Ofast
+
+
+
 default: mono
 
 mono: CCOMP = $(CC)
@@ -37,13 +43,13 @@ mpiomp: $(OBJ)
 	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_mpiomp -lm
 
 lmpi: CCOMP = $(LMPICC)
-lmpi: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_MPI)
-lmpi: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_MPI)
+lmpi: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_LMPI)
+lmpi: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_LMPI)
 lmpi: $(OBJ)
 	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_lmpi -lm
 
 clean   :
-	rm -f *.o core* hydro_mono hydro_mpi hydro_omp hydro_mpiomp
+	rm -f *.o core* hydro_mono hydro_mpi hydro_omp hydro_mpiomp ../Bin/hydro_lmpi
 
 cleanall   : clean
 	rm -f *~ *.vts *.out

@@ -171,7 +171,7 @@ int main ( int argc, char **argv ) {
 
 
     // test message printing
-    if (DEBUG && ON) {
+    if (DEBUG && OFF) {
         TRC ( H.rank, "this is a trace" );
         TRC ( H.rank, "%s", "this is a trace" );
         DBG ( "a debug\n" );

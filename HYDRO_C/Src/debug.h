@@ -5,6 +5,9 @@
  * This might only work for C99 using GNU C compiler!
  * Make sure to include stdio in the file where you use this!
  * 
+ * The additional functions are intended to be used for MPI programming!
+ * 
+ * 
  * For any prints to the screen, use the functions below instead prints
  * 
  * - TRC (trace)
@@ -18,24 +21,29 @@
  * - ERR (error)
  *      ERR ( format, args )
  *      ERR ( msg )
- *      output if an critical error occured and the program will exit
+ *      output if an critical error occurred and the program will exit
  * 
  * - WRN (warn)
- *      warings about errors, but the program tries to continue
+ *      warnings about stuff, but the program tries to continue
  * 
  * - INF (info)
  *      just some nice information..
  * 
+ * 
  * there are XXX_if functions as well. Use those for example to print
  * only on a selected rank:
- * - INF_if
+ * 
+ * - INF_if ( _COND, _FORMAT, ... )
  *      INF_if ( H->rank==0, "message")
  *      INF_if ( H->rank==0, format, args )
  * 
- *      print information if enabled and if the condition is true
+ *      print information only if the condition is true (and if enabled)
  * 
- * then there are XXX_at functions, that output the rank as prefix or otherwise
- * - ERR_at (error with rank)
+ * 
+ * then there are XXX_at functions, that output the rank as prefix
+ * (rank is just a 4 digit int)
+ * 
+ * - ERR_at ( _RANK, _FORMAT, ...)
  *      ERR_at ( rank, frmt, args )
  *      ERR_at ( rank, msg )
  * 
@@ -52,7 +60,7 @@
 #ifndef __DEBUG_H__
 #define __DEBUG_H__
 
-// just some handy preliminary defs for the confused ones
+// just some handy preliminary defs for the confused ones like me
 #define ON 1
 #define OFF 0
 #define YES 1
@@ -75,22 +83,29 @@
 // compile tests and other debug code
 #define DEBUG ON
 
+// run the asserts
+#define DO_ASSERTS ON
+
 // use color output
 #define USE_COLOR YES
 
-// do traces output (lowest level, print where in the code it is as well, usually off)
+// do traces output (lowest level, print where in the code it is as well,
+// usually off)
 #define TRACE_PRINT ON
 
 // do debug output (usually off)
 #define DEBUG_PRINT ON
 
-// do runtime error output (stuff for the user to see if something is massivly screwed up and the programm will shut down, usually on)
+// do run time error output (stuff for the user to see if something is
+// massively screwed up and the program will shut down, usually on)
 #define ERROR_PRINT ON
 
-// do runtime warn output (stuff for the user to see if something is screwed up, usually on)
+// do run time warn output (stuff for the user to see if something is screwed
+// up, usually on)
 #define WARN_PRINT ON
 
-// do runtime info output (stuff for the user to see in normal operation, usually on)
+// do run time info output (stuff for the user to see in normal operation,
+// usually on)
 #define INFO_PRINT ON
 
 
@@ -104,8 +119,6 @@
 
 // color definition according to:
 // http://stackoverflow.com/questions/3585846/color-text-in-terminal-aplications-in-unix
-
-
 #if USE_COLOR==TRUE
     #define KNRM  "\x1B[0m"
     #define KRED  "\x1B[31m"
@@ -130,50 +143,78 @@
 
 // Note to myself: there's a good reason this uses NO ifdef / else clauses! read the SO question!!
 // (--> compiler can check the print code)
-// the optimizer should remove while{if{0}} never the less
+// the optimizer should remove while{if{0}} never the less, so no overhead!
 
 #define TRC(_RANK, _FORMAT, ...) \
-    do { if (TRACE_PRINT) fprintf(stderr, KMAG "rank %04i " KMAG "%s:%s():%i > " KCYN _FORMAT RESET "\n", _RANK, __FILE__, __func__, __LINE__, ##__VA_ARGS__); } while (0)
+    do { if (TRACE_PRINT) \
+        fprintf(stderr, \
+                KMAG "rank %04i " KMAG "%s:%s():%i > " KCYN _FORMAT RESET "\n", \
+                _RANK, __FILE__, __func__, __LINE__, ##__VA_ARGS__); \
+    } while (0)
 
 #define DBG(_FORMAT, ...) \
-    do { if (DEBUG_PRINT) fprintf(stderr, KCYN _FORMAT RESET, ##__VA_ARGS__); } while (0)
+    do { if (DEBUG_PRINT) \
+        fprintf(stderr, KCYN _FORMAT RESET, ##__VA_ARGS__); \
+    } while (0)
 
 #define ERR(_FORMAT, ...) \
     do { if (ERROR_PRINT) {\
         fprintf(stderr, KRED _FORMAT RESET, ##__VA_ARGS__); \
-        fprintf(stderr, KMAG "rank ---- " KMAG "%s:%s():%i\n", __FILE__, __func__, __LINE__); \
+        fprintf(stderr, KMAG "rank ---- " KMAG "%s:%s():%i\n", \
+                __FILE__, __func__, __LINE__); \
     }} while (0)
 
 #define ERR_if(_COND, _FORMAT, ...) \
     do { if (ERROR_PRINT && _COND) {\
         fprintf(stderr, KRED _FORMAT RESET, ##__VA_ARGS__); \
-        fprintf(stderr, KMAG "rank ---- " KMAG "%s:%s():%i\n", __FILE__, __func__, __LINE__); \
+        fprintf(stderr, KMAG "rank ---- " KMAG "%s:%s():%i\n", \
+                __FILE__, __func__, __LINE__ ); \
     }} while (0)
 
 #define ERR_at(_RANK, _FORMAT, ...) \
     do { if (ERROR_PRINT) {\
         fprintf(stderr, KRED _FORMAT RESET, ##__VA_ARGS__); \
-        fprintf(stderr, KMAG "rank %04i " KMAG "%s:%s():%i\n", _RANK, __FILE__, __func__, __LINE__); \
+        fprintf(stderr, KMAG "rank %04i " KMAG "%s:%s():%i\n", \
+                _RANK, __FILE__, __func__, __LINE__); \
     }} while (0)
 
 #define ERRr_if(_COND, _RANK, _FORMAT, ...) \
     do { if (ERROR_PRINT && _COND) {\
         fprintf(stderr, KRED _FORMAT RESET, ##__VA_ARGS__); \
-        fprintf(stderr, KMAG "rank %04i " KMAG "%s:%s():%i\n", _RANK, __FILE__, __func__, __LINE__); \
+        fprintf(stderr, KMAG "rank %04i " KMAG "%s:%s():%i\n", \
+                _RANK, __FILE__, __func__, __LINE__); \
     }} while (0)
 
+
 #define WRN(_FORMAT, ...) \
-    do { if (WARN_PRINT) fprintf(stderr, KYEL _FORMAT RESET, ##__VA_ARGS__); } while (0)
+    do { if (WARN_PRINT) \
+        fprintf(stderr, KYEL _FORMAT RESET, ##__VA_ARGS__); \
+    }while (0)
 
 #define WRN_if(_COND, _FORMAT, ...) \
-    do { if (WARN_PRINT && _COND) fprintf(stderr, KYEL _FORMAT RESET, ##__VA_ARGS__); } while (0)
+    do { if (WARN_PRINT && _COND) \
+        fprintf(stderr, KYEL _FORMAT RESET, ##__VA_ARGS__); \
+    } while (0)
 
 #define INF(_FORMAT, ...) \
-    do { if (INFO_PRINT) fprintf(stdout, _FORMAT, ##__VA_ARGS__); } while (0)
+    do { if (INFO_PRINT) \
+        fprintf(stdout, _FORMAT, ##__VA_ARGS__); \
+    } while (0)
 
 #define INF_if(_COND, _FORMAT, ...) \
-    do { if (INFO_PRINT && _COND) fprintf(stdout, _FORMAT, ##__VA_ARGS__); } while (0)
+    do { if (INFO_PRINT && _COND) \
+        fprintf(stdout, _FORMAT, ##__VA_ARGS__); \
+    } while (0)
 
+
+// for this to work, first include <assert.h>, then debug!
+#if DO_ASSERTS
+#undef NDEBUG
+#else
+#define NDEBUG
+#undef assert
+#define assert(ignore) ((void) 0)
+#endif //ASSERTS
 
 
 

@@ -25,6 +25,8 @@
  * MPI variables. We need to do this before anything else so that MPI
  * is initialized and ready to use.
  * 
+ * Don't do much if no mpi is used, but init variables never the less
+ * 
  * Expects: -none-
  * Sets:    mpi_is_init, n_procs, rank
  * 
@@ -44,6 +46,8 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
     // 2 rows on each side x 2 sides (left & right) x 2 (send & recv)
     H->mpi_req = malloc ( 8*sizeof ( MPI_Request ) );
 
+#if USE_MPI  //--- set this in debug.h ----------------------------------------
+
     // Initialize MPI library
     H->mpi_error = MPI_Init ( argc, argv );
 
@@ -56,6 +60,13 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
         exit ( 1 );
     }
     H->mpi_is_init = 1;
+    
+#else // ----------------------------------------------------------------------
+    H->n_procs = 1;
+    H->rank = 0;
+    H->mpi_is_init = 0;
+    
+#endif // USE_MPI -------------------------------------------------------------
 }
 
 
@@ -66,10 +77,13 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
  * @return void
  */
 void MPI_finish ( hydroparam_t *H ) {
-    //TODO (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here??
+    //TODO (CR) Dont we need a hydroparam_t *H rather than a const
+    // hydroparam_t H here??
 
     Free ( H->mpi_status );
     Free ( H->mpi_req );
+
+#if USE_MPI  //--- set this in debug.h ----------------------------------------
 
     H->mpi_error = MPI_Finalize();
 
@@ -78,7 +92,10 @@ void MPI_finish ( hydroparam_t *H ) {
         exit ( 1 );
     }
 
+#endif // USE_MPI -------------------------------------------------------------
+
     H->mpi_is_init = 0;
+
 }
 
 
@@ -122,7 +139,7 @@ void MPI_domain_decomp ( hydroparam_t *H ) {
 } // MPI_domain_decomp
 
 
-
+//TODO delete this func
 void
 hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     long i, j;
@@ -162,15 +179,28 @@ hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
      Hv->uold[IHvP(x, y, IP)] = one / H->dx / H->dx;*/
     // point explosion at corner (top,left)
     Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;
+
+
 }                               // hydro_init
 
-/*
-** MPI_hydro_init() is basically the same function as hydro_init() but
-** it only allocates the local computational domain and sets the initial
-** conditions depending on the rank of the current MPI process.
-*/
-void
-MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
+
+
+
+/**
+ * @brief Init the simulation
+ * 
+ * MPI_hydro_init() is basically the same function as hydro_init() but
+ * it only allocates the local computational domain and sets the initial
+ * conditions depending on the rank of the current MPI process.
+ * 
+ * Expects: mpi_is_init, 
+ * Sets   : 
+ * 
+ * @param H ...
+ * @param Hv ...
+ * @return void
+ */
+void MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     long i, j;
     long x, y;
 
