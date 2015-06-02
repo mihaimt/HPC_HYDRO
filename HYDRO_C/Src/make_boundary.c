@@ -183,7 +183,7 @@ MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_R
         }
 
         // Get values from the right domain.
-        if ( H.rank == H.n_proc-1 ) {
+        if ( H.rank == H.n_procs-1 ) {
             // Set physical boundary conditions for the right ghost layer
             for ( ivar = 0; ivar < H.nvar; ivar++ ) {
                 for ( i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++ ) {
@@ -298,7 +298,7 @@ MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
 
     // I have no idea why MPI_Waitall() doesnt work
     // Here we send two columns at once
-    if ( idim == 1 && H.n_proc > 1 ) {
+    if ( idim == 1 && H.n_procs > 1 ) {
         // Dont do this if we sweep the grid in ny direction.
         if ( H.rank == 0 ) {
             // Only exchanged cells with the right layer
@@ -307,7 +307,7 @@ MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
             MPI_Wait ( MPI_req+2, &status );
             fprintf ( stderr,"Rank %i: MPI_Wait 3\n", H.rank );
             MPI_Wait ( MPI_req+3, &status );
-        } else if ( H.rank == H.n_proc-1 ) {
+        } else if ( H.rank == H.n_procs-1 ) {
             // Only exchanged cells with the left layer
             // (CR) Debug
             fprintf ( stderr,"Rank %i: MPI_Wait 0\n", H.rank );
@@ -431,7 +431,7 @@ MPI_get_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
             MPI_Send ( &Hv->uold[IHv ( H.nx+ExtraLayer-1, 0, ID )], 1, H.mpi_hydro_vector_type, H.rank+1, 1, MPI_COMM_WORLD );
 
             fprintf ( stderr, "iProc %i: Sending right copy layer to iProc %i. Done\n", H.rank, H.rank+1 );
-        } else if ( H.rank == H.n_proc-1 ) {
+        } else if ( H.rank == H.n_procs-1 ) {
             // Rank iNProc-1 (most right domain)
             // Receive left ghost layer from the left domain (but dont send the right copy layer to the right).
             // (CR) Debug
@@ -475,7 +475,7 @@ MPI_get_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
             // MPI_Recv( buf, count, datatype, source, tag, comm, status)
             MPI_Recv ( &Hv->uold[IHv ( H.nx+ExtraLayer+1, 0, ID )], 1, H.mpi_hydro_vector_type, H.rank+1, 0, MPI_COMM_WORLD, &status );
             MPI_Recv ( &Hv->uold[IHv ( H.nx+ExtraLayer, 0, ID )], 1, H.mpi_hydro_vector_type, H.rank+1, 1, MPI_COMM_WORLD, &status );
-        } else if ( H.rank == H.n_proc - 1 ) {
+        } else if ( H.rank == H.n_procs - 1 ) {
             // Rank: iNProc-1 (most right domain)
             // Set physical boundary conditions for the right ghost cells
             for ( ivar = 0; ivar < H.nvar; ivar++ ) {
@@ -574,7 +574,7 @@ MPI_get_boundary_simple ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
     WHERE ( "MPI_get_boundary_simple" );
 
     // (CR) Debug
-    assert ( H.n_proc == 2 );
+    assert ( H.n_procs == 2 );
 
     fprintf ( stdout,"Rank %i: MPI_get_boundary_simple()\n", H.rank );
     // Use:

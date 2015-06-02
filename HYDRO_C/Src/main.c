@@ -15,6 +15,8 @@
 #include "hydro_godunov.h"
 #include "utils.h"
 
+#include "debug.h"
+
 hydroparam_t   H;
 hydrovar_t     Hv;
 hydrovarwork_t Hvw;
@@ -61,10 +63,12 @@ int main ( int argc, char **argv ) {
     // Domain decomposition
     MPI_domain_decomp ( &H );
 
-    int nxtotal = 0.0;
-    // (CR) Debug
-    MPI_Allreduce ( &H.nx,&nxtotal,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD );
-    fprintf ( stderr,"Process %i: nx = %i nxtotal = %i\n",H.rank,H.nx,nxtotal );
+    // (CR,RK) debug test if domain decomposition makes sense
+    if (DEBUG) {
+        int nxtotal = 0.0;
+        MPI_Allreduce ( &H.nx, &nxtotal, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
+        DBG ( "rank %04i: nx=%i nxtotal=%i\n",H.rank,H.nx,nxtotal );
+    }
 
     // Initialize the hydro variables and set initial conditions.
     MPI_hydro_init ( &H, &Hv );
@@ -73,7 +77,7 @@ int main ( int argc, char **argv ) {
     fprintf ( stderr,"Process %i: nxt=%i nyt=%i\n",H.rank,H.nxt,H.nyt );
     if ( H.rank == 0 ) {
         printf ( "Hydro starts - MPI version \n" );
-        printf ( "Running on %i processes\n", H.n_proc );
+        printf ( "Running on %i processes\n", H.n_procs );
 #ifdef MPI_NO_OUTPUT
         printf ( "NOT WRITING ANY OUTPUT\n" );
 #endif
@@ -166,6 +170,8 @@ int main ( int argc, char **argv ) {
         }
         timeToString ( outnum, elaps );
         fprintf ( stdout, "Hydro ends in %ss (%.3lf).\n", outnum, elaps );
+        INF ( "Hydro ends in %ss (%.3lf).\n", outnum, elaps );
+        
     }
 
     // Finalize MPI and free memory.

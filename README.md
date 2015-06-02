@@ -9,10 +9,11 @@ Contributors: Mihai Tomozeiu, Christian Reinhardt, Rafael Kung.
 ### on your local university desktop opensuse
 
 ```
-cd HYDRO_C/Src
+cd hpc/HYDRO_C/Src
+make clean
 make lmpi
-
-mpirun -n 4 ../Bin/hydro_lmpi -i ../Input/input_sedov_100x10.nml
+cd ../Output
+mpirun -n 16 ../Bin/hydro_lmpi -i ../Input/debug.nml
 ```
 
 The binary is in `HYDRO_C/Bin`. You can use `mpirun` to run the program, or use `HYDRO_C/Bin/run`, which runs the command above.

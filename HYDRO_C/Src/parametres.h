@@ -56,7 +56,7 @@ typedef struct _hydroparam {
      * mpi_status: status of an MPI call
      */
     int rank;
-    int n_proc;
+    int n_procs;
     int mpi_error;
     int mpi_is_init;
     MPI_Datatype mpi_hydro_vector_type;

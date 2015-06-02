@@ -16,14 +16,23 @@
 #include "hydro_funcs.h"
 
 
-
+/**
+ * @brief init mpi and according variables
+ * 
+ * MPI_init() initializes the MPI library and allocates memory for the
+ * MPI variables. We need to do this before anything else so that MPI
+ * is initialized and ready to use.
+ * 
+ * Expects: -none-
+ * Sets:    mpi_is_init, n_procs, rank
+ * 
+ * @param H ...
+ * @param argc ...
+ * @param argv ...
+ * @return void
+ */
 void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
-    /*
-     * MPI_init() initializes the MPI library and allocates memory for the
-     * MPI variables. We need to do this before anything else so that MPI
-     * is initialized and ready to use.
-     */
-    
+
     H->mpi_is_init = 0;
 
     // Allocate Status (use one for all, overwrite old ones)
@@ -34,10 +43,10 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
     H->mpi_req = malloc ( 8*sizeof ( MPI_Request ) );
 
     // Initialize MPI library
-    H->mpi_error = MPI_Init ( argc,argv );
+    H->mpi_error = MPI_Init ( argc, argv );
 
     // Get the props of the MPI world
-    MPI_Comm_size ( MPI_COMM_WORLD, &H->n_proc );
+    MPI_Comm_size ( MPI_COMM_WORLD, &H->n_procs );
     MPI_Comm_rank ( MPI_COMM_WORLD, &H->rank );
 
     if ( H->mpi_error != 0 ) {
@@ -45,17 +54,22 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
         exit ( 1 );
     }
     H->mpi_is_init = 1;
-}                               // MPI_init
+}
 
-void
-MPI_finish ( hydroparam_t *H ) {
-    /* (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here?? */
-    /* Finalize MPI library */
-    H->mpi_error = MPI_Finalize();
+
+/**
+ * @brief Shutdown MPI
+ * 
+ * @param H ...
+ * @return void
+ */
+void MPI_finish ( hydroparam_t *H ) {
+    //TODO (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here??
 
     Free ( H->mpi_status );
-    // Free MPI_req
     Free ( H->mpi_req );
+
+    H->mpi_error = MPI_Finalize();
 
     if ( H->mpi_error != 0 ) {
         printf ( "MPI_Finalize: Error %i\n",H->mpi_error );
@@ -63,29 +77,43 @@ MPI_finish ( hydroparam_t *H ) {
     }
 
     H->mpi_is_init = 0;
-}                               // MPI_finish
+}
 
 
-/*
-** Do a domain decomposition. Very simple in our case.
-*/
-void
-MPI_domain_decomp ( hydroparam_t *H ) {
-    float frac;
-    int lo, up;
-//	int i,j;
+/**
+ * @brief Simple domain decomposition
+ * 
+ * We use simple vertical slides as sub-domains, assuming a wind tunnel
+ * domain. Each process gets one slide of the whole domain.
+ * Use some slight integer magic here.
+ * (remember: casting to int rounds DOWN)
+ * 
+ * Expects: n_proc, rank, nxdomain, nydomain
+ * Sets   : nx, ny
+ * 
+ * @param H ...
+ * @return void
+ */
+void MPI_domain_decomp ( hydroparam_t *H ) {
 
-    // Dont change ny (only split along the x direction)
-    H->ny = H->nydomain;
-
-    frac = 1.0 * H->nxdomain / H->n_proc;
+    float frac; // size of one sub domain
+    int lo, up; // lower and upper boundary of this proc in the whole domain
+    
+    // X DIRECTION: Slicing
+    frac = 1.0 * H->nxdomain / H->n_procs;
     lo = ( int ) ( frac * H->rank );
     up = ( int ) ( frac * ( H->rank+1 ) );
 
     H->nx = up-lo;
+
+    // Y DIRECTION: Dont change ny (only split along the x direction)
+    H->ny = H->nydomain;
+
     // (CR) Debug
     // fprintf(stderr,"Rank %i: nx=%i ny=%i nxdomain=%i nydomain=%i\n", H->iProc, H->nx, H->ny, H->nxdomain, H->nydomain);
 }                               // MPI_domain_decomp
+
+
 
 void
 hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {

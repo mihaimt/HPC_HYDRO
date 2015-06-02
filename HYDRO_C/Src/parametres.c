@@ -215,6 +215,14 @@ static void process_input ( char *datafile, hydroparam_t * H ) {
 }
 
 
+/**
+ * @brief processes the commandline arguments and the input file
+ * 
+ * @param argc ...
+ * @param argv ...
+ * @param H ...
+ * @return void
+ */
 void process_args ( long argc, char **argv, hydroparam_t * H ) {
 
     long n = 1;
