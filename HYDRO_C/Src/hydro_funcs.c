@@ -26,6 +26,7 @@
  * is initialized and ready to use.
  * 
  * Don't do much if no mpi is used, but init variables never the less
+ * and make sure to set n_procs and rank correctly!
  * 
  * Expects: -none-
  * Sets:    mpi_is_init, n_procs, rank
@@ -60,13 +61,17 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
         exit ( 1 );
     }
     H->mpi_is_init = 1;
-    
+
 #else // ----------------------------------------------------------------------
+
+    // the rest of the code relies on those, so make sure they are initialized
+    // so sensible values!
     H->n_procs = 1;
     H->rank = 0;
     H->mpi_is_init = 0;
-    
+
 #endif // USE_MPI -------------------------------------------------------------
+
 }
 
 
@@ -84,6 +89,9 @@ void MPI_finish ( hydroparam_t *H ) {
     Free ( H->mpi_req );
 
 #if USE_MPI  //--- set this in debug.h ----------------------------------------
+
+    // Free MPI data type
+    MPI_Type_free ( &H->mpi_hydro_vector_type );
 
     H->mpi_error = MPI_Finalize();
 
@@ -193,9 +201,12 @@ hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
  * it only allocates the local computational domain and sets the initial
  * conditions depending on the rank of the current MPI process.
  * 
+ * Note: the rank is also set (==0) if MPI is disabled!
+ * 
  * Expects: mpi_is_init, nx, ny, nvar
  * Sets   : imin, imax, nxt, nyt, nxyt, arSz, arVarSz, 
  *          mpi_hydro_vector_type
+ *          uold
  * 
  * @param H ...
  * @param Hv ...
@@ -242,7 +253,7 @@ void MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     // allocate uold for each conservative variable
     Hv->uold = ( double* ) calloc ( H->nvar * H->nxt * H->nyt, sizeof ( double ) );
 
-    // wind tunnel with point explosion
+    // wind tunnel initial condition: silence
     for ( j = H->jmin + ExtraLayer; j < H->jmax - ExtraLayer; j++ ) {
         for ( i = H->imin + ExtraLayer; i < H->imax - ExtraLayer; i++ ) {
             Hv->uold[IHvP ( i, j, ID )] = one;
@@ -251,38 +262,45 @@ void MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
             Hv->uold[IHvP ( i, j, IP )] = 1e-5;
         }
     }
-    // point explosion at middle of the domian
-    /*    x = (H->imax - H->imin) / 2 + ExtraLayer * 0;
-    y = (H->jmax - H->jmin) / 2 + ExtraLayer * 0;
 
-     printf("PFL %d %d\n", x, y);
-     Hv->uold[IHvP(x, y, IP)] = one / H->dx / H->dx;*/
-    // point explosion at corner (top,left)
-    // (CR) Bottom left??
+    // point explosion at corner (bottom, left)
     if ( H->rank == 0 ) {
-        /* Only in the domain of process zero we have the initial explosion. */
         Hv->uold[IHvP ( H->imin+ExtraLayer, H->jmin+ExtraLayer, IP )] = one / H->dx / H->dx;
     }
-}                               // MPI_hydro_init
 
-void
-hydro_finish ( const hydroparam_t H, hydrovar_t * Hv ) {
+} // MPI_hydro_init
+
+
+
+//TODO delete this func
+void hydro_finish ( const hydroparam_t H, hydrovar_t * Hv ) {
+
     Free ( Hv->uold );
+
 }                               // hydro_finish
 
-void
-MPI_hydro_finish ( hydroparam_t *H, hydrovar_t * Hv ) {
-    /* (CR) Dont we need a hydroparam_t *H rather than a const hydroparam_t H here?? */
 
-    // Free MPI data type
-    MPI_Type_free ( &H->mpi_hydro_vector_type );
 
-    /* Finalize MPI library */
-    if ( H->mpi_status != NULL ) MPI_finish ( H );
+
+/**
+ * @brief Cleans up the hydro vars
+ * 
+ * @param H ...
+ * @param Hv ...
+ * @return void
+ */
+void MPI_hydro_finish ( hydroparam_t *H, hydrovar_t * Hv ) {
 
     Free ( Hv->uold );
-}
-// hydro_finish
+
+} // MPI_hydro_finish
+
+
+
+
+
+
+
 void
 allocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
     WHERE ( "allocate_work_space" );

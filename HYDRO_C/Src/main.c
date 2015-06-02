@@ -167,6 +167,7 @@ int main ( int argc, char **argv ) {
     }
 
     // Finalize MPI and free memory.
+    MPI_finish ( &H );
     MPI_hydro_finish ( &H, &Hv );
 
 
