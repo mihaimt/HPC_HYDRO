@@ -193,21 +193,23 @@ hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
  * it only allocates the local computational domain and sets the initial
  * conditions depending on the rank of the current MPI process.
  * 
- * Expects: mpi_is_init, 
- * Sets   : 
+ * Expects: mpi_is_init, nx, ny, nvar
+ * Sets   : imin, imax, nxt, nyt, nxyt, arSz, arVarSz, 
+ *          mpi_hydro_vector_type
  * 
  * @param H ...
  * @param Hv ...
  * @return void
  */
 void MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
+
     long i, j;
     long x, y;
 
-    /* Make sure that MPI is initialized before we use it. */
+    // Make sure that MPI is initialized before we use it.
     assert ( H->mpi_is_init );
 
-    /* Make sure that we did the domain decomposition. */
+    // Make sure that we did the domain decomposition.
     assert ( H->nx > 0 && H->ny > 0 );
 
     // *WARNING* : we will use 0 based arrays everywhere since it is C code!
@@ -224,15 +226,21 @@ void MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     H->arSz = ( H->nxyt + 2 );
     H->arVarSz = ( H->nxyt + 2 ) * H->nvar;
 
-    // Define a new MPI data type
-    MPI_Type_vector ( H->nvar*H->nyt, ExtraLayer, H->nxt, MPI_DOUBLE, &H->mpi_hydro_vector_type );
 
-//	Just define one column at the moment
-//	MPI_Type_vector( H->nvar*H->nyt, 1, H->nxt, MPI_DOUBLE, &H->MPI_Hydro_vars );
-    MPI_Type_commit ( & H->mpi_hydro_vector_type );
+#if USE_MPI  //--- set this in debug.h ----------------------------------------
+
+    // Define a new MPI data type
+    // Just define one column at the moment
+    MPI_Type_vector ( H->nvar*H->nyt, ExtraLayer, H->nxt, MPI_DOUBLE,
+                      &H->mpi_hydro_vector_type );
+
+    MPI_Type_commit ( &H->mpi_hydro_vector_type );
+
+#endif // USE_MPI -------------------------------------------------------------
+
 
     // allocate uold for each conservative variable
-    Hv->uold = ( double * ) calloc ( H->nvar * H->nxt * H->nyt, sizeof ( double ) );
+    Hv->uold = ( double* ) calloc ( H->nvar * H->nxt * H->nyt, sizeof ( double ) );
 
     // wind tunnel with point explosion
     for ( j = H->jmin + ExtraLayer; j < H->jmax - ExtraLayer; j++ ) {
