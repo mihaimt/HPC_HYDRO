@@ -200,16 +200,18 @@ static void process_input ( char *datafile, hydroparam_t * H ) {
         }
     }
     fclose ( fd );
-    // petit resume de la situation
 
-    INF ( "+-------------------+\n" );
-    INF ( "|nx=%-7ld         |\n", H->nx );
-    INF ( "|ny=%-7ld         |\n", H->ny );
-    INF ( "|tend=%-10.3f    |\n", H->tend );
-    INF ( "|nstepmax=%-7ld   |\n", H->nstepmax );
-    INF ( "|noutput=%-7ld    |\n", H->noutput );
-    INF ( "|dtoutput=%-10.3f|\n", H->dtoutput );
-    INF ( "+-------------------+\n" );
+    // petit resume de la situation
+    if ( H->rank == 0 ) {
+        INF ( "+-------------------+\n" );
+        INF ( "|nxdomain=%-7ld   |\n", H->nxdomain );
+        INF ( "|nydomain=%-7ld   |\n", H->nydomain );
+        INF ( "|tend=%-10.3f    |\n", H->tend );
+        INF ( "|nstepmax=%-7ld   |\n", H->nstepmax );
+        INF ( "|noutput=%-7ld    |\n", H->noutput );
+        INF ( "|dtoutput=%-10.3f|\n", H->dtoutput );
+        INF ( "+-------------------+\n" );
+    }
 
     //exit(0);
 }

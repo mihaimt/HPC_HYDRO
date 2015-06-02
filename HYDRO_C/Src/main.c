@@ -178,10 +178,13 @@ int main ( int argc, char **argv ) {
         DBG ( "%s", "a debug\n" );
         ERR ( "an error\n" );
         ERR ( "%s", "an error\n" );
+        ERR_at ( -1, "%s", "an error\n" );
         WRN ( "warn\n" );
         WRN ( "%s", "warn\n" );
         INF ( "info\n" );
         INF ( "%s", "info\n" );
+        INF_if ( 1==1, "%s", "cond. info, true\n" );
+        INF_if ( 1==2, "%s", "cond. info, false\n" );
     }
 
 

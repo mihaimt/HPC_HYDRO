@@ -52,7 +52,7 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
     MPI_Comm_rank ( MPI_COMM_WORLD, &H->rank );
 
     if ( H->mpi_error != 0 ) {
-        printf ( "MPI_Init: Error %i\n",H->mpi_error );
+        ERR ( "MPI_Init: Error %i\n", H->mpi_error );
         exit ( 1 );
     }
     H->mpi_is_init = 1;
@@ -74,7 +74,7 @@ void MPI_finish ( hydroparam_t *H ) {
     H->mpi_error = MPI_Finalize();
 
     if ( H->mpi_error != 0 ) {
-        printf ( "MPI_Finalize: Error %i\n",H->mpi_error );
+        ERR ( "MPI_Finalize: Error %i\n",H->mpi_error );
         exit ( 1 );
     }
 
