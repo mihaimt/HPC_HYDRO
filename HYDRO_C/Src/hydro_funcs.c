@@ -47,35 +47,35 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
     // 2 rows on each side x 2 sides (left & right) x 2 (send & recv)
     H->mpi_req = malloc ( 8*sizeof ( MPI_Request ) );
 
-#if USE_MPI  //--- set this in debug.h ----------------------------------------
+    if ( USE_MPI ) {
 
-    // Initialize MPI library
-    H->mpi_error = MPI_Init ( argc, argv );
+        // Initialize MPI library
+        H->mpi_error = MPI_Init ( argc, argv );
 
-    // Get the props of the MPI world
-    MPI_Comm_size ( MPI_COMM_WORLD, &H->n_procs );
-    MPI_Comm_rank ( MPI_COMM_WORLD, &H->rank );
+        // Get the props of the MPI world
+        MPI_Comm_size ( MPI_COMM_WORLD, &H->n_procs );
+        MPI_Comm_rank ( MPI_COMM_WORLD, &H->rank );
 
-    if ( H->mpi_error != 0 ) {
-        ERR ( "MPI_Init: Error %i\n", H->mpi_error );
-        exit ( 1 );
+        if ( H->mpi_error != 0 ) {
+            ERR ( "MPI_Init: Error %i\n", H->mpi_error );
+            exit ( 1 );
+        }
+        H->mpi_is_init = 1;
     }
-    H->mpi_is_init = 1;
+    else {
+        // the rest of the code relies on those, so make sure they are initialized
+        // to sensible values!
 
-#else // ----------------------------------------------------------------------
-
-    // the rest of the code relies on those, so make sure they are initialized
-    // so sensible values!
-    H->n_procs = 1;
-    H->rank = 0;
-    H->mpi_is_init = 0;
-
-#endif // USE_MPI -------------------------------------------------------------
+        H->n_procs = 1;
+        H->rank = 0;
+        H->mpi_is_init = 0;
+    }
 
     TRC ( H->rank, "I'm online" );
     INF_if ( H->rank==0, "mpi init successful, using %i procs\n", H->n_procs );
 
 }
+
 
 
 /**
@@ -91,19 +91,18 @@ void MPI_finish ( hydroparam_t *H ) {
     Free ( H->mpi_status );
     Free ( H->mpi_req );
 
-#if USE_MPI  //--- set this in debug.h ----------------------------------------
+    if ( USE_MPI ) {
 
-    // Free MPI data type
-    MPI_Type_free ( &H->mpi_hydro_vector_type );
+        // Free MPI data type
+        MPI_Type_free ( &H->mpi_hydro_vector_type );
 
-    H->mpi_error = MPI_Finalize();
+        H->mpi_error = MPI_Finalize();
 
-    if ( H->mpi_error != 0 ) {
-        ERR ( "MPI_Finalize: Error %i\n",H->mpi_error );
-        exit ( 1 );
+        if ( H->mpi_error != 0 ) {
+            ERR ( "MPI_Finalize: Error %i\n",H->mpi_error );
+            exit ( 1 );
+        }
     }
-
-#endif // USE_MPI -------------------------------------------------------------
 
     H->mpi_is_init = 0;
 
@@ -148,6 +147,8 @@ void MPI_domain_decomp ( hydroparam_t *H ) {
     }
 
 } // MPI_domain_decomp
+
+
 
 
 //TODO delete this func
@@ -197,6 +198,8 @@ hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
 
 
 
+
+
 /**
  * @brief Init the simulation
  * 
@@ -226,7 +229,7 @@ void MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     // Make sure that we did the domain decomposition.
     assert ( H->nx > 0 && H->ny > 0 );
 
-    // *WARNING* : we will use 0 based arrays everywhere since it is C code!
+    // WARNING: we will use 0 based arrays everywhere since it is C code!
     H->imin = H->jmin = 0;
 
     // We add two extra layers left/right/top/bottom
@@ -240,16 +243,13 @@ void MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     H->arVarSz = ( H->nxyt + 2 ) * H->nvar;
 
 
-#if USE_MPI  //--- set this in debug.h ----------------------------------------
-
-    // Define a new MPI data type
-    // Just define one column at the moment
-    MPI_Type_vector ( H->nvar*H->nyt, ExtraLayer, H->nxt, MPI_DOUBLE,
-                      &H->mpi_hydro_vector_type );
-
-    MPI_Type_commit ( &H->mpi_hydro_vector_type );
-
-#endif // USE_MPI -------------------------------------------------------------
+    // Define a new MPI data type vector for transmitting ghost cells
+    if ( USE_MPI ) {
+        // Just define one column at the moment
+        MPI_Type_vector ( H->nvar*H->nyt, ExtraLayer, H->nxt, MPI_DOUBLE,
+                          &H->mpi_hydro_vector_type );
+        MPI_Type_commit ( &H->mpi_hydro_vector_type );
+    }
 
 
     // allocate uold for each conservative variable
@@ -274,12 +274,14 @@ void MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
 
 
 
+
+
 //TODO delete this func
 void hydro_finish ( const hydroparam_t H, hydrovar_t * Hv ) {
 
     Free ( Hv->uold );
 
-}                               // hydro_finish
+} // hydro_finish
 
 
 
@@ -303,9 +305,18 @@ void MPI_hydro_finish ( hydroparam_t *H, hydrovar_t * Hv ) {
 
 
 
-void
-allocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
-    WHERE ( "allocate_work_space" );
+/**
+ * @brief Allocates all needed vars for the actual work
+ * 
+ * @param H ...
+ * @param Hw ...
+ * @param Hvw ...
+ * @return void
+ */
+void allocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
+
+    TRC ( H.rank, "allocating work space" );
+
     Hvw->u = DMalloc ( H.arVarSz );
     Hvw->q = DMalloc ( H.arVarSz );
     Hvw->dq = DMalloc ( H.arVarSz );
@@ -346,23 +357,22 @@ allocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * H
     Hw->pold = DMalloc ( H.arSz );
     Hw->ind = IMalloc ( H.arSz );
     Hw->ind2 = IMalloc ( H.arSz );
-}                               // allocate_work_space
+} // allocate_work_space
 
 
-/*
-static void
-VFree(double **v, const hydroparam_t H)
-{
-    long i;
-    for (i = 0; i < H.nvar; i++) {
-        Free(v[i]);
-    }
-    Free(v);
-} // VFree
-*/
-void
-deallocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
-    WHERE ( "deallocate_work_space" );
+
+
+/**
+ * @brief Free work variables
+ * 
+ * @param H ...
+ * @param Hw ...
+ * @param Hvw ...
+ * @return void
+ */
+void deallocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
+
+    TRC ( H.rank, "deallocating work space" );
 
     //
     Free ( Hw->e );
@@ -409,7 +419,18 @@ deallocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t *
     Free ( Hw->ind );
     Free ( Hw->ind2 );
 
-}                               // deallocate_work_space
+} // deallocate_work_space
 
 
-// EOF
+
+
+
+
+
+
+
+
+
+
+
+
