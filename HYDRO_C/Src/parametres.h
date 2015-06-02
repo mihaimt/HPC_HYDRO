@@ -48,20 +48,14 @@ typedef struct _hydroparam {
 
     /*
      * Variables needed for the MPI.
-     *
-     * rank: rank of the current process
-     * n_proc: total number of processes in MPI_COMM_WORLD
-     * mpi_error: error returned from an MPI call
-     * mpi_is_init: is the MPI library initialized
-     * mpi_status: status of an MPI call
      */
-    int rank;
-    int n_procs;
-    int mpi_error;
-    int mpi_is_init;
-    MPI_Datatype mpi_hydro_vector_type;
-    MPI_Request* mpi_req;
-    MPI_Status* mpi_status;
+    int rank;           // rank of the current process
+    int n_procs;        // total number of processes in MPI_COMM_WORLD
+    int mpi_error;      // error returned from last MPI call (reusable)
+    int mpi_is_init;    // (bool) is the MPI library initialized?
+    MPI_Datatype mpi_hydro_vector_type; // data vector for transport of ghost cells
+    MPI_Request* mpi_req;   // pointer to array of currently hanging MPI requests
+    MPI_Status* mpi_status; // pointer to array with statuses of requests
 
 } hydroparam_t;
 

@@ -216,9 +216,16 @@ hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
     deallocate_work_space ( H, Hw, Hvw );
 }	// hydro_godunov
 
-void
-MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
-                    hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
+
+
+
+
+
+void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
+                         hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
+
+    LOC ( H.rank );
+
     // Local variables
     long i, j;
     double dtdx;
@@ -239,8 +246,6 @@ MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
     double *qgdnv;
     double *qID;
     double *qIP;
-
-    WHERE ( "hydro_godunov" );
 
     // constant
     dtdx = dt / H.dx;

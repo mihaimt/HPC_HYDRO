@@ -3,6 +3,7 @@
  * 
  * one place to set up everything for debug.
  * This might only work for C99 using GNU C compiler!
+ * (esp the __VA_ARGS__ thingy)
  * Make sure to include stdio in the file where you use this!
  * 
  * The additional functions are intended to be used for MPI programming!
@@ -61,6 +62,7 @@
 #define __DEBUG_H__
 
 // just some handy preliminary defs for the confused ones like me
+// don't change!
 #define ON 1
 #define OFF 0
 #define YES 1
@@ -102,6 +104,13 @@
 
 // use color output
 #define USE_COLOR YES
+
+// --- [ DEBUG PRINT OUTPUT ] -------------------------------------------------------
+
+// print locations in code. at start of each function, do a print.
+// used to be the WHERE macro in the original code
+// I (RK) think they are pretty useless and very verbose, turn OFF
+#define LOCATION_PRINT OFF
 
 // do traces output (lowest level, print where in the code it is as well,
 // usually OFF)
@@ -164,6 +173,13 @@
         fprintf(stderr, \
                 KMAG "rank %04i " KMAG "%s:%s():%i > " KCYN _FORMAT RESET "\n", \
                 _RANK, __FILE__, __func__, __LINE__, ##__VA_ARGS__); \
+    } while (0)
+
+#define LOC(_RANK) \
+    do { if (LOCATION_PRINT) \
+        fprintf(stderr, \
+                KGRN "--> rank %04i in [ %s ] - func [ %s ] - line [ %i ]" RESET "\n", \
+                _RANK, __FILE__, __func__, __LINE__); \
     } while (0)
 
 #define DBG(_FORMAT, ...) \

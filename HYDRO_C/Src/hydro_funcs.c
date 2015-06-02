@@ -38,6 +38,8 @@
  */
 void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
 
+    LOC ( H->rank );
+
     H->mpi_is_init = 0;
 
     // Allocate Status (use one for all, overwrite old ones)
@@ -68,7 +70,7 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
 
         H->n_procs = 1;
         H->rank = 0;
-        H->mpi_is_init = 0;
+        H->mpi_is_init = 1; // yes, that doesn't make much sense.. but anyways..
     }
 
     TRC ( H->rank, "I'm online" );
@@ -87,6 +89,8 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
 void MPI_finish ( hydroparam_t *H ) {
     //TODO (CR) Dont we need a hydroparam_t *H rather than a const
     // hydroparam_t H here??
+
+    LOC ( H->rank );
 
     Free ( H->mpi_status );
     Free ( H->mpi_req );
@@ -125,9 +129,11 @@ void MPI_finish ( hydroparam_t *H ) {
  */
 void MPI_domain_decomp ( hydroparam_t *H ) {
 
+    LOC ( H->rank );
+
     float frac; // size of one sub domain
     int lo, up; // lower and upper boundary of this proc in the whole domain
-    
+
     // X DIRECTION: Slicing
     frac = 1.0 * H->nxdomain / H->n_procs;
     lo = ( int ) ( frac * H->rank );
@@ -139,7 +145,7 @@ void MPI_domain_decomp ( hydroparam_t *H ) {
     H->ny = H->nydomain;
 
     // (CR,RK) debug test if domain decomposition makes sense
-    if (DEBUG) {
+    if ( DEBUG && USE_MPI ) {
         int nxtotal = 0.0;
         MPI_Allreduce ( &H->nx, &nxtotal, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
         TRC ( H->rank, "nx=%i ny=%i nxdomain=%i nydomain=%i nxtotal=%i", H->nx, H->ny, H->nxdomain, H->nydomain, nxtotal);
@@ -220,6 +226,8 @@ hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
  */
 void MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
 
+    LOC ( H->rank );
+
     long i, j;
     long x, y;
 
@@ -295,6 +303,8 @@ void hydro_finish ( const hydroparam_t H, hydrovar_t * Hv ) {
  */
 void MPI_hydro_finish ( hydroparam_t *H, hydrovar_t * Hv ) {
 
+    LOC ( H->rank );
+
     Free ( Hv->uold );
 
 } // MPI_hydro_finish
@@ -315,7 +325,7 @@ void MPI_hydro_finish ( hydroparam_t *H, hydrovar_t * Hv ) {
  */
 void allocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
 
-    TRC ( H.rank, "allocating work space" );
+    LOC ( H.rank );
 
     Hvw->u = DMalloc ( H.arVarSz );
     Hvw->q = DMalloc ( H.arVarSz );
@@ -372,7 +382,7 @@ void allocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_
  */
 void deallocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
 
-    TRC ( H.rank, "deallocating work space" );
+    LOC ( H.rank );
 
     //
     Free ( Hw->e );

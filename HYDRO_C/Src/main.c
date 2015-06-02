@@ -29,7 +29,7 @@ int main ( int argc, char **argv ) {
 
     // DECLARE VARS
     //------------------------------------------------------------------------
-    
+
     int nb_th = 1;
     double dt = 0;
     long nvtk = 0; // counter for steps / states written to file
@@ -49,7 +49,7 @@ int main ( int argc, char **argv ) {
 
     // The maximal time used to run
     double tmax = 0.0;
-    
+
 
 
     // INIT EVERYTHING
@@ -80,7 +80,7 @@ int main ( int argc, char **argv ) {
     INF_if ( H.rank==0, "   use COLOR:    %s\n\n", __str(USE_COLOR) );
 
     // give every proc time to start up and read from filesys
-    MPI_Barrier( MPI_COMM_WORLD );
+    if ( USE_MPI ) { MPI_Barrier( MPI_COMM_WORLD ); }
 
     // write the initial state to file
     if ( WRITE_INIT_STATE ) {
@@ -121,8 +121,8 @@ int main ( int argc, char **argv ) {
             // Get the smallest possible time step for all processes.
             if ( USE_MPI ) {
                 H.mpi_error = MPI_Allreduce ( &dt, &dtmin, 1, MPI_DOUBLE,
-                                            MPI_MIN, MPI_COMM_WORLD );
-                TRC ( H.rank, "Time sync: dt=%.2e dtmin=%.2e\n", dt, dtmin);
+                                              MPI_MIN, MPI_COMM_WORLD );
+                TRC ( H.rank, "time sync: dt=%.2e dtmin=%.2e", dt, dtmin);
                 dt = dtmin;
             }
 
@@ -144,9 +144,10 @@ int main ( int argc, char **argv ) {
         H.nstep++;
         H.t += dt;
 
-        // some outdated code that calculates the flops with a rather adhoc method..
+
+        // some outdated code that calculates the flops with a rather ad hoc method..
         // I (RK) don't see the point in this...
-        // The else part is below
+        // The else part is below thou
 /*
         if ( flops > 0 ) {
             double iter_time = ( double ) ( end_iter - start_iter );
@@ -206,8 +207,8 @@ int main ( int argc, char **argv ) {
         // Synchronize all processes if debugging for nicer output
         if ( DEBUG && USE_MPI ) { MPI_Barrier ( MPI_COMM_WORLD ); }
 
-        // and some infos about the steps on rank 0
-        DBG_if ( H.rank == 0, "step=%04li t=%.4e dt=%.4e %s\n", H.nstep, H.t, dt, outnum );
+        // and some infos about the steps on rank 0 (step is already increased!)
+        DBG_if ( H.rank == 0, "main loop | end: step=%04li t=%.4e dt=%.4e %s\n", H.nstep-1, H.t, dt, outnum );
 
     }   // end main loop
 

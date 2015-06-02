@@ -30,13 +30,15 @@ static void usage ( void ) {
 
 static void default_values ( hydroparam_t * H ) {
 
+    LOC ( H->rank );
+
     // Default values should be given
     H->prt = 0; // no printing of internal arrays
 
     // Global
     H->nxdomain = 2;
     H->nydomain = 2;
-    
+
     // local (is set in MPI_domain_decomp)
     H->nx = 0;
     H->ny = 0;
@@ -99,11 +101,13 @@ static void keyval ( char *buffer, char **pkey, char **pval ) {
 
 static void process_input ( char *datafile, hydroparam_t * H ) {
 
+    LOC ( H->rank );
+
     FILE *fd = NULL;
     char buffer[1024];
     char *pval, *pkey;
     fd = fopen ( datafile, "r" );
-    
+
     if ( fd == NULL ) {
         ERR ( "Provided input file (-i) is not readable\n" );
         exit ( 1 );
@@ -215,7 +219,7 @@ static void process_input ( char *datafile, hydroparam_t * H ) {
 
 
 /**
- * @brief processes the commandline arguments and the input file
+ * @brief processes the command line arguments and the input file
  * 
  * @param argc ...
  * @param argv ...
@@ -224,6 +228,7 @@ static void process_input ( char *datafile, hydroparam_t * H ) {
  */
 void process_args ( long argc, char **argv, hydroparam_t * H ) {
 
+    LOC ( H->rank );
     INF_if ( H->rank==0, "Processing arguments and setting defaults\n");
 
     long n = 1;
