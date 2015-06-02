@@ -86,26 +86,40 @@
 // run the asserts
 #define DO_ASSERTS ON
 
+// measure run time of one iteration locally / globally (min/max)
+// GLOBAL results in overhead of two additional MPI_Reduce per step!
+#define GET_LOCAL_ITER_TIME  ON
+#define GET_GLOBAL_ITER_TIME ON
+
+// write initital | intermediate | final states to vtk file
+// attention: the last / final step write will probably write a state
+//     with a different time-spacing to the previous one.
+//     So dt (or d_steps) between two frames is always the same, expect for
+//     the last write! (default: OFF)
+#define WRITE_INIT_STATE  ON
+#define WRITE_INTER_STATE ON
+#define WRITE_FINAL_STATE OFF
+
 // use color output
 #define USE_COLOR YES
 
 // do traces output (lowest level, print where in the code it is as well,
-// usually off)
+// usually OFF)
 #define TRACE_PRINT ON
 
-// do debug output (usually off)
+// do debug output (usually OFF)
 #define DEBUG_PRINT ON
 
 // do run time error output (stuff for the user to see if something is
-// massively screwed up and the program will shut down, usually on)
+// massively screwed up and the program will shut down, usually ON)
 #define ERROR_PRINT ON
 
 // do run time warn output (stuff for the user to see if something is screwed
-// up, usually on)
+// up, usually ON)
 #define WARN_PRINT ON
 
 // do run time info output (stuff for the user to see in normal operation,
-// usually on)
+// usually ON)
 #define INFO_PRINT ON
 
 

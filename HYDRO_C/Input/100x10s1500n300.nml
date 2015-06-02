@@ -4,7 +4,6 @@ This namelist contains various input parameters for HYDRO runs
 nstepmax=1500
 tend=300.0
 noutput=5
-on_output=.true.
 /
 
 &MESH

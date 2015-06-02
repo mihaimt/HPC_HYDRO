@@ -32,14 +32,16 @@ int main ( int argc, char **argv ) {
     
     int nb_th = 1;
     double dt = 0;
-    long nvtk = 0;
-    char outnum[80];
+    long nvtk = 0; // counter for steps / states written to file
+    char outnum[160];
     long time_output = 0;
 
     // double output_time = 0.0;
     double next_output_time = 0;
     double start_time = 0, end_time = 0;
     double start_iter = 0, end_iter = 0;
+    double iter_time = 0; // time for one iteration
+    double it_min = 0, it_max = 0; // used for global stats about iter times
     double elaps = 0;
 
     // The smallest possible time step for the entire computational domain.
@@ -47,11 +49,13 @@ int main ( int argc, char **argv ) {
 
     // The maximal time used to run
     double tmax = 0.0;
+    
 
 
     // INIT EVERYTHING
     //------------------------------------------------------------------------
 
+    // global program timer
     start_time = cclock();
 
     // Initialize MPI library (and allocate memory for the MPI variables).
@@ -67,7 +71,7 @@ int main ( int argc, char **argv ) {
     MPI_hydro_init ( &H, &Hv );
 
 
-    TRC ( H.rank, "nxt=%i nyt=%i\n", H.nxt, H.nyt );
+    TRC ( H.rank, "nxt=%i nyt=%i", H.nxt, H.nyt );
     INF_if ( H.rank==0, "Hydro starts\n" );
     INF_if ( H.rank==0, "   use MPI:      %s\n", __str(USE_MPI) );
     INF_if ( H.rank==0, "   use OPENMP:   %s\n", __str(USE_OPENMP) );
@@ -78,8 +82,16 @@ int main ( int argc, char **argv ) {
     // give every proc time to start up and read from filesys
     MPI_Barrier( MPI_COMM_WORLD );
 
+    // write the initial state to file
+    if ( WRITE_INIT_STATE ) {
+        vtkfile ( nvtk, H, &Hv );
+    }
 
-    // vtkfile(nvtk, H, &Hv);
+    // check in which mode to write the state to the vtk files
+    // * if {dtoutput} is defined in the input file, then write state after this
+    //   amount of physical time has passed
+    // * else (dtoutput==0) simply write output after {noutput} steps happened
+    //   (default value is VERY big! -> no output )
     if ( H.dtoutput > 0 ) {
         // outputs are in physical time not in time steps
         time_output = 1;
@@ -92,7 +104,7 @@ int main ( int argc, char **argv ) {
 
     while ( ( H.t < H.tend ) && ( H.nstep < H.nstepmax ) ) {
 
-        DBG_if ( H.rank==0, "Main loop: nstep = %i \n", H.nstep);
+        DBG_if ( H.rank==0, "main loop | start: nstep = %i \n", H.nstep);
 
         start_iter = cclock();
         outnum[0] = 0; // delete string by setting first char to 0 byte
@@ -132,7 +144,10 @@ int main ( int argc, char **argv ) {
         H.nstep++;
         H.t += dt;
 
-
+        // some outdated code that calculates the flops with a rather adhoc method..
+        // I (RK) don't see the point in this...
+        // The else part is below
+/*
         if ( flops > 0 ) {
             double iter_time = ( double ) ( end_iter - start_iter );
             if ( iter_time > 1.e-9 ) {
@@ -144,29 +159,65 @@ int main ( int argc, char **argv ) {
             double iter_time = ( double ) ( end_iter - start_iter );
             sprintf ( outnum, "t_iter=%.3es ", iter_time );
         }
+*/
 
 
-        if ( time_output == 0 ) {
-            if ( ( H.nstep % H.noutput ) == 0 ) {
-                vtkfile ( ++nvtk, H, &Hv );
-                sprintf ( outnum, "%s[filenr=%04ld]", outnum, nvtk );
+        // get time elapsed in one iteration
+        if ( GET_LOCAL_ITER_TIME || GET_GLOBAL_ITER_TIME ) {
+            iter_time = end_iter - start_iter;
+            sprintf ( outnum, "t_iter=%.3es ", iter_time );
+        }
+
+        // get iter timings from all procs to rank 0
+        if ( USE_MPI && GET_GLOBAL_ITER_TIME ) {
+            it_min = 0.0;
+            it_max = 0.0;
+            H.mpi_error = MPI_Reduce ( &iter_time, &it_min, 1, MPI_DOUBLE,
+                                       MPI_MIN, 0, MPI_COMM_WORLD );
+            H.mpi_error = MPI_Reduce ( &iter_time, &it_max, 1, MPI_DOUBLE,
+                                       MPI_MIN, 0, MPI_COMM_WORLD );
+            if ( H.rank == 0 ) {
+                sprintf ( outnum, "%s (global %.3e..%.3e)", outnum, it_min, it_max );
             }
         }
-        else {
-            if ( H.t >= next_output_time ) {
-                vtkfile ( ++nvtk, H, &Hv );
-                next_output_time = next_output_time + H.dtoutput;
-                sprintf ( outnum, "%s[filenr=%04ld]", outnum, nvtk );
+
+        // write the current state to vtk file
+        if ( WRITE_INTER_STATE ) {
+
+            // write each nth step
+            if ( time_output == 0 ) {
+                if ( ( H.nstep % H.noutput ) == 0 ) {
+                    vtkfile ( ++nvtk, H, &Hv );
+                    sprintf ( outnum, "%s [filenr=%04ld]", outnum, nvtk );
+                }
+            }
+            // or write after dtoutput physical time has passed
+            else {
+                if ( H.t >= next_output_time ) {
+                    vtkfile ( ++nvtk, H, &Hv );
+                    next_output_time = next_output_time + H.dtoutput;
+                    sprintf ( outnum, "%s [filenr=%04ld]", outnum, nvtk );
+                }
             }
         }
+
+
 
         // Synchronize all processes if debugging for nicer output
         if ( DEBUG && USE_MPI ) { MPI_Barrier ( MPI_COMM_WORLD ); }
 
+        // and some infos about the steps on rank 0
         DBG_if ( H.rank == 0, "step=%04li t=%.4e dt=%.4e %s\n", H.nstep, H.t, dt, outnum );
 
     }   // end main loop
 
+
+    // write the final state to file
+    // be aware that this last step could have another time spacing as the
+    // intermediate steps above!
+    if ( WRITE_FINAL_STATE ) {
+        vtkfile ( ++nvtk, H, &Hv );
+    }
 
     end_time = cclock();
     elaps = ( double ) ( end_time - start_time );
