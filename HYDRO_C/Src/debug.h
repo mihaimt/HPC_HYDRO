@@ -157,6 +157,11 @@
         fprintf(stderr, KCYN _FORMAT RESET, ##__VA_ARGS__); \
     } while (0)
 
+#define DBG_if(_COND, _FORMAT, ...) \
+    do { if (DEBUG_PRINT && _COND) \
+        fprintf(stderr, KCYN _FORMAT RESET, ##__VA_ARGS__); \
+    } while (0)
+
 #define ERR(_FORMAT, ...) \
     do { if (ERROR_PRINT) {\
         fprintf(stderr, KRED _FORMAT RESET, ##__VA_ARGS__); \
@@ -189,7 +194,7 @@
 #define WRN(_FORMAT, ...) \
     do { if (WARN_PRINT) \
         fprintf(stderr, KYEL _FORMAT RESET, ##__VA_ARGS__); \
-    }while (0)
+    } while (0)
 
 #define WRN_if(_COND, _FORMAT, ...) \
     do { if (WARN_PRINT && _COND) \
@@ -216,6 +221,7 @@
 #define assert(ignore) ((void) 0)
 #endif //ASSERTS
 
+#define __str(_VAL) (_VAL ? "YES" : "NO ")
 
 
 #endif // DEBUG_H

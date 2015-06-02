@@ -48,7 +48,7 @@ int main ( int argc, char **argv ) {
     // The maximal time used to run
     double tmax = 0.0;
 
-    
+
     // INIT EVERYTHING
     //------------------------------------------------------------------------
 
@@ -65,16 +65,19 @@ int main ( int argc, char **argv ) {
 
     // Initialize the hydro variables and set initial conditions.
     MPI_hydro_init ( &H, &Hv );
-    PRINTUOLD ( H, &Hv );
 
-    fprintf ( stderr,"Process %i: nxt=%i nyt=%i\n",H.rank,H.nxt,H.nyt );
-    if ( H.rank == 0 ) {
-        printf ( "Hydro starts - MPI version \n" );
-        printf ( "Running on %i processes\n", H.n_procs );
-#ifdef MPI_NO_OUTPUT
-        printf ( "NOT WRITING ANY OUTPUT\n" );
-#endif
-    }
+
+    TRC ( H.rank, "nxt=%i nyt=%i\n", H.nxt, H.nyt );
+    INF_if ( H.rank==0, "Hydro starts\n" );
+    INF_if ( H.rank==0, "   use MPI:      %s\n", __str(USE_MPI) );
+    INF_if ( H.rank==0, "   use OPENMP:   %s\n", __str(USE_OPENMP) );
+    INF_if ( H.rank==0, "   use DEBUG:    %s\n", __str(DEBUG) );
+    INF_if ( H.rank==0, "   use ASSSERTS: %s\n", __str(DO_ASSERTS) );
+    INF_if ( H.rank==0, "   use COLOR:    %s\n\n", __str(USE_COLOR) );
+
+    // give every proc time to start up and read from filesys
+    MPI_Barrier( MPI_COMM_WORLD );
+
 
     // vtkfile(nvtk, H, &Hv);
     if ( H.dtoutput > 0 ) {
@@ -83,79 +86,97 @@ int main ( int argc, char **argv ) {
         next_output_time = next_output_time + H.dtoutput;
     }
 
-    /*
-     ** The main loop.
-     */
+    //-------------------------------------------------------------------------
+    // The main loop
+    //-------------------------------------------------------------------------
+
     while ( ( H.t < H.tend ) && ( H.nstep < H.nstepmax ) ) {
-//		fprintf(stderr,"Main loop: nstep = %i \n",H.nstep);
+
+        DBG_if ( H.rank==0, "Main loop: nstep = %i \n", H.nstep);
+
         start_iter = cclock();
-        outnum[0] = 0;
+        outnum[0] = 0; // delete string by setting first char to 0 byte
         flops = 0;
+
+        // Calculate new time step for every even step.
         if ( ( H.nstep % 2 ) == 0 ) {
-            // We calculate the new time step for every even step.
+
             compute_deltat ( &dt, H, &Hw, &Hv, &Hvw );
             if ( H.nstep == 0 ) {
                 dt = dt / 2.0;
             }
 
             // Get the smallest possible time step for all processes.
-            H.mpi_error = MPI_Allreduce ( &dt,&dtmin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD );
-//			fprintf(stderr,"Process %i: dt = %g dtmin = %g\n",H.iProc,dt,dtmin);
-            dt = dtmin;
+            if ( USE_MPI ) {
+                H.mpi_error = MPI_Allreduce ( &dt, &dtmin, 1, MPI_DOUBLE,
+                                            MPI_MIN, MPI_COMM_WORLD );
+                TRC ( H.rank, "Time sync: dt=%.2e dtmin=%.2e\n", dt, dtmin);
+                dt = dtmin;
+            }
+
         }
 
-        // This is the acutal calculation
+
+        // This is the actual calculation
         if ( ( H.nstep % 2 ) == 0 ) {
             MPI_hydro_godunov ( 1, dt, H, &Hv, &Hw, &Hvw );
             MPI_hydro_godunov ( 2, dt, H, &Hv, &Hw, &Hvw );
-        } else {
+        }
+        else {
             MPI_hydro_godunov ( 2, dt, H, &Hv, &Hw, &Hvw );
             MPI_hydro_godunov ( 1, dt, H, &Hv, &Hw, &Hvw );
         }
+
 
         end_iter = cclock();
         H.nstep++;
         H.t += dt;
 
+
         if ( flops > 0 ) {
             double iter_time = ( double ) ( end_iter - start_iter );
             if ( iter_time > 1.e-9 ) {
                 double mflops = ( double ) flops / ( double ) 1.e+6 / iter_time;
-                sprintf ( outnum, "%s {%.3f Mflops} (%.3fs)", outnum, mflops, iter_time );
+                sprintf ( outnum, "%.3f Mflops t_iter=%.3fs) ", mflops, iter_time );
             }
-        } else {
-            double iter_time = ( double ) ( end_iter - start_iter );
-            sprintf ( outnum, "%s (%.3fs)", outnum, iter_time );
         }
+        else {
+            double iter_time = ( double ) ( end_iter - start_iter );
+            sprintf ( outnum, "t_iter=%.3es ", iter_time );
+        }
+
 
         if ( time_output == 0 ) {
             if ( ( H.nstep % H.noutput ) == 0 ) {
                 vtkfile ( ++nvtk, H, &Hv );
-                sprintf ( outnum, "%s [%04ld]", outnum, nvtk );
+                sprintf ( outnum, "%s[filenr=%04ld]", outnum, nvtk );
             }
-        } else {
+        }
+        else {
             if ( H.t >= next_output_time ) {
                 vtkfile ( ++nvtk, H, &Hv );
                 next_output_time = next_output_time + H.dtoutput;
-                sprintf ( outnum, "%s [%04ld]", outnum, nvtk );
+                sprintf ( outnum, "%s[filenr=%04ld]", outnum, nvtk );
             }
         }
 
-        // Synchronize all processes
-        MPI_Barrier ( MPI_COMM_WORLD );
+        // Synchronize all processes if debugging for nicer output
+        if ( DEBUG && USE_MPI ) { MPI_Barrier ( MPI_COMM_WORLD ); }
 
-        if ( H.rank == 0 ) {
-            fprintf ( stdout, "--> step=%-4ld %12.5e, %10.5e %s\n", H.nstep, H.t, dt, outnum );
-        }
-    }   // end while loop
+        DBG_if ( H.rank == 0, "step=%04li t=%.4e dt=%.4e %s\n", H.nstep, H.t, dt, outnum );
+
+    }   // end main loop
+
 
     end_time = cclock();
     elaps = ( double ) ( end_time - start_time );
 
 
-
     // Get the largest time for all processes.
-    H.mpi_error = MPI_Allreduce ( &elaps,&tmax,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD );
+    if ( USE_MPI ) {
+        H.mpi_error = MPI_Allreduce ( &elaps, &tmax, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
+    }
+
 
     if ( H.rank == 0 ) {
         if ( elaps < tmax ) {
@@ -165,6 +186,7 @@ int main ( int argc, char **argv ) {
         //fprintf ( stdout, "Hydro ends in %ss (%.3lf).\n", outnum, elaps );
         INF ( "Hydro ends in %ss (%.3lf).\n", outnum, elaps );
     }
+
 
     // Finalize MPI and free memory.
     MPI_finish ( &H );

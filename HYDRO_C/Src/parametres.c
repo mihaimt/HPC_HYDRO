@@ -21,7 +21,7 @@ static void usage ( void ) {
     ERR ( "options possibles du programme hydro\n" );
     ERR ( "--help\n" );
     ERR ( "-i input\n" );
-    ERR ( "-v :: pour avoir les impressions internes\n" );
+    ERR ( "-v verbose (prints internal arrays)\n       outdated, use compile flags instead!\n" );
     ERR ( "------------------------------------\n" );
     exit ( 1 );
 
@@ -30,10 +30,8 @@ static void usage ( void ) {
 
 static void default_values ( hydroparam_t * H ) {
 
-    INF ( "Setting default values ...\n" );
-
     // Default values should be given
-    H->prt = 0;                 // no printing of internal arrays
+    H->prt = 0; // no printing of internal arrays
 
     // Global
     H->nxdomain = 2;
@@ -203,14 +201,13 @@ static void process_input ( char *datafile, hydroparam_t * H ) {
 
     // petit resume de la situation
     if ( H->rank == 0 ) {
-        INF ( "+-------------------+\n" );
-        INF ( "|nxdomain=%-7ld   |\n", H->nxdomain );
-        INF ( "|nydomain=%-7ld   |\n", H->nydomain );
-        INF ( "|tend=%-10.3f    |\n", H->tend );
-        INF ( "|nstepmax=%-7ld   |\n", H->nstepmax );
-        INF ( "|noutput=%-7ld    |\n", H->noutput );
-        INF ( "|dtoutput=%-10.3f|\n", H->dtoutput );
-        INF ( "+-------------------+\n" );
+        INF ( "parameters read successfully:\n" );
+        INF ( "   nxdomain = %-7ld\n", H->nxdomain );
+        INF ( "   nydomain = %-7ld\n", H->nydomain );
+        INF ( "   tend     = %-10.3f\n", H->tend );
+        INF ( "   nstepmax = %-7ld\n", H->nstepmax );
+        INF ( "   noutput  = %-7ld\n", H->noutput );
+        INF ( "   dtoutput = %-10.3f\n\n", H->dtoutput );
     }
 
     //exit(0);
@@ -226,6 +223,8 @@ static void process_input ( char *datafile, hydroparam_t * H ) {
  * @return void
  */
 void process_args ( long argc, char **argv, hydroparam_t * H ) {
+
+    INF_if ( H->rank==0, "Processing arguments and setting defaults\n");
 
     long n = 1;
     char donnees[512];

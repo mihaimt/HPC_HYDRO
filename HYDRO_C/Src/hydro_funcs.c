@@ -72,6 +72,9 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
 
 #endif // USE_MPI -------------------------------------------------------------
 
+    TRC ( H->rank, "I'm online" );
+    INF_if ( H->rank==0, "mpi init successful, using %i procs\n", H->n_procs );
+
 }
 
 
@@ -231,8 +234,7 @@ void MPI_hydro_init ( hydroparam_t * H, hydrovar_t * Hv ) {
     H->jmax = H->ny + ExtraLayerTot;
     H->nxt = H->imax - H->imin; // column size in the array
     H->nyt = H->jmax - H->jmin; // row size in the array
-    // maximum direction size
-    H->nxyt = ( H->nxt > H->nyt ) ? H->nxt : H->nyt;
+    H->nxyt = ( H->nxt > H->nyt ) ? H->nxt : H->nyt; // maximum direction size
 
     H->arSz = ( H->nxyt + 2 );
     H->arVarSz = ( H->nxyt + 2 ) * H->nvar;
