@@ -144,7 +144,7 @@ void OPENMP_init ( hydroparam_t* H ) {
             assert ( H->n_threads == N_OMP_THREADS );
         }
 
-        INF_if ( H->rank==0, "OpenMP init successful, using %i procs\n", H->n_procs );
+        INF_if ( H->rank==0, "OpenMP init successful, using %i threads\n", H->n_procs );
 
     }
     else {

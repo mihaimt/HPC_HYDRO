@@ -31,7 +31,7 @@
 #define GET_GLOBAL_ITER_TIME ON
 
 // write the timings to a file (GET_LOCAL_ITER_TIME has to be ON for that)
-#define WRITE_TIMING OFF
+#define WRITE_TIMING ON
 
 // write status report at the end
 #define STATUS ON

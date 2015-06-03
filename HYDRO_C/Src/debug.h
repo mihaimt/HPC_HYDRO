@@ -123,7 +123,7 @@
 #define LOC(_RANK) \
     do { if (LOCATION_PRINT) \
         fprintf(stderr, \
-                KGRN "--> rank %04i in [ %s ] - func [ %s ] - line [ %i ]" RESET "\n", \
+                KGRN "--> rank %04i in [ %-24s ] - func [ %-32s ] - line [ % 5i ]" RESET "\n", \
                 _RANK, __FILE__, __func__, __LINE__); \
     } while (0)
 

@@ -166,11 +166,12 @@ void MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t* Hv,
     if ( idim == 1 ) {
         // scanning horizontally (left / right)
 
+
         // Make sure MPI_req is allocated
         assert ( MPI_req != NULL );
 
         // Set physical boundary conditions for the left ghost layer of this domain
-        
+
         if ( H.rank == 0 ) {
             // this is the left most domain, so enforce physical boundary conditions here
 
@@ -353,6 +354,8 @@ void MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t* Hv,
  */
 void MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Request *MPI_req ) {
 
+    LOC ( H.rank );
+
     int count, offset;
     int error;
     MPI_Status *status;
@@ -362,23 +365,27 @@ void MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t * Hv, MP
     offset = 0;
 
     if ( idim == 1) {
-#if COM_METHOD == _CM_VEKTOR
         // Don't do this if we sweep the grid in ny direction.
-        if (H.rank == 0 || H.rank == H.n_procs-1) {
-            // For the most outer domains we have less b.c. to exchange.
-            count = 1;
-            if ( H.rank == 0 ) {
-                offset = 2;
+
+#if COM_METHOD == _CM_VEKTOR
+        if ( USE_MPI && H.n_procs>1 ) {
+            if (H.rank == 0 || H.rank == H.n_procs-1) {
+                // For the most outer domains we have less b.c. to exchange.
+                count = 1;
+                if ( H.rank == 0 ) {
+                    offset = 2;
+                }
+            } else {
+                count = 2;
             }
-        } else {
-            count = 2;
+            error = MPI_Waitall( 2*count, MPI_req + offset, status);
+            assert( error == 0 );
         }
-        error = MPI_Waitall( 2*count, MPI_req + offset, status);
-        assert( error == 0 );
 #elif COM_METHOD == _CM_SINGLE
 #endif
     }
 
+    
 /* 
     // (CR) I have no idea why MPI_Waitall() doesnt work
     // (RK) I did somehow fix it.. now idea how..
@@ -866,6 +873,8 @@ MPI_get_boundary_simple ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
  */
 void MPI_make_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
 
+    LOC ( H.rank );
+    
     // Allocate MPI_req !!!
     MPI_Request *MPI_req;
     MPI_req = malloc ( 4 * sizeof ( MPI_Request ) );

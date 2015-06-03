@@ -73,8 +73,7 @@ hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
         fprintf ( stdout, "godunov %ld\n", idim );
         PRINTUOLD ( H, Hv );
     }
-    // (CR) Debug
-    assert ( 0 );
+
     make_boundary ( idim, H, Hv );
     PRINTUOLD ( H, Hv );
 
@@ -274,7 +273,7 @@ void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t 
 
     // Get boundary conditions
     MPI_make_boundary ( idim, H, Hv );
-
+LOC ( H.rank );
     PRINTUOLD ( H, Hv );
 
     // Allocate work space for 1D sweeps
