@@ -61,6 +61,7 @@ typedef struct _hydroparam {
 
     // variables for openmp
     int n_threads;      /// how many threads we are using (basically the macro N_OMP_THREADS)
+    FILE* timing_file;  /// this file saves the timing information
 
 } hydroparam_t;
 

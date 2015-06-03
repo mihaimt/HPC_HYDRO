@@ -30,6 +30,12 @@
 #define GET_LOCAL_ITER_TIME  ON
 #define GET_GLOBAL_ITER_TIME ON
 
+// write the timings to a file (GET_LOCAL_ITER_TIME has to be ON for that)
+#define WRITE_TIMING ON
+
+// write status report at the end
+#define STATUS ON
+
 // write initital | intermediate | final states to vtk file
 // attention: the last / final step write will probably write a state
 //     with a different time-spacing to the previous one.

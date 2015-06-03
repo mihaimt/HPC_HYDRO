@@ -72,6 +72,11 @@ int main ( int argc, char **argv ) {
 
     // Initialize the hydro variables and set initial conditions.
     MPI_hydro_init ( &H, &Hv );
+    
+    // initialize the output file to write the iteration timings into
+    if ( WRITE_TIMING ) {
+        timingfile_init ( &H );
+    }
 
 
     TRC ( H.rank, "nxt=%i nyt=%i", H.nxt, H.nyt );
@@ -84,8 +89,6 @@ int main ( int argc, char **argv ) {
 
     // give every proc time to start up and read from filesys
     if ( USE_MPI ) { MPI_Barrier( MPI_COMM_WORLD ); }
-    
-    exit( 0 );
 
     // write the initial state to file
     if ( WRITE_INIT_STATE ) {
@@ -189,6 +192,11 @@ int main ( int argc, char **argv ) {
             }
         }
 
+        // write the time for this step to the output file
+        if ( GET_LOCAL_ITER_TIME && WRITE_TIMING ) {
+            timingfile_write ( H.nstep, iter_time, H );
+        }
+
         // write the current state to vtk file
         if ( WRITE_INTER_STATE ) {
 
@@ -245,11 +253,17 @@ int main ( int argc, char **argv ) {
         //fprintf ( stdout, "Hydro ends in %ss (%.3lf).\n", outnum, elaps );
         INF ( "Hydro ends in %ss (%.3lf).\n", outnum, elaps );
     }
+    
+    // write a status report
+    if ( H.rank == 0 ) {
+        write_stat ( elaps, H.nstep, H );
+    }
 
 
     // Finalize MPI and free memory.
     MPI_finish ( &H );
     MPI_hydro_finish ( &H, &Hv );
+    timingfile_finish( &H );
 
 
     // test message printing

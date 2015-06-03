@@ -10,23 +10,37 @@
 #include <unistd.h>
 #include <strings.h>
 
+#include "debug.h"
+
 #include "parametres.h"
 #include "utils.h"
 #include "vtkfile.h"
-void
-vtkfile ( long step, const hydroparam_t H, hydrovar_t * Hv ) {
+
+
+
+/**
+ * @brief writes a snapshot / step to a vtk file
+ * 
+ * @param step ...
+ * @param H ...
+ * @param Hv ...
+ * @return void
+ */
+void vtkfile ( long step, const hydroparam_t H, hydrovar_t * Hv ) {
+
     char name[160];
     FILE *fic;
     long i, j, nv;
 
+    LOC ( H.rank );
     WHERE ( "vtkfile" );
-//	sprintf(name, "outputvtk_%05ld.vts", step);
-//	Files are named outputvtk_rank_step.vts
+
+    // Files are named outputvtk_rank_step.vts
     sprintf ( name, "outputvtk_%04i_%05ld.vts", H.rank, step );
 
     fic = fopen ( name, "w" );
     if ( fic == NULL ) {
-        fprintf ( stderr, "Ouverture du fichier %s impossible\n", name );
+        ERR ( "Cannot open file %s\n", name );
         exit ( 1 );
     }
     fprintf ( fic, "<?xml version=\"1.0\"?>\n" );
@@ -87,3 +101,52 @@ vtkfile ( long step, const hydroparam_t H, hydrovar_t * Hv ) {
     fprintf ( fic, "</VTKFile>\n" );
     fclose ( fic );
 }
+
+
+
+void timingfile_init ( hydroparam_t* H ) {
+    
+    LOC ( H->rank );
+
+    char name[160];
+
+    sprintf ( name, "timing_%04i.cvs", H->rank );
+
+    H->timing_file = fopen ( name, "w" );
+
+    
+}
+
+
+
+inline void timingfile_write ( long step, double time, const hydroparam_t H) {
+
+    fprintf ( H.timing_file, "%ld, %e\n", step, time );
+
+}
+
+
+void timingfile_finish ( hydroparam_t* H ) {
+    fclose ( H->timing_file );
+}
+
+void write_stat ( double elapsed, long nsteps, const hydroparam_t H ) {
+    
+    LOC ( H.rank );
+
+    char name[160];
+    FILE* fic;
+
+    sprintf ( name, "stats_%04i.txt", H.rank );
+
+    fic = fopen ( name, "w" );
+    
+    fprintf ( fic, "stats\n" );
+    fprintf ( fic, "nsteps:%ld\n", nsteps );
+    fprintf ( fic, "wall_time:%e\n", elapsed );
+    
+    fclose ( fic );
+}
+
+
+
