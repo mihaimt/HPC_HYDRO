@@ -84,6 +84,8 @@ int main ( int argc, char **argv ) {
 
     // give every proc time to start up and read from filesys
     if ( USE_MPI ) { MPI_Barrier( MPI_COMM_WORLD ); }
+    
+    exit( 0 );
 
     // write the initial state to file
     if ( WRITE_INIT_STATE ) {

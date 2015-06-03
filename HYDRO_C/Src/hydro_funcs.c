@@ -66,6 +66,9 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
             exit ( 1 );
         }
         H->mpi_is_init = 1;
+
+        TRC ( H->rank, "Yep, I'm alive" );
+        INF_if ( H->rank==0, "mpi init successful, using %i procs\n", H->n_procs );
     }
     else {
         // the rest of the code relies on those, so make sure they are initialized
@@ -74,10 +77,10 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
         H->n_procs = 1;
         H->rank = 0;
         H->mpi_is_init = 1; // yes, that doesn't make much sense.. but anyways..
+
+        INF_if ( H->rank==0, "mpi not running, using %i procs\n", H->n_procs );
     }
 
-    TRC ( H->rank, "I'm online" );
-    INF_if ( H->rank==0, "mpi init successful, using %i procs\n", H->n_procs );
 
 }
 
@@ -128,22 +131,27 @@ void MPI_finish ( hydroparam_t *H ) {
 void OPENMP_init ( hydroparam_t* H ) {
 
     if ( USE_OPENMP ) {
-        H->n_treads = omp_get_num_threads();
-        
-        // test openmp
+        omp_set_dynamic ( 0 ); // dont adjust number of threads, always use the same
+        omp_set_num_threads ( N_OMP_THREADS );
+
+        // test openmp, abort of for some reason can't spawn enough threads
         int tid, n_threads;
 #pragma omp parallel private(tid, n_threads)
         {
             tid = omp_get_thread_num();
-            n_threads = omp_get_num_threads();
-            TRC ( H->rank, "rank %i thread %i of %i: I'm online", H->rank, tid, n_threads );
+            H->n_threads = omp_get_num_threads();
+            TRC ( H->rank, "rank %i thread %i of %i: Alive, but only for short time", H->rank, tid, H->n_threads );
+            assert ( H->n_threads == N_OMP_THREADS );
         }
-        
-        
+
+        INF_if ( H->rank==0, "OpenMP init successful, using %i procs\n", H->n_procs );
+
     }
     else {
-        H->n_treads = 1;
+        H->n_threads = 1;
+        INF_if ( H->rank==0, "OpenMP not running\n");
     }
+
 }
 
 

@@ -60,7 +60,7 @@ typedef struct _hydroparam {
 */
 
     // variables for openmp
-    int n_treads;      /// how many threads we are using (basically the macro N_OMP_THREADS)
+    int n_threads;      /// how many threads we are using (basically the macro N_OMP_THREADS)
 
 } hydroparam_t;
 

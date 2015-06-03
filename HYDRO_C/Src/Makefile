@@ -43,13 +43,13 @@ mpiomp: $(OBJ)
 	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_mpiomp -lm
 
 lmpi: CCOMP = $(LMPICC)
-lmpi: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_LMPI)
+lmpi: CCOMPFLAGS = $(CFLAGS) $(CFLAGS_LMPI)
 lmpi: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_LMPI)
 lmpi: $(OBJ)
 	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_lmpi -lm
 
 lmpiomp: CCOMP = $(LMPICC)
-lmpiomp: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_LMPI) $(FFLAGS_OMP)
+lmpiomp: CCOMPFLAGS = $(CFLAGS) $(CFLAGS_LMPI) $(CFLAGS_OMP)
 lmpiomp: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_LMPI) $(LDFLAGS_OMP)
 lmpiomp: $(OBJ)
 	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_lmpiomp -lm
