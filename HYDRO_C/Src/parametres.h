@@ -54,8 +54,10 @@ typedef struct _hydroparam {
     int mpi_error;      // error returned from last MPI call (reusable)
     int mpi_is_init;    // (bool) is the MPI library initialized?
     MPI_Datatype mpi_hydro_vector_type; // data vector for transport of ghost cells
+/*
     MPI_Request* mpi_req;   // pointer to array of currently hanging MPI requests
     MPI_Status* mpi_status; // pointer to array with statuses of requests
+*/
 
 } hydroparam_t;
 

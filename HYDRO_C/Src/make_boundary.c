@@ -11,17 +11,21 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "debug.h"
+
 #include "parametres.h"
 #include "make_boundary.h"
 #include "utils.h"
+
+
+
+
+
+
+
 void
 make_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
 
-    // - - - - - - - - - - - - - - - - - - -
-    // Cette portion de code est � v�rifier
-    // d�tail. J'ai des doutes sur la conversion
-    // des index depuis fortran.
-    // - - - - - - - - - - - - - - - - - - -
     long i, ivar, i0, j, j0;
     double sign;
     WHERE ( "make_boundary" );
@@ -124,68 +128,112 @@ make_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
     }
 }                               // make_boundary
 
-/*
-** Exchange the boundary conditions with neighboring domains that are on
-** different processes. We use MPI_IRecv() and MPI_ISend() to exchange the
-** data. This means we have to make sure that all data was transvered before
-** we can do the computation for the most outer layer of the grid using
-** MPI_get_boundary_end().
-*/
-void
-MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Request *MPI_req ) {
+
+
+
+
+
+
+
+
+/**
+ * @brief Defines the boundary cells
+ * 
+ * Exchange the boundary conditions with neighboring domains that are on
+ * different processes. We use MPI_IRecv() and MPI_ISend() to exchange the
+ * data. This means we have to make sure that all data was transvered before
+ * we can do the computation for the most outer layer of the grid using
+ * MPI_get_boundary_end().
+ * 
+ * Note: NO special handling for non MPI mode is required throuout the file!
+ * The MPI calls to send/recv will never happen anyways if rank=0 and n_procs=1
+ * 
+ * @param idim ...
+ * @param H ...
+ * @param Hv ...
+ * @param MPI_req ...
+ * @return void
+ */
+void MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t* Hv,
+                              MPI_Request* MPI_req ) {
+
+    LOC ( H.rank );
+
     long i, ivar, i0, j, j0, k;
     double sign;
-    WHERE ( "MPI_get_boundary_start" );
 
-//	MPI_Irecv(values, count, type, source, tag, comm, req)
-//	H.iMPIError = MPI_Irecv(Hv, 1, columntype, H.iProc-1, tag, MPI_COMM_WORLD,req);
-//	MPI_Isend(values, count, datatype, dest, tag, comm, req)
-//	H.iMPIError = MPI_Isend(Hv, 1, columntype, H.iProc-1, tag, MPI_COMM_WORLD,MPI_Request *request);
-
+    // In which direction are we scanning?
     if ( idim == 1 ) {
+        // scanning horizontally (left / right)
+
         // Make sure MPI_req is allocated
         assert ( MPI_req != NULL );
 
-        // Get values from the left domain.
+        // Set physical boundary conditions for the left ghost layer of this domain
+        
         if ( H.rank == 0 ) {
-            // Set physical boundary conditions for the left ghost layer
+            // this is the left most domain, so enforce physical boundary conditions here
+
             for ( ivar = 0; ivar < H.nvar; ivar++ ) {
                 for ( i = 0; i < ExtraLayer; i++ ) {
                     sign = 1.0;
-                    if ( H.boundary_left == 1 ) {
+                    if ( H.boundary_left == 1 ) {   // 1 is fixed / reflecting border
                         i0 = ExtraLayerTot - i - 1;
                         if ( ivar == IU ) {
                             sign = -1.0;
                         }
-                    } else if ( H.boundary_left == 2 ) {
-                        i0 = 2;
-                    } else {
-                        i0 = H.nx + i;
                     }
+                    else if ( H.boundary_left == 2 ) { // 2 is absorbing border
+                        i0 = 2;
+                    }
+                    else {   // everything else is circular connected domain
+                        // TODO This is not implemented! additional MPI calls between first and last domain
+                        // would be required..
+                        // SO we break if anyone wants to do this and let him know...
+                        i0 = H.nx + i;
+                        ERR ( "circular boundary conditions are setup\nThis is NOT supported at the moment, sorry!" );
+                        exit ( 1 );
+                    }
+                    // Copy the data into the ghost cells
                     for ( j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++ ) {
                         Hv->uold[IHv ( i, j, ivar )] = Hv->uold[IHv ( i0, j, ivar )] * sign;
-                        MFLOPS ( 1, 0, 0, 0 );
+                        //TODO remove this //MFLOPS ( 1, 0, 0, 0 );
                     }
                 }
             }
-        } else 	{
+        }
+        else {
+            // this is NOT the left most domain, but somewhere in the middle or right
 
-            // Exchange MPI boundary conditions to the left (send two columns at once)
+#if COM_METHOD == _CM_VECTOR
+            // Exchange MPI boundary conditions with proc / domain to the left (send two columns at once)
+            // get 2 rows from the actual domain of the left neighbor and use those as ghost cells in the current cell.
+            // send 2 rows of physical data to the left, such that it can use it as ghost cells
             MPI_Irecv ( &Hv->uold[IHv ( 0, 0, ID )], 1, H.mpi_hydro_vector_type, H.rank-1, 2, MPI_COMM_WORLD, MPI_req );
             MPI_Isend ( &Hv->uold[IHv ( 2, 0, ID )], 1, H.mpi_hydro_vector_type, H.rank-1, 0, MPI_COMM_WORLD, MPI_req+1 );
-
-            // Exchange MPI boundary conditions to the left (one column per call)
-//			MPI_Irecv( &Hv->uold[IHv(0, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 2, MPI_COMM_WORLD, MPI_req );
-//			MPI_Irecv( &Hv->uold[IHv(1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 3, MPI_COMM_WORLD, MPI_req+1 );
-
-//			MPI_Isend( &Hv->uold[IHv(2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 0, MPI_COMM_WORLD, MPI_req+2 );
-//			MPI_Isend( &Hv->uold[IHv(3, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc-1, 1, MPI_COMM_WORLD, MPI_req+3 );
+#elif COM_METHOD == _CM_SINGLE
+            MPI_Status stat;
+            MPI_Request req;
+            double buf = 0.0;
+            for (ivar = 0; ivar < H.nvar; ivar++) {
+                for (i = 0; i < ExtraLayer; i++) {
+                    for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
+                        MPI_Recv( &buf, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
+                        Hv->uold[IHv(i, j, ivar)] = buf;
+                        
+                        MPI_Send( &Hv->uold[IHv(i+ExtraLayer, j, ivar)], 1, MPI_DOUBLE, H.rank-1, 0, MPI_COMM_WORLD );
+                    }
+                }
+            }
+#endif
         }
 
-        // Get values from the right domain.
+        // Set physical boundary conditions for the right ghost layer of this domain
+
         if ( H.rank == H.n_procs-1 ) {
-            // Set physical boundary conditions for the right ghost layer
-            for ( ivar = 0; ivar < H.nvar; ivar++ ) {
+            // this is the right most domain, so enforce physical boundary conditions here
+
+            for ( ivar = 0; ivar < H.nvar; ivar++ ) {  // explanation see above (left hand part)
                 for ( i = H.nx + ExtraLayer; i < H.nx + ExtraLayerTot; i++ ) {
                     sign = 1.0;
                     if ( H.boundary_right == 1 ) {
@@ -199,26 +247,44 @@ MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_R
                         i0 = i - H.nx;
                     }
                     for ( j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++ ) {
-                        /* fprintf(stderr,"PFL %d %d\n",i,j); */
                         Hv->uold[IHv ( i, j, ivar )] = Hv->uold[IHv ( i0, j, ivar )] * sign;
-                        /* fprintf(stderr,"PFL \n"); */
-                        MFLOPS ( 1, 0, 0, 0 );
+                        //TODO delete this //MFLOPS ( 1, 0, 0, 0 );
                     }
                 }
             }
-        } else {
-            // Exchange MPI boundary conditions to the right (send two columns at once)
+        }
+        else {
+            // this is NOT the right most domain, but somewhere in the middle or to the left
+
+#if COM_METHOD == _CM_VECTOR
+            // Exchange MPI boundary conditions with proc / domain to the right (send two columns at once)
+            // get 2 rows from the actual domain of the right neighbor and use those as ghost cells in the current cell.
+            // send 2 rows of physical data to the right, such that it can use it as ghost cells
             MPI_Irecv ( &Hv->uold[IHv ( H.nx+ExtraLayer, 0, ID )], 1, H.mpi_hydro_vector_type, H.rank+1, 0, MPI_COMM_WORLD, MPI_req+2 );
             MPI_Isend ( &Hv->uold[IHv ( H.nx+ExtraLayer-2, 0, ID )], 1, H.mpi_hydro_vector_type, H.rank+1, 2, MPI_COMM_WORLD, MPI_req+3 );
+#elif COM_METHOD == _CM_SINGLE
+            MPI_Status stat;
+            MPI_Request req;
+            double buf = 0.0;
+            for (ivar = 0; ivar < H.nvar; ivar++) {
+                for (i = 0; i < ExtraLayer; i++) {
+                    for (j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++) {
+                        MPI_Send( &Hv->uold[IHv(i+ExtraLayer, j, ivar)], 1, MPI_DOUBLE, H.rank+1, 0, MPI_COMM_WORLD );
 
-            // Exchange MPI boundary conditions to the left (one column per call)
-//			MPI_Irecv( &Hv->uold[IHv(H.nx+ExtraLayer, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 0, MPI_COMM_WORLD, MPI_req+4 );
-//			MPI_Irecv( &Hv->uold[IHv(H.nx+ExtraLayer+1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 1, MPI_COMM_WORLD, MPI_req+5 );
+                        MPI_Recv( &buf, 1, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
+                        Hv->uold[IHv(i, j, ivar)] = buf;
+                    }
+                }
+            }
+#endif
 
-//			MPI_Isend( &Hv->uold[IHv(H.nx+ExtraLayer-2, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 2, MPI_COMM_WORLD, MPI_req+6 );
-//			MPI_Isend( &Hv->uold[IHv(H.nx+ExtraLayer-1, 0, ID)], 1, H.MPI_Hydro_vars, H.iProc+1, 3, MPI_COMM_WORLD, MPI_req+7 );
         }
-    } else {
+
+    }
+    else {
+        // scanning vertically (top / down)
+        // this part is still like the original code
+
         // Lower boundary
         j0 = 0;
         for ( ivar = 0; ivar < H.nvar; ivar++ ) {
@@ -262,41 +328,61 @@ MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_R
             }
         }
     }
-}                               // MPI_get_boundary_start
+} // MPI_get_boundary_start
 
-/*
-** Make sure that all boundary cells have been successfully exchanged between
-** the processes before we continue.
-*/
-void
-MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Request *MPI_req ) {
-    int count, offset, MPIError;
-    //MPI_Status *status;
 
-    //status = malloc(8*sizeof(status));
 
-    MPI_Status status;
+
+
+
+
+
+
+
+/**
+ * @brief Finish up domain transfers
+ * 
+ * Make sure that all boundary cells have been successfully exchanged between
+ * the processes before we continue.
+ * 
+ * @param idim ...
+ * @param H ...
+ * @param Hv ...
+ * @param MPI_req ...
+ * @return void
+ */
+void MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Request *MPI_req ) {
+
+    int count, offset;
+    int error;
+    MPI_Status *status;
+
+    status = malloc( 4*sizeof( MPI_Status ));
+
     offset = 0;
-    /*
-    	if ( idim == 1) {
-    		// Dont do this if we sweep the grid in ny direction.
-    		if (H.iProc == 0 || H.iProc == H.iNProc-1)
-    		{
-    			// For the most outer domains we have less b.c. to exchange.
-    			count = 1;
-    			if ( H.iProc == 0 )
-    			{
-    				offset = 4;
-    			}
-    		} else {
-    			count = 2;
-    		}
-    		MPIError = MPI_Waitall(4*count, MPI_req+offset, status);
-    		assert( MPIError == 0 );
-    	}
-    */
 
-    // I have no idea why MPI_Waitall() doesnt work
+    if ( idim == 1) {
+#if COM_METHOD == _CM_VEKTOR
+        // Don't do this if we sweep the grid in ny direction.
+        if (H.rank == 0 || H.rank == H.n_procs-1) {
+            // For the most outer domains we have less b.c. to exchange.
+            count = 1;
+            if ( H.rank == 0 ) {
+                offset = 2;
+            }
+        } else {
+            count = 2;
+        }
+        error = MPI_Waitall( 2*count, MPI_req + offset, status);
+        assert( error == 0 );
+#elif COM_METHOD == _CM_SINGLE
+#endif
+    }
+
+/* 
+    // (CR) I have no idea why MPI_Waitall() doesnt work
+    // (RK) I did somehow fix it.. now idea how..
+
     // Here we send two columns at once
     if ( idim == 1 && H.n_procs > 1 ) {
         // Dont do this if we sweep the grid in ny direction.
@@ -321,42 +407,30 @@ MPI_get_boundary_end ( long idim, const hydroparam_t H, hydrovar_t * Hv, MPI_Req
             MPI_Wait ( MPI_req+3, &status );
         }
     }
-    /*
-    	if ( idim == 1) {
-    		// Dont do this if we sweep the grid in ny direction.
-    		if (H.iProc == 0 )
-    		{
-    			// Only exchanged cells with the right layer
-    			MPI_Wait( MPI_req+4, status);
-    			MPI_Wait( MPI_req+5, status);
-    			MPI_Wait( MPI_req+6, status);
-    			MPI_Wait( MPI_req+7, status);
-    		} else if ( H.iProc == H.iNProc-1 ) {
-    			// Only exchanged cells with the left layer
-    			MPI_Wait( MPI_req, status);
-    			MPI_Wait( MPI_req+1, status);
-    			MPI_Wait( MPI_req+2, status);
-    			MPI_Wait( MPI_req+3, status);
-    		} else {
-    			MPI_Wait( MPI_req, status);
-    			MPI_Wait( MPI_req+1, status);
-    			MPI_Wait( MPI_req+2, status);
-    			MPI_Wait( MPI_req+3, status);
-    			MPI_Wait( MPI_req+4, status);
-    			MPI_Wait( MPI_req+5, status);
-    			MPI_Wait( MPI_req+6, status);
-    			MPI_Wait( MPI_req+7, status);
-    		}
-    	}
-    */
-//	Free( status );
-}                               // MPI_get_boundary_end
+*/
+
+} // MPI_get_boundary_end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 ** Here we use MPI_sendrecv rather than more complicated stuff.
 */
 void
-MPI_get_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
+MPI_get_boundary_sendrecv ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
     long i, ivar, i0, j, j0, k;
     double sign;
     MPI_Status status;
@@ -561,6 +635,16 @@ MPI_get_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
     }
 }                               // MPI_get_boundary
 
+
+
+
+
+
+
+
+
+
+
 /*
  * The most simple version possible. Only two processes and I implemented every send and receive
  * manually.
@@ -760,15 +844,31 @@ MPI_get_boundary_simple ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
         }
     }
 }                               // MPI_get_boundary_simple
-/*
-** Exchange the boundary conditions with neighboring domains that are on
-** different processes.
-*/
-void
-MPI_make_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
+
+
+
+
+
+
+
+
+
+/**
+ * @brief Exchange the boundary conditions
+ * 
+ * Exchange the boundary conditions with neighboring domains that are on
+ * different processes.
+ * 
+ * @param idim ...
+ * @param H ...
+ * @param Hv ...
+ * @return void
+ */
+void MPI_make_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
+
     // Allocate MPI_req !!!
     MPI_Request *MPI_req;
-    MPI_req = malloc ( 8*sizeof ( MPI_Request ) );
+    MPI_req = malloc ( 4 * sizeof ( MPI_Request ) );
 
     // Initiate send and receive requests
     MPI_get_boundary_start ( idim, H, Hv, MPI_req );
@@ -776,11 +876,19 @@ MPI_make_boundary ( long idim, const hydroparam_t H, hydrovar_t * Hv ) {
     // Make sure the data was successfully exchanged before we continue.
     MPI_get_boundary_end ( idim, H, Hv, MPI_req );
 
-
     // (CR) Debug
-//	MPI_Barrier( MPI_COMM_WORLD );
-    // Free MPI_req
+    // MPI_Barrier( MPI_COMM_WORLD );
     Free ( MPI_req );
-}                               // MPI_make_boundary
 
-//EOF
+} // MPI_make_boundary
+
+
+
+
+
+
+
+
+
+
+

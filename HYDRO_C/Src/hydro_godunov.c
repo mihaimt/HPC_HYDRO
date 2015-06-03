@@ -13,6 +13,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include "debug.h"
+
 #include "parametres.h"
 #include "hydro_godunov.h"
 #include "hydro_funcs.h"
@@ -221,6 +223,17 @@ hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
 
 
 
+/**
+ * @brief set up work space and start solving
+ * 
+ * @param idim ...
+ * @param dt ...
+ * @param H ...
+ * @param Hv ...
+ * @param Hw ...
+ * @param Hvw ...
+ * @return void
+ */
 void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
                          hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
 
@@ -251,17 +264,16 @@ void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t 
     dtdx = dt / H.dx;
 
     // Update boundary conditions
+    // ------------------------------------------------------------------------
+
     if ( H.prt ) {
         fprintf ( stdout, "godunov %ld\n", idim );
         PRINTUOLD ( H, Hv );
     }
 
-//	Get boundary conditions
-//	make_boundary(idim, H, Hv);
+
+    // Get boundary conditions
     MPI_make_boundary ( idim, H, Hv );
-//	Try a simple MPI_Sendrecv()
-//	MPI_get_boundary(idim, H, Hv);
-//	MPI_get_boundary_simple(idim, H, Hv);
 
     PRINTUOLD ( H, Hv );
 
@@ -403,7 +415,25 @@ void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t 
 
     // Deallocate work space
     deallocate_work_space ( H, Hw, Hvw );
+
 }	// MPI_hydro_godunov
 
 
-// EOF
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

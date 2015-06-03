@@ -71,11 +71,11 @@ hydro_funcs.o: utils.h parametres.h hydro_funcs.h
 hydro_godunov.o: parametres.h hydro_godunov.h
 hydro_godunov.o: hydro_funcs.h utils.h make_boundary.h cmpflx.h conservar.h
 hydro_godunov.o: equation_of_state.h qleftright.h constoprim.h riemann.h
-hydro_godunov.o: trace.h slope.h
+hydro_godunov.o: trace.h slope.h debug.h
 main.o: parametres.h hydro_funcs.h vtkfile.h
 main.o: compute_deltat.h hydro_godunov.h utils.h debug.h
 make_boundary.o: parametres.h make_boundary.h
-make_boundary.o: utils.h
+make_boundary.o: utils.h debug.h
 parametres.o: parametres.h debug.h
 qleftright.o: parametres.h utils.h qleftright.h
 riemann.o: parametres.h utils.h riemann.h

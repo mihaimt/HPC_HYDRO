@@ -42,12 +42,14 @@ void MPI_init ( hydroparam_t * H, int * argc, char *** argv ) {
 
     H->mpi_is_init = 0;
 
+/*
     // Allocate Status (use one for all, overwrite old ones)
     H->mpi_status = malloc ( sizeof ( MPI_Status ) );
 
-    // Allocate Requests (need 8 because of the 8 parallel MPI calls:
-    // 2 rows on each side x 2 sides (left & right) x 2 (send & recv)
-    H->mpi_req = malloc ( 8*sizeof ( MPI_Request ) );
+    // Allocate Requests (need 4 because of the 4 parallel MPI calls:
+    // 1 doublerow on each side x 2 sides (left & right) x 2 (send & recv)
+    H->mpi_req = malloc ( 4 * sizeof ( MPI_Request ) );
+*/
 
     if ( USE_MPI ) {
 
@@ -92,8 +94,10 @@ void MPI_finish ( hydroparam_t *H ) {
 
     LOC ( H->rank );
 
+/*
     Free ( H->mpi_status );
     Free ( H->mpi_req );
+*/
 
     if ( USE_MPI ) {
 
