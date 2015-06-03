@@ -226,6 +226,8 @@ int main ( int argc, char **argv ) {
         DBG_if ( H.rank == 0, "main loop | end: step=%04li t=%.4e dt=%.4e %s\n", H.nstep-1, H.t, dt, outnum );
 
     }   // end main loop
+    
+    INF_if ( H.rank==0, "main loop finished, cleaning up...\n" );
 
 
     // write the final state to file
@@ -250,20 +252,17 @@ int main ( int argc, char **argv ) {
             elaps = tmax;
         }
         timeToString ( outnum, elaps );
-        //fprintf ( stdout, "Hydro ends in %ss (%.3lf).\n", outnum, elaps );
         INF ( "Hydro ends in %ss (%.3lf).\n", outnum, elaps );
-    }
-    
-    // write a status report
-    if ( H.rank == 0 ) {
-        write_stat ( elaps, H.nstep, H );
+
+        // write a status report
+        write_stat ( elaps, H.nstep, nvtk, H );
     }
 
 
     // Finalize MPI and free memory.
     MPI_finish ( &H );
     MPI_hydro_finish ( &H, &Hv );
-    timingfile_finish( &H );
+    if ( WRITE_TIMING ) { timingfile_finish( &H ); }
 
 
     // test message printing

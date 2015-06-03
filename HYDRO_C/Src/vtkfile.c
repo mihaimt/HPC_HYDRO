@@ -130,20 +130,21 @@ void timingfile_finish ( hydroparam_t* H ) {
     fclose ( H->timing_file );
 }
 
-void write_stat ( double elapsed, long nsteps, const hydroparam_t H ) {
+void write_stat ( double elapsed, long nsteps, long nstates, const hydroparam_t H ) {
     
     LOC ( H.rank );
 
     char name[160];
     FILE* fic;
 
-    sprintf ( name, "stats_%04i.txt", H.rank );
+    sprintf ( name, "stats.txt" );
 
     fic = fopen ( name, "w" );
     
     fprintf ( fic, "stats\n" );
-    fprintf ( fic, "nsteps:%ld\n", nsteps );
-    fprintf ( fic, "wall_time:%e\n", elapsed );
+    fprintf ( fic, "nsteps: %ld\n", nsteps );
+    fprintf ( fic, "nstates_written: %ld\n", nstates );
+    fprintf ( fic, "wall_time: %e\n", elapsed );
     
     fclose ( fic );
 }
