@@ -1,6 +1,8 @@
 #ifndef RIEMANN_H_INCLUDED
 #define RIEMANN_H_INCLUDED
 
+#include "utils.h"
+
 
 void riemann ( double *RESTRICT qleft, double *RESTRICT qright,
                double *RESTRICT qgdnv, double *RESTRICT rl,

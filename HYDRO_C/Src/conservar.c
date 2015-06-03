@@ -13,8 +13,26 @@
 #include "parametres.h"
 #include "utils.h"
 #include "conservar.h"
-void
-gatherConservativeVars ( const long idim, const long rowcol,
+
+
+/**
+ * @brief gatherConservativeVars
+ * 
+ * @param idim IN
+ * @param rowcol IN
+ * @param uold IN
+ * @param u OUT
+ * @param Himin IN
+ * @param Himax IN
+ * @param Hjmin IN
+ * @param Hjmax IN
+ * @param Hnvar IN
+ * @param Hnxt IN
+ * @param Hnyt IN
+ * @param Hnxyt IN
+ * @return void
+ */
+void gatherConservativeVars ( const long idim, const long rowcol,
                          double *RESTRICT uold,
                          double *RESTRICT u,
                          const long Himin,

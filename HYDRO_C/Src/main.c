@@ -231,7 +231,7 @@ int main ( int argc, char **argv ) {
 
 
     // write the final state to file
-    // be aware that this last step could have another time spacing as the
+    // be aware that this last step could have another "time" spacing as the
     // intermediate steps above!
     if ( WRITE_FINAL_STATE ) {
         vtkfile ( ++nvtk, H, &Hv );

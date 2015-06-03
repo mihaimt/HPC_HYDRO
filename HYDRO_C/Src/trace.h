@@ -1,6 +1,7 @@
 #ifndef TRACE_H_INCLUDED
 #define TRACE_H_INCLUDED
 
+#include "utils.h"
 
 void trace ( double *RESTRICT q, double *RESTRICT dq,
              double *RESTRICT c, double *RESTRICT qxm,

@@ -1,8 +1,11 @@
 #ifndef CONSERVAR_H_INCLUDED
 #define CONSERVAR_H_INCLUDED
 
+#include "utils.h"
 
-void gatherConservativeVars ( const long idim, const long rowcol,
+
+void gatherConservativeVars ( const long idim,
+                              const long rowcol,
                               double *RESTRICT uold,
                               double *RESTRICT u,
                               const long Himin,

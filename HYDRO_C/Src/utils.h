@@ -2,6 +2,7 @@
 #define UTILS_H_INCLUDED
 
 #include "parametres.h"
+#include "debug.h"
 
 #ifndef Square
 #define Square(x) ((x) * (x))
