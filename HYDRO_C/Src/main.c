@@ -61,6 +61,9 @@ int main ( int argc, char **argv ) {
     // Initialize MPI library (and allocate memory for the MPI variables).
     MPI_init ( &H, &argc, &argv );
 
+    // Initialise OpenMP
+    OPENMP_init ( &H );
+
     // Parse command line variables and input file(s)
     process_args ( argc, argv, &H );
 
@@ -72,7 +75,7 @@ int main ( int argc, char **argv ) {
 
 
     TRC ( H.rank, "nxt=%i nyt=%i", H.nxt, H.nyt );
-    INF_if ( H.rank==0, "Hydro starts\n" );
+    INF_if ( H.rank==0, "Hydro setup successful\n" );
     INF_if ( H.rank==0, "   use MPI:      %s\n", __str(USE_MPI) );
     INF_if ( H.rank==0, "   use OPENMP:   %s\n", __str(USE_OPENMP) );
     INF_if ( H.rank==0, "   use DEBUG:    %s\n", __str(DEBUG) );
@@ -97,6 +100,8 @@ int main ( int argc, char **argv ) {
         time_output = 1;
         next_output_time = next_output_time + H.dtoutput;
     }
+
+    INF_if ( H.rank==0, "starting mainloop...\n" );
 
     //-------------------------------------------------------------------------
     // The main loop
@@ -176,9 +181,9 @@ int main ( int argc, char **argv ) {
             H.mpi_error = MPI_Reduce ( &iter_time, &it_min, 1, MPI_DOUBLE,
                                        MPI_MIN, 0, MPI_COMM_WORLD );
             H.mpi_error = MPI_Reduce ( &iter_time, &it_max, 1, MPI_DOUBLE,
-                                       MPI_MIN, 0, MPI_COMM_WORLD );
+                                       MPI_MAX, 0, MPI_COMM_WORLD );
             if ( H.rank == 0 ) {
-                sprintf ( outnum, "%s (global %.3e..%.3e)", outnum, it_min, it_max );
+                sprintf ( outnum, "%s (global %.3e .. %.3e)", outnum, it_min, it_max );
             }
         }
 

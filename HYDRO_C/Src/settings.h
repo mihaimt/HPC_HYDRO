@@ -16,7 +16,8 @@
 #define USE_MPI YES
 
 // compile with OPENMP
-#define USE_OPENMP NO
+#define USE_OPENMP YES
+#define N_OMP_THREADS 2
 
 // compile tests and other debug code
 #define DEBUG ON

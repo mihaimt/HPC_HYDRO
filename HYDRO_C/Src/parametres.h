@@ -59,6 +59,9 @@ typedef struct _hydroparam {
     MPI_Status* mpi_status; // pointer to array with statuses of requests
 */
 
+    // variables for openmp
+    int n_treads;      /// how many threads we are using (basically the macro N_OMP_THREADS)
+
 } hydroparam_t;
 
 

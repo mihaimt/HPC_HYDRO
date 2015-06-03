@@ -1,0 +1,49 @@
+# C compiler
+#------------------
+CC = gcc
+
+# Fortran compiler
+#-----------------
+F90 = ifort
+
+# MPI C compiler
+#---------------
+MPICC = mpiicc
+
+# MPI Fortran compiler
+#---------------------
+MPIF90 = mpiifort
+
+# C compilation options
+#----------------------
+CFLAGS = -O3 -Ofast
+
+# Fortran compilation options
+#----------------------------
+FFLAGS = -O3
+# -traceback -mcmodel=medium -shared-intel -check all
+
+# Linker options
+#---------------
+LDFLAGS = -O3 -Ofast
+# -traceback -mcmodel=medium -shared-intel -check all
+
+# OpenMP C compilation options
+#-----------------------------
+CFLAGS_OMP =  -fopenmp
+
+# OpenMP Fortran compilation options
+#-----------------------------------
+FFLAGS_OMP =  -openmp
+
+# OpenMP link options
+#--------------------
+LDFLAGS_OMP = -fopenmp
+
+# Pthreads compilation options
+#-----------------------------
+CFLAGS_PTH = -pthread
+
+# Pthreads link options
+#----------------------
+LDFLAGS_PTH = -lpthread

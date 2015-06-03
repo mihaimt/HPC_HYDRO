@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <mpi.h>
+#include <omp.h>
 #include <assert.h>
 
 #include "debug.h"
@@ -115,6 +116,52 @@ void MPI_finish ( hydroparam_t *H ) {
     H->mpi_is_init = 0;
 
 }
+
+
+
+/**
+ * @brief Initializes OPENMP
+ * 
+ * @param H ...
+ * @return void
+ */
+void OPENMP_init ( hydroparam_t* H ) {
+
+    if ( USE_OPENMP ) {
+        H->n_treads = omp_get_num_threads();
+        
+        // test openmp
+        int tid, n_threads;
+#pragma omp parallel private(tid, n_threads)
+        {
+            tid = omp_get_thread_num();
+            n_threads = omp_get_num_threads();
+            TRC ( H->rank, "rank %i thread %i of %i: I'm online", H->rank, tid, n_threads );
+        }
+        
+        
+    }
+    else {
+        H->n_treads = 1;
+    }
+}
+
+
+/**
+ * @brief Shutdown OPENMP
+ * 
+ * This is probably empty
+ * 
+ * @param H ...
+ * @return void
+ */
+void OPENMP_finish ( hydroparam_t* H ) {
+
+}
+
+
+
+
 
 
 /**

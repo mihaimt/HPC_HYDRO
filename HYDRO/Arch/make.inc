@@ -1,1 +1,1 @@
-make_intel
+make_gnu

@@ -11,8 +11,8 @@ MPICC = cc
 LMPICC = mpicc
 
 
-FFLAGS_LMPI = -Ofast
-LDFLAGS_LMPI = -Ofast
+FFLAGS_LMPI = 
+LDFLAGS_LMPI = 
 
 
 
@@ -47,6 +47,12 @@ lmpi: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_LMPI)
 lmpi: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_LMPI)
 lmpi: $(OBJ)
 	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_lmpi -lm
+
+lmpiomp: CCOMP = $(LMPICC)
+lmpiomp: CCOMPFLAGS = $(FFLAGS) $(FFLAGS_LMPI) $(FFLAGS_OMP)
+lmpiomp: LINKFLAGS = $(LDFLAGS) $(LDFLAGS_LMPI) $(LDFLAGS_OMP)
+lmpiomp: $(OBJ)
+	$(CCOMP) $(LINKFLAGS) $(OBJ) -o ../Bin/hydro_lmpiomp -lm
 
 clean   :
 	rm -f *.o core* hydro_mono hydro_mpi hydro_omp hydro_mpiomp ../Bin/hydro_lmpi
