@@ -11,7 +11,7 @@ FILE="../../Input/weak_scaling_8.nml"
 #sbatch --dependency=afterany:$SLURM_JOB_ID $FILE.job
 
 cd ../Output
-mkdir zbox-weak1
-cd zbox-weak1
+mkdir zbox-weak8
+cd zbox-weak8
 srun ../../Bin/hydro_lmpi -i $FILE
 
