@@ -73,7 +73,7 @@ void riemann ( double *RESTRICT qleft,
 
 
     // Pressure, density and velocity
-    #pragma omp for private(iter)
+    // //pragma omp for private(iter)
     for ( i = 0; i < nface; i++ ) {
         rl[i] = MAX ( qleft[IHVW ( i, ID )], Hsmallr );
         ul[i] = qleft[IHVW ( i, IU )];
@@ -186,7 +186,7 @@ void riemann ( double *RESTRICT qleft,
 
     // other passive variables
     if ( Hnvar > IP+1 ) {
-        #pragma omp for private(i)
+        // //pragma omp for private(i)
         for ( invar = IP + 1; invar < Hnvar; invar++ ) {
             for ( i = 0; i < nface; i++ ) {
                 if ( sgnm[i] == 1 ) {

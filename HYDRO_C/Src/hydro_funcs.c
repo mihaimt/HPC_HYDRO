@@ -136,7 +136,7 @@ void OPENMP_init ( hydroparam_t* H ) {
 
         // test openmp, abort of for some reason can't spawn enough threads
         int tid, n_threads;
-#pragma omp parallel private(tid, n_threads)
+// //pragma omp parallel private(tid, n_threads)
         {
             tid = omp_get_thread_num();
             H->n_threads = omp_get_num_threads();

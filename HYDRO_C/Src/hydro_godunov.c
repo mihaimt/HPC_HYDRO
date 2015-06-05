@@ -333,7 +333,7 @@ void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t 
             
             for ( j = H.jmin + ExtraLayer; j < H.jmax - ExtraLayer; j++ ) {
 
-                #pragma omp parallel private(j)
+                // //pragma omp parallel private(j)
 
 //                 TRC (H.rank, "thr:%i uold:%ld", omp_get_thread_num(), uold);
 //                 TRC (H.rank, "thr:%i flux:%ld", omp_get_thread_num(), flux);

@@ -57,7 +57,7 @@ void trace ( double *RESTRICT q,
         project = zero;
     }
 
-    #pragma omp for
+    // //pragma omp for
     for ( i = ijmin + 1; i < ijmax - 1; i++ ) {
         double cc, csq, r, u, v, p;
         double dr, du, dv, dp;
@@ -128,7 +128,7 @@ void trace ( double *RESTRICT q,
     
     if ( Hnvar > IP+1 ) {
         
-        #pragma omp for private(i)
+        // //pragma omp for private(i)
         for ( IN = IP + 1; IN < Hnvar; IN++ ) {
             for ( i = ijmin + 1; i < ijmax - 1; i++ ) {
                 double spzero;

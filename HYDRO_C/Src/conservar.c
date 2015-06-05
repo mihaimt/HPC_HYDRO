@@ -54,7 +54,7 @@ void gatherConservativeVars ( const long idim,
 
     if ( idim == 1 ) {
         // Gather conservative variables
-        #pragma omp for
+        //pragma omp for
         for ( i = Himin; i < Himax; i++ ) {
             u[IHVW ( i, ID )] = uold[IHU ( i, rowcol, ID )];
             u[IHVW ( i, IU )] = uold[IHU ( i, rowcol, IU )];
@@ -63,7 +63,7 @@ void gatherConservativeVars ( const long idim,
         }
 
         if ( Hnvar > IP + 1 ) {
-            #pragma omp for private(i)
+            //pragma omp for private(i)
             for ( ivar = IP + 1; ivar < Hnvar; ivar++ ) {
                 for ( i = Himin; i < Himax; i++ ) {
                     u[IHVW ( i, ivar )] = uold[IHU ( i, rowcol, ivar )];
@@ -73,7 +73,7 @@ void gatherConservativeVars ( const long idim,
     }
     else {
         // Gather conservative variables
-        #pragma omp for
+        //pragma omp for
         for ( j = Hjmin; j < Hjmax; j++ ) {
             u[IHVW ( j, ID )] = uold[IHU ( rowcol, j, ID )];
             u[IHVW ( j, IU )] = uold[IHU ( rowcol, j, IV )];
@@ -81,7 +81,7 @@ void gatherConservativeVars ( const long idim,
             u[IHVW ( j, IP )] = uold[IHU ( rowcol, j, IP )];
         }
         if ( Hnvar > IP + 1 ) {
-            #pragma omp for private(j)
+            //pragma omp for private(j)
             for ( ivar = IP + 1; ivar < Hnvar; ivar++ ) {
                 for ( j = Hjmin; j < Hjmax; j++ ) {
                     u[IHVW ( j, ivar )] = uold[IHU ( rowcol, j, ivar )];
@@ -118,7 +118,7 @@ void updateConservativeVars ( const long idim,
 
     if ( idim == 1 ) {
         // Update conservative variables
-        #pragma omp for
+        //pragma omp for
         for ( i = Himin + ExtraLayer; i < Himax - ExtraLayer; i++ ) {
             uold[IHU ( i, rowcol, ID )] =
                 u[IHVW ( i, ID )] + ( flux[IHVW ( i - 2, ID )] - flux[IHVW ( i - 1, ID )] ) * dtdx;
@@ -132,7 +132,7 @@ void updateConservativeVars ( const long idim,
         }
 
         if ( Hnvar > IP + 1 ) {
-            #pragma omp for private(i)
+            //pragma omp for private(i)
             for ( ivar = IP + 1; ivar < Hnvar; ivar++ ) {
                 for ( i = Himin + ExtraLayer; i < Himax - ExtraLayer; i++ ) {
                     uold[IHU ( i, rowcol, ivar )] =
@@ -144,7 +144,7 @@ void updateConservativeVars ( const long idim,
         }
     } else {
         // Update conservative variables
-        #pragma omp for
+        //pragma omp for
         for ( j = Hjmin + ExtraLayer; j < Hjmax - ExtraLayer; j++ ) {
             uold[IHU ( rowcol, j, ID )] =
                 u[IHVW ( j, ID )] + ( flux[IHVW ( j - 2, ID )] - flux[IHVW ( j - 1, ID )] ) * dtdx;
@@ -157,7 +157,7 @@ void updateConservativeVars ( const long idim,
             MFLOPS ( 12, 0, 0, 0 );
         }
         if ( Hnvar > IP + 1 ) {
-            #pragma omp for private(j)
+            //pragma omp for private(j)
             for ( ivar = IP + 1; ivar < Hnvar; ivar++ ) {
                 for ( j = Hjmin + ExtraLayer; j < Hjmax - ExtraLayer; j++ ) {
                     uold[IHU ( rowcol, j, ivar )] =
