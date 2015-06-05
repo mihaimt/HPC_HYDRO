@@ -16,8 +16,8 @@
 #define USE_MPI YES
 
 // compile with OPENMP
-#define USE_OPENMP ON
-#define N_OMP_THREADS 2
+#define USE_OPENMP OFF
+#define N_OMP_THREADS 1
 
 // compile tests and other debug code
 #define DEBUG ON
@@ -42,7 +42,7 @@
 //     So dt (or d_steps) between two frames is always the same, expect for
 //     the last write! (default: OFF)
 #define WRITE_INIT_STATE  OFF
-#define WRITE_INTER_STATE ON
+#define WRITE_INTER_STATE OFF
 #define WRITE_FINAL_STATE OFF
 
 // use color output
