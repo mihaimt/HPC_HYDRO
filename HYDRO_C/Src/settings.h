@@ -20,18 +20,18 @@
 #define N_OMP_THREADS 1
 
 // compile tests and other debug code
-#define DEBUG ON
+#define DEBUG OFF
 
 // run the asserts
-#define DO_ASSERTS ON
+#define DO_ASSERTS OFF
 
 // measure run time of one iteration locally / globally (min/max)
 // GLOBAL results in overhead of two additional MPI_Reduce per step!
-#define GET_LOCAL_ITER_TIME  ON
-#define GET_GLOBAL_ITER_TIME ON
+#define GET_LOCAL_ITER_TIME  OFF
+#define GET_GLOBAL_ITER_TIME OFF
 
 // write the timings to a file (GET_LOCAL_ITER_TIME has to be ON for that)
-#define WRITE_TIMING ON
+#define WRITE_TIMING OFF
 
 // write status report at the end
 #define STATUS ON
@@ -42,7 +42,7 @@
 //     So dt (or d_steps) between two frames is always the same, expect for
 //     the last write! (default: OFF)
 #define WRITE_INIT_STATE  OFF
-#define WRITE_INTER_STATE OFF
+#define WRITE_INTER_STATE ON
 #define WRITE_FINAL_STATE OFF
 
 // use color output
@@ -69,10 +69,10 @@
 
 // do traces output (lowest level, print where in the code it is as well,
 // usually OFF)
-#define TRACE_PRINT ON
+#define TRACE_PRINT OFF
 
 // do debug output (usually OFF)
-#define DEBUG_PRINT ON
+#define DEBUG_PRINT OFF
 
 // do run time error output (stuff for the user to see if something is
 // massively screwed up and the program will shut down, usually ON)
