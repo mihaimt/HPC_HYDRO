@@ -212,6 +212,7 @@ void MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t* Hv,
             // send 2 rows of physical data to the left, such that it can use it as ghost cells
             MPI_Irecv ( &Hv->uold[IHv ( 0, 0, ID )], 1, H.mpi_hydro_vector_type, H.rank-1, 2, MPI_COMM_WORLD, MPI_req );
             MPI_Isend ( &Hv->uold[IHv ( 2, 0, ID )], 1, H.mpi_hydro_vector_type, H.rank-1, 0, MPI_COMM_WORLD, MPI_req+1 );
+
 #elif COM_METHOD == _CM_SINGLE
             MPI_Status stat;
             MPI_Request req;
@@ -226,7 +227,7 @@ void MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t* Hv,
                     }
                 }
             }
-#endif
+#endif // COM_METHOD
         }
 
         // Set physical boundary conditions for the right ghost layer of this domain
@@ -263,6 +264,7 @@ void MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t* Hv,
             // send 2 rows of physical data to the right, such that it can use it as ghost cells
             MPI_Irecv ( &Hv->uold[IHv ( H.nx+ExtraLayer, 0, ID )], 1, H.mpi_hydro_vector_type, H.rank+1, 0, MPI_COMM_WORLD, MPI_req+2 );
             MPI_Isend ( &Hv->uold[IHv ( H.nx+ExtraLayer-2, 0, ID )], 1, H.mpi_hydro_vector_type, H.rank+1, 2, MPI_COMM_WORLD, MPI_req+3 );
+
 #elif COM_METHOD == _CM_SINGLE
             MPI_Status stat;
             MPI_Request req;
@@ -277,7 +279,7 @@ void MPI_get_boundary_start ( long idim, const hydroparam_t H, hydrovar_t* Hv,
                     }
                 }
             }
-#endif
+#endif // COM_METHOD
 
         }
 

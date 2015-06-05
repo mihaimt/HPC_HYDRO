@@ -16,39 +16,64 @@
 
 #define DABS(x) (double) fabs((x))
 
-void
-riemann ( double *RESTRICT qleft, double *RESTRICT qright,
-          double *RESTRICT qgdnv, double *RESTRICT rl,
-          double *RESTRICT ul, double *RESTRICT pl, double *RESTRICT cl,
-          double *RESTRICT wl, double *RESTRICT rr, double *RESTRICT ur,
-          double *RESTRICT pr, double *RESTRICT cr, double *RESTRICT wr,
-          double *RESTRICT ro, double *RESTRICT uo, double *RESTRICT po,
-          double *RESTRICT co, double *RESTRICT wo,
-          double *RESTRICT rstar, double *RESTRICT ustar,
-          double *RESTRICT pstar, double *RESTRICT cstar,
-          long *RESTRICT sgnm, double *RESTRICT spin,
-          double *RESTRICT spout, double *RESTRICT ushock,
-          double *RESTRICT frac, double *RESTRICT scr,
-          double *RESTRICT delp, double *RESTRICT pold,
-          long *RESTRICT ind, long *RESTRICT ind2,
-          const long narray,
-          const double Hsmallr,
-          const double Hsmallc,
-          const double Hgamma, const long Hniter_riemann, const long Hnvar, const long Hnxyt ) {
+
+void riemann ( double *RESTRICT qleft,
+               double *RESTRICT qright,
+               double *RESTRICT qgdnv,
+               double *RESTRICT rl,
+               double *RESTRICT ul,
+               double *RESTRICT pl,
+               double *RESTRICT cl,
+               double *RESTRICT wl,
+               double *RESTRICT rr,
+               double *RESTRICT ur,
+               double *RESTRICT pr,
+               double *RESTRICT cr,
+               double *RESTRICT wr,
+               double *RESTRICT ro,
+               double *RESTRICT uo,
+               double *RESTRICT po,
+               double *RESTRICT co,
+               double *RESTRICT wo,
+               double *RESTRICT rstar,
+               double *RESTRICT ustar,
+               double *RESTRICT pstar,
+               double *RESTRICT cstar,
+               long *RESTRICT sgnm,
+               double *RESTRICT spin,
+               double *RESTRICT spout,
+               double *RESTRICT ushock,
+               double *RESTRICT frac,
+               double *RESTRICT scr,
+               double *RESTRICT delp,
+               double *RESTRICT pold,
+               long *RESTRICT ind,
+               long *RESTRICT ind2,
+               const long narray,
+               const double Hsmallr,
+               const double Hsmallc,
+               const double Hgamma,
+               const long Hniter_riemann,
+               const long Hnvar,
+               const long Hnxyt ) {
+
+#define IHVW(i, v) ((i) + (v) * Hnxyt)
+
+    WHERE ( "riemann" );
 
     // Local variables
     double smallp, gamma6, ql, qr, usr, usl, wwl, wwr, smallpp;
     long i, invar, iter, nface;
-#define IHVW(i, v) ((i) + (v) * Hnxyt)
-
-    WHERE ( "riemann" );
 
     // Constants
     nface = narray;
     smallp = Square ( Hsmallc ) / Hgamma;
     smallpp = Hsmallr * smallp;
     gamma6 = ( Hgamma + one ) / ( two * Hgamma );
+
+
     // Pressure, density and velocity
+    #pragma omp for private(iter)
     for ( i = 0; i < nface; i++ ) {
         rl[i] = MAX ( qleft[IHVW ( i, ID )], Hsmallr );
         ul[i] = qleft[IHVW ( i, IU )];
@@ -161,6 +186,7 @@ riemann ( double *RESTRICT qleft, double *RESTRICT qright,
 
     // other passive variables
     if ( Hnvar > IP+1 ) {
+        #pragma omp for private(i)
         for ( invar = IP + 1; invar < Hnvar; invar++ ) {
             for ( i = 0; i < nface; i++ ) {
                 if ( sgnm[i] == 1 ) {
@@ -174,7 +200,19 @@ riemann ( double *RESTRICT qleft, double *RESTRICT qright,
             }
         }
     }
-}                               // riemann
+} // riemann
 
 
-//EOF
+
+
+
+
+
+
+
+
+
+
+
+
+

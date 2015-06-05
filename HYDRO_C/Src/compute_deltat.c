@@ -63,12 +63,19 @@ courantOnXY ( double *cournox_loc, double *cournoy_loc, const long Hnx, const lo
 #undef IHVW
 }
 
-void
-compute_deltat ( double *dt, const hydroparam_t H, hydrowork_t * Hw,
-                 hydrovar_t * Hv, hydrovarwork_t * Hvw ) {
-    double cournox, cournoy;
 
+
+
+
+void compute_deltat ( double *dt,
+                      const hydroparam_t H,
+                      hydrowork_t * Hw,
+                      hydrovar_t * Hv,
+                      hydrovarwork_t * Hvw ) {
+
+    double cournox, cournoy;
     long j;
+
     WHERE ( "compute_deltat" );
 
 #define IHVW(i,v) ((i) + (v) * nxyt)

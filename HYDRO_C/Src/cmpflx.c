@@ -16,19 +16,28 @@
 #include "utils.h"
 #include "cmpflx.h"
 
-void
-cmpflx ( double *RESTRICT qgdnv, double *RESTRICT flux, const long narray,
-         const long Hnxyt, const long Hnvar, const double Hgamma ) {
+
+
+void cmpflx ( double *RESTRICT qgdnv,
+              double *RESTRICT flux,
+              const long narray,
+              const long Hnxyt,
+              const long Hnvar,
+              const double Hgamma ) {
+
+#define IHVW(i,v) ((i) + (v) * nxyt)
+
+    WHERE ( "cmpflx" );
+
     long nface, i, IN;
     double entho, ekin, etot;
     const long nxyt = Hnxyt;
-    WHERE ( "cmpflx" );
 
-#define IHVW(i,v) ((i) + (v) * nxyt)
     nface = narray;
     entho = one / ( Hgamma - one );
 
     // Compute fluxes
+    #pragma omp for
     for ( i = 0; i < nface; i++ ) {
         // Mass density
         flux[IHVW ( i, ID )] = qgdnv[IHVW ( i, ID )] * qgdnv[IHVW ( i, IU )];
@@ -46,6 +55,7 @@ cmpflx ( double *RESTRICT qgdnv, double *RESTRICT flux, const long narray,
 
     // Other advected quantities
     if ( Hnvar > IP+1 ) {
+        #pragma omp for private(i)
         for ( IN = IP + 1; IN < Hnvar; IN++ ) {
             for ( i = 0; i < nface; i++ ) {
                 flux[IHVW ( i, IN )] = flux[IHVW ( i, IN )] * qgdnv[IHVW ( i, IN )];

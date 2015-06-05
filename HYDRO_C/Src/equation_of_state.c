@@ -23,6 +23,7 @@ equation_of_state ( double *RESTRICT rho, double *RESTRICT eint,
     smallp = Square ( Hsmallc ) / Hgamma;
     MFLOPS ( 0, 1, 0, 0 );
 
+    #pragma omp for
     for ( k = imin; k < imax; k++ ) {
         p[k] = ( Hgamma - one ) * rho[k] * eint[k];
         p[k] = MAX ( p[k], ( double ) ( rho[k] * smallp ) );

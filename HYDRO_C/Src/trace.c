@@ -13,17 +13,27 @@
 #include "parametres.h"
 #include "utils.h"
 #include "trace.h"
-void
-trace ( double *RESTRICT q, double *RESTRICT dq, double *RESTRICT c,
-        double *RESTRICT qxm, double *RESTRICT qxp,
-        const double dtdx, const long n, const long Hscheme, const long Hnvar, const long Hnxyt ) {
-    long ijmin, ijmax;
-    long i, IN;
-    double zerol = 0.0, zeror = 0.0, project = 0.;
+
+
+void trace ( double *RESTRICT q,
+             double *RESTRICT dq,
+             double *RESTRICT c,
+             double *RESTRICT qxm,
+             double *RESTRICT qxp,
+             const double dtdx,
+             const long n,
+             const long Hscheme,
+             const long Hnvar,
+             const long Hnxyt ) {
 
 #define IHVW(i, v) ((i) + (v) * Hnxyt)
 
     WHERE ( "trace" );
+
+    long ijmin, ijmax;
+    long i, IN;
+    double zerol = 0.0, zeror = 0.0, project = 0.;
+
     ijmin = 0;
     ijmax = n;
 
@@ -47,6 +57,7 @@ trace ( double *RESTRICT q, double *RESTRICT dq, double *RESTRICT c,
         project = zero;
     }
 
+    #pragma omp for
     for ( i = ijmin + 1; i < ijmax - 1; i++ ) {
         double cc, csq, r, u, v, p;
         double dr, du, dv, dp;
@@ -113,7 +124,11 @@ trace ( double *RESTRICT q, double *RESTRICT dq, double *RESTRICT c,
         qxm[IHVW ( i, IV )] = v + ( azv1left );
         qxm[IHVW ( i, IP )] = p + ( apleft + amleft ) * csq;
     }
+    
+    
     if ( Hnvar > IP+1 ) {
+        
+        #pragma omp for private(i)
         for ( IN = IP + 1; IN < Hnvar; IN++ ) {
             for ( i = ijmin + 1; i < ijmax - 1; i++ ) {
                 double spzero;

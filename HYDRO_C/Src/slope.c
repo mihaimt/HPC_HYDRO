@@ -20,16 +20,25 @@
 #define DABS(x) (double) fabs((x))
 // #endif
 
-void
-slope ( double *RESTRICT q, double *RESTRICT dq, const long narray,
-        const long Hnvar, const long Hnxyt, const double slope_type ) {
+
+
+void slope ( double *RESTRICT q,
+             double *RESTRICT dq,
+             const long narray,
+             const long Hnvar,
+             const long Hnxyt,
+             const double slope_type ) {
+
     long n, i, ijmin, ijmax;
+
 #define IHVW(i, v) ((i) + (v) * Hnxyt)
 
     WHERE ( "slope" );
+
     ijmin = 0;
     ijmax = narray;
 
+    #pragma omp for private(i)
     for ( n = 0; n < Hnvar; n++ ) {
         for ( i = ijmin + 1; i < ijmax - 1; i++ ) {
             double dlft, drgt, dcen, dsgn, slop, dlim;
@@ -50,7 +59,17 @@ slope ( double *RESTRICT q, double *RESTRICT dq, const long narray,
             dq[ihvwin] = dsgn * ( double ) MIN ( dlim, DABS ( dcen ) );
         }
     }
-}                               // slope
+} // slope
 
 #undef IHVW
-//EOF
+
+
+
+
+
+
+
+
+
+
+

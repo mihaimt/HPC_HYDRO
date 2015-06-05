@@ -140,11 +140,11 @@ void OPENMP_init ( hydroparam_t* H ) {
         {
             tid = omp_get_thread_num();
             H->n_threads = omp_get_num_threads();
-            TRC ( H->rank, "rank %i thread %i of %i: Alive, but only for short time", H->rank, tid, H->n_threads );
+            TRC ( H->rank, "rank %i thread %i of %i: Alive, but only for short time", H->rank, tid+1, H->n_threads );
             assert ( H->n_threads == N_OMP_THREADS );
         }
 
-        INF_if ( H->rank==0, "OpenMP init successful, using %i threads\n", H->n_procs );
+        INF_if ( H->rank==0, "OpenMP init successful, using %i threads\n", H->n_threads );
 
     }
     else {
@@ -442,9 +442,12 @@ void allocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_
 void deallocate_work_space ( const hydroparam_t H, hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
 
     LOC ( H.rank );
+    
+    //TRC ( H.rank, "thread %i", omp_get_thread_num() );
 
     //
     Free ( Hw->e );
+
     //
     Free ( Hvw->u );
     Free ( Hvw->q );

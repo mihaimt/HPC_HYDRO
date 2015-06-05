@@ -32,22 +32,29 @@
  * @param Hnxyt IN
  * @return void
  */
-void gatherConservativeVars ( const long idim, const long rowcol,
-                         double *RESTRICT uold,
-                         double *RESTRICT u,
-                         const long Himin,
-                         const long Himax,
-                         const long Hjmin,
-                         const long Hjmax,
-                         const long Hnvar, const long Hnxt, const long Hnyt, const long Hnxyt ) {
-    long i, j, ivar;
+void gatherConservativeVars ( const long idim,
+                              const long rowcol,
+                              double *RESTRICT uold,
+                              double *RESTRICT u,
+                              const long Himin,
+                              const long Himax,
+                              const long Hjmin,
+                              const long Hjmax,
+                              const long Hnvar,
+                              const long Hnxt,
+                              const long Hnyt,
+                              const long Hnxyt ) {
 
 #define IHU(i, j, v)  ((i) + Hnxt * ((j) + Hnyt * (v)))
 #define IHVW(i, v) ((i) + (v) * Hnxyt)
 
     WHERE ( "gatherConservativeVars" );
+
+    long i, j, ivar;
+
     if ( idim == 1 ) {
         // Gather conservative variables
+        #pragma omp for
         for ( i = Himin; i < Himax; i++ ) {
             u[IHVW ( i, ID )] = uold[IHU ( i, rowcol, ID )];
             u[IHVW ( i, IU )] = uold[IHU ( i, rowcol, IU )];
@@ -56,14 +63,17 @@ void gatherConservativeVars ( const long idim, const long rowcol,
         }
 
         if ( Hnvar > IP + 1 ) {
+            #pragma omp for private(i)
             for ( ivar = IP + 1; ivar < Hnvar; ivar++ ) {
                 for ( i = Himin; i < Himax; i++ ) {
                     u[IHVW ( i, ivar )] = uold[IHU ( i, rowcol, ivar )];
                 }
             }
         }
-    } else {
+    }
+    else {
         // Gather conservative variables
+        #pragma omp for
         for ( j = Hjmin; j < Hjmax; j++ ) {
             u[IHVW ( j, ID )] = uold[IHU ( rowcol, j, ID )];
             u[IHVW ( j, IU )] = uold[IHU ( rowcol, j, IV )];
@@ -71,6 +81,7 @@ void gatherConservativeVars ( const long idim, const long rowcol,
             u[IHVW ( j, IP )] = uold[IHU ( rowcol, j, IP )];
         }
         if ( Hnvar > IP + 1 ) {
+            #pragma omp for private(j)
             for ( ivar = IP + 1; ivar < Hnvar; ivar++ ) {
                 for ( j = Hjmin; j < Hjmax; j++ ) {
                     u[IHVW ( j, ivar )] = uold[IHU ( rowcol, j, ivar )];
@@ -78,29 +89,36 @@ void gatherConservativeVars ( const long idim, const long rowcol,
             }
         }
     }
-}
-
 #undef IHVW
 #undef IHU
+}
 
-void
-updateConservativeVars ( const long idim, const long rowcol, const double dtdx,
-                         double *RESTRICT uold,
-                         double *RESTRICT u,
-                         double *RESTRICT flux,
-                         const long Himin,
-                         const long Himax,
-                         const long Hjmin,
-                         const long Hjmax,
-                         const long Hnvar, const long Hnxt, const long Hnyt, const long Hnxyt ) {
-    long i, j, ivar;
-    WHERE ( "updateConservativeVars" );
+
+void updateConservativeVars ( const long idim,
+                              const long rowcol,
+                              const double dtdx,
+                              double *RESTRICT uold,
+                              double *RESTRICT u,
+                              double *RESTRICT flux,
+                              const long Himin,
+                              const long Himax,
+                              const long Hjmin,
+                              const long Hjmax,
+                              const long Hnvar,
+                              const long Hnxt,
+                              const long Hnyt,
+                              const long Hnxyt ) {
 
 #define IHU(i, j, v)  ((i) + Hnxt * ((j) + Hnyt * (v)))
 #define IHVW(i, v) ((i) + (v) * Hnxyt)
 
+    WHERE ( "updateConservativeVars" );
+
+    long i, j, ivar;
+
     if ( idim == 1 ) {
         // Update conservative variables
+        #pragma omp for
         for ( i = Himin + ExtraLayer; i < Himax - ExtraLayer; i++ ) {
             uold[IHU ( i, rowcol, ID )] =
                 u[IHVW ( i, ID )] + ( flux[IHVW ( i - 2, ID )] - flux[IHVW ( i - 1, ID )] ) * dtdx;
@@ -112,7 +130,9 @@ updateConservativeVars ( const long idim, const long rowcol, const double dtdx,
                 u[IHVW ( i, IP )] + ( flux[IHVW ( i - 2, IP )] - flux[IHVW ( i - 1, IP )] ) * dtdx;
             MFLOPS ( 12, 0, 0, 0 );
         }
+
         if ( Hnvar > IP + 1 ) {
+            #pragma omp for private(i)
             for ( ivar = IP + 1; ivar < Hnvar; ivar++ ) {
                 for ( i = Himin + ExtraLayer; i < Himax - ExtraLayer; i++ ) {
                     uold[IHU ( i, rowcol, ivar )] =
@@ -124,6 +144,7 @@ updateConservativeVars ( const long idim, const long rowcol, const double dtdx,
         }
     } else {
         // Update conservative variables
+        #pragma omp for
         for ( j = Hjmin + ExtraLayer; j < Hjmax - ExtraLayer; j++ ) {
             uold[IHU ( rowcol, j, ID )] =
                 u[IHVW ( j, ID )] + ( flux[IHVW ( j - 2, ID )] - flux[IHVW ( j - 1, ID )] ) * dtdx;
@@ -136,6 +157,7 @@ updateConservativeVars ( const long idim, const long rowcol, const double dtdx,
             MFLOPS ( 12, 0, 0, 0 );
         }
         if ( Hnvar > IP + 1 ) {
+            #pragma omp for private(j)
             for ( ivar = IP + 1; ivar < Hnvar; ivar++ ) {
                 for ( j = Hjmin + ExtraLayer; j < Hjmax - ExtraLayer; j++ ) {
                     uold[IHU ( rowcol, j, ivar )] =
@@ -146,9 +168,21 @@ updateConservativeVars ( const long idim, const long rowcol, const double dtdx,
             }
         }
     }
-}
-
 #undef IHVW
 #undef IHU
+}
 
-//EOF
+
+
+
+
+
+
+
+
+
+
+
+
+
+

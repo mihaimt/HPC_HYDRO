@@ -16,7 +16,7 @@
 #define USE_MPI YES
 
 // compile with OPENMP
-#define USE_OPENMP YES
+#define USE_OPENMP ON
 #define N_OMP_THREADS 2
 
 // compile tests and other debug code
@@ -41,7 +41,7 @@
 //     with a different time-spacing to the previous one.
 //     So dt (or d_steps) between two frames is always the same, expect for
 //     the last write! (default: OFF)
-#define WRITE_INIT_STATE  ON
+#define WRITE_INIT_STATE  OFF
 #define WRITE_INTER_STATE ON
 #define WRITE_FINAL_STATE OFF
 
@@ -49,7 +49,7 @@
 #define USE_COLOR YES
 
 // --- [ COM METHOD ] ---------------------------------------------------------
-// which method should be used to progagate the domain boundaries?
+// which method should be used to propagate the domain boundaries?
 // this is only for testing purposes..
 // for real application use _CM_VEKTOR
 
