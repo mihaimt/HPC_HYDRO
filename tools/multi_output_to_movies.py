@@ -131,7 +131,9 @@ for element in step_f[1:]:
 	element.sort()
 	print element
 
-
+print "-"*40
+print "Producing frames"
+print "-"*40
 for element in step_f[1:]:
 	element.sort()
 	large_d, large_p, large_u, large_v, vtk_name = [], [], [], [], []
@@ -163,8 +165,10 @@ for element in step_f[1:]:
 		large_u = large_u + [u.T]
 		large_v = large_v + [v.T]
 		vtk_name = vtk_name + [vtk]	
-		outname = ppath+vtk[0:-6]
-
+		
+		outname = ppath+vtk[0:-14]+vtk[-9:-4]
+		#outname = ppath + vtk
+	print "step:", vtk[-9:-4], float( vtk[-9:-4])/float(nsteps)*100, " %"
 	da = large_d[0]
 #	print large_d	
 
