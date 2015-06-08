@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH -J hydro_mpi
+#SBATCH --time=1-0:00:00
+#SBATCH --ntasks=6
+#SBATCH --cpus-per-task=1 
+#SBATCH --comment="Try a 1000x100 grid."
+#SBATCH --partition=zbox
+
+FILE="input_sedov_1000x100.nml"
+
+#sbatch --dependency=afterany:$SLURM_JOB_ID $FILE.job
+
+#aprun -B gasoline.i_hmax_cond_mpi_dora +restart $FILE.par
+srun ../../../Bin/hydro_lmpi -i $FILE
+
