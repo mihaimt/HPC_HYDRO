@@ -129,17 +129,17 @@ inline void timingfile_write ( long step, double time, const hydroparam_t H) {
 inline void timingfile_write ( const hydroparam_t H, const TIMINGS T) {
 
     fprintf ( H.timing_file,
-              "%ld"
-              "%e,%e,%e,%e,"
-              "%e,%e,%e,%e,%e,%e,%e,"
-              "%e,%e,%e,%e,%e,%e,%e,"
-              "%e,%e,%e,%e,%e,%e,%e,"
+              "%ld,XXX,"
+//              "%e,%e,%e,%e,"
+              "%e,%e,%e,%e,%e,%e,XXX,"
+              "%e,%e,%e,%e,%e,%e,XXX,"
+              "%e,%e,%e,%e,%e,%e"
               "\n",
               H.nstep,
-              T.MP[0], T.MP[0], T.MP[0], T.MP[0],
-              T.LP[0], T.LP[0], T.LP[0], T.LP[0], T.LP[0], T.LP[0], T.LP[0],
-              T.IT0[0], T.IT0[1], T.IT0[2], T.IT0[3], T.IT0[4], T.IT0[5], T.IT0[6],
-              T.IT1[0], T.IT1[1], T.IT1[2], T.IT1[3], T.IT1[4], T.IT1[5], T.IT1[6]
+//              T.MP[0], T.MP[1], T.MP[2], T.MP[3],
+              T.LP[0], T.LP[1]-T.LP[0], T.LP[2]-T.LP[0], T.LP[3]-T.LP[0], T.LP[4]-T.LP[0], T.LP[5]-T.LP[0], 
+              T.IT0[0], T.IT0[1]-T.IT0[0], T.IT0[2]-T.IT0[0], T.IT0[3]-T.IT0[0], T.IT0[4]-T.IT0[0], T.IT0[5]-T.IT0[0], 
+              T.IT1[0], T.IT1[1]-T.IT1[0], T.IT1[2]-T.IT1[0], T.IT1[3]-T.IT1[0], T.IT1[4]-T.IT1[0], T.IT1[5]-T.IT1[0]
             );
 
 }
@@ -152,22 +152,32 @@ void timingfile_finish ( hydroparam_t* H ) {
     fclose ( H->timing_file );
 }
 
-void write_stat ( double elapsed, long nsteps, long nstates, const hydroparam_t H ) {
+
+void write_stat ( const hydroparam_t H, const TIMINGS T,
+                  int nstates, double tmax, double tmin ) {
     
     LOC ( H.rank );
 
     char name[160];
     FILE* fic;
 
-    sprintf ( name, "stats.txt" );
+    sprintf ( name, "stats_%04i.txt", H.rank );
 
     fic = fopen ( name, "w" );
     
     fprintf ( fic, "stats\n" );
-    fprintf ( fic, "nsteps: %ld\n", nsteps );
+    fprintf ( fic, "nsteps: %ld\n", H.nstep );
     fprintf ( fic, "nstates_written: %ld\n", nstates );
-    fprintf ( fic, "wall_time: %e\n", elapsed );
-    
+
+    fprintf ( fic, "tot_time: %e\n", T.MP[3] - T.MP[0] );
+    fprintf ( fic, "init_time: %e\n", T.MP[1] - T.MP[0]);
+    fprintf ( fic, "tot_loop_time: %e\n", T.MP[2] - T.MP[1]);
+    fprintf ( fic, "outro_time: %e\n", T.MP[3] - T.MP[2]);
+
+    fprintf ( fic, "wall_time: %e\n", T.MP[2] - T.MP[0]);
+    fprintf ( fic, "global_min_wall_time: %e\n", tmin );
+    fprintf ( fic, "global_max_wall_time: %e\n", tmax );
+
     fclose ( fic );
 }
 

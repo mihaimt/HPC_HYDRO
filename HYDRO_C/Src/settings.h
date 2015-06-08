@@ -20,19 +20,10 @@
 #define N_OMP_THREADS 1
 
 // compile tests and other debug code
-#define DEBUG OFF
+#define DEBUG ON
 
 // run the asserts
 #define DO_ASSERTS OFF
-
-
-// measure run time of one iteration locally / globally (min/max)
-// GLOBAL results in overhead of two additional MPI_Reduce per step!
-#define GET_LOCAL_ITER_TIME  OFF
-#define GET_GLOBAL_ITER_TIME OFF
-
-// write the timings to a file (GET_LOCAL_ITER_TIME has to be ON for that)
-#define WRITE_TIMING OFF
 
 
 // Time specific parts of the code for profiling and print them to file and screen
@@ -40,7 +31,7 @@
 #define DO_TIMINGS ON
 #define DO_DETAILED_TIMINGS ON
 
-#define SHOW_GLOBAL_TIMINGS OFF // use MPI to collect timing data and show stats of each iter on screen on rank0
+#define SHOW_GLOBAL_TIMINGS ON // use MPI to collect timing data and show stats of each iter on screen on rank0
 
 
 
@@ -83,7 +74,7 @@
 #define TRACE_PRINT OFF
 
 // do debug output (usually OFF)
-#define DEBUG_PRINT OFF
+#define DEBUG_PRINT ON
 
 // do run time error output (stuff for the user to see if something is
 // massively screwed up and the program will shut down, usually ON)
