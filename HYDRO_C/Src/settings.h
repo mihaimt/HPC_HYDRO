@@ -25,6 +25,7 @@
 // run the asserts
 #define DO_ASSERTS OFF
 
+
 // measure run time of one iteration locally / globally (min/max)
 // GLOBAL results in overhead of two additional MPI_Reduce per step!
 #define GET_LOCAL_ITER_TIME  OFF
@@ -32,6 +33,16 @@
 
 // write the timings to a file (GET_LOCAL_ITER_TIME has to be ON for that)
 #define WRITE_TIMING OFF
+
+
+// Time specific parts of the code for profiling and print them to file and screen
+// (screen only if DEBUG on)
+#define DO_TIMINGS ON
+#define DO_DETAILED_TIMINGS ON
+
+#define SHOW_GLOBAL_TIMINGS OFF // use MPI to collect timing data and show stats of each iter on screen on rank0
+
+
 
 // write status report at the end
 #define STATUS ON

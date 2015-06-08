@@ -236,9 +236,11 @@ hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
  * @return void
  */
 void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t * Hv,
-                         hydrowork_t * Hw, hydrovarwork_t * Hvw ) {
+                         hydrowork_t * Hw, hydrovarwork_t * Hvw , double * IT) {
 
     LOC ( H.rank );
+    
+    TIME2 ( IT[0] );
 
     {
 
@@ -274,6 +276,7 @@ void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t 
             PRINTUOLD ( H, Hv );
         }
 
+        TIME2 ( IT[1] );
 
         // Get boundary conditions
         {
@@ -281,6 +284,8 @@ void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t 
             PRINTUOLD ( H, Hv );
         } // END SINGLE
 
+        TIME2 ( IT[2] );
+        
         // Allocate work space for 1D sweeps
         {
             allocate_work_space ( H, Hw, Hvw );
@@ -328,6 +333,7 @@ void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t 
         ind = Hw->ind;
         ind2 = Hw->ind2;
 
+        TIME2 ( IT[3] );
 
         if ( idim == 1 ) {
             
@@ -440,11 +446,14 @@ void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t 
 
     }
 
+    TIME2 ( IT[4] );
+
     {
         // Deallocate work space
         deallocate_work_space ( H, Hw, Hvw );
     }
 
+    TIME2 ( IT[5] );
 
 }	// MPI_hydro_godunov
 

@@ -112,6 +112,8 @@
 // Note to myself: there's a good reason this uses NO ifdef / else clauses! read the SO question!!
 // (--> compiler can check the print code)
 // the optimizer should remove while{if{0}} never the less, so no overhead!
+// it protects again nasty side effects (if used inside an if statement, a naked if here could
+// interfere with a following else)
 
 #define TRC(_RANK, _FORMAT, ...) \
     do { if (TRACE_PRINT) \
@@ -185,6 +187,27 @@
     do { if (INFO_PRINT && _COND) \
         fprintf(stdout, _FORMAT, ##__VA_ARGS__); \
     } while (0)
+
+    
+// used to get timings
+// _PNT is a double to store the current time into
+
+// conditional timings
+#define TIME_if(_COND, _PNT) \
+    do { if (DO_TIMINGS && _COND) { \
+        _PNT = cclock(); \
+    }} while (0)
+//coarse timings
+#define TIME(_PNT) \
+    do { if (DO_TIMINGS) { \
+        _PNT = cclock(); \
+    }} while (0)
+
+//detailed timings
+#define TIME2(_PNT) \
+    do { if (DO_TIMINGS && DO_DETAILED_TIMINGS) { \
+        _PNT = cclock(); \
+    }} while (0)
 
 
 // for this to work, first include <assert.h>, then debug!

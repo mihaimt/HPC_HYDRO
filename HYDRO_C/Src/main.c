@@ -23,9 +23,14 @@ hydrovarwork_t Hvw;
 hydrowork_t    Hw;
 unsigned long flops = 0;
 
+// we use this strucs of times of certain points for our benchmarks
+// struct of double arrays
+TIMINGS T;
 
 
 int main ( int argc, char **argv ) {
+    
+    TIME(T.MP[0]);
 
     // DECLARE VARS
     //------------------------------------------------------------------------
@@ -107,12 +112,27 @@ int main ( int argc, char **argv ) {
     }
 
     INF_if ( H.rank==0, "starting mainloop...\n" );
+    
+    TIME(T.MP[1]);
 
     //-------------------------------------------------------------------------
     // The main loop
     //-------------------------------------------------------------------------
 
     while ( ( H.t < H.tend ) && ( H.nstep < H.nstepmax ) ) {
+        
+        // reset timings
+        /*
+        T.LP[0]=0.0;
+        T.LP[1]=0.0;
+        T.LP[2]=0.0;
+        T.LP[3]=0.0;
+        T.LP[4]=0.0;
+        T.LP[5]=0.0;
+        T.LP[6]=0.0;
+        */
+        
+        TIME2(T.LP[0]);
 
         DBG_if ( H.rank==0, "main loop | start: nstep = %i \n", H.nstep);
 
@@ -120,6 +140,7 @@ int main ( int argc, char **argv ) {
         outnum[0] = 0; // delete string by setting first char to 0 byte
         flops = 0;
 
+        TIME2(T.LP[1]);
         // Calculate new time step for every even step.
         if ( ( H.nstep % 2 ) == 0 ) {
 
@@ -135,20 +156,21 @@ int main ( int argc, char **argv ) {
                 TRC ( H.rank, "time sync: dt=%.2e dtmin=%.2e", dt, dtmin);
                 dt = dtmin;
             }
-
         }
-
+        
+        TIME2(T.LP[2]);
 
         // This is the actual calculation
         if ( ( H.nstep % 2 ) == 0 ) {
-            MPI_hydro_godunov ( 1, dt, H, &Hv, &Hw, &Hvw );
-            MPI_hydro_godunov ( 2, dt, H, &Hv, &Hw, &Hvw );
+            MPI_hydro_godunov ( 1, dt, H, &Hv, &Hw, &Hvw, T.IT0 );
+            MPI_hydro_godunov ( 2, dt, H, &Hv, &Hw, &Hvw, T.IT1 );
         }
         else {
-            MPI_hydro_godunov ( 2, dt, H, &Hv, &Hw, &Hvw );
-            MPI_hydro_godunov ( 1, dt, H, &Hv, &Hw, &Hvw );
+            MPI_hydro_godunov ( 2, dt, H, &Hv, &Hw, &Hvw, T.IT1 );
+            MPI_hydro_godunov ( 1, dt, H, &Hv, &Hw, &Hvw, T.IT0 );
         }
-
+        
+        TIME2(T.LP[3]);
 
         end_iter = cclock();
         H.nstep++;
@@ -197,6 +219,8 @@ int main ( int argc, char **argv ) {
             timingfile_write ( H.nstep, iter_time, H );
         }
 
+        TIME2(T.LP[4]);
+        
         // write the current state to vtk file
         if ( WRITE_INTER_STATE ) {
 
@@ -217,15 +241,49 @@ int main ( int argc, char **argv ) {
             }
         }
 
+        TIME2(T.LP[5]);
 
 
         // Synchronize all processes if debugging for nicer output
         if ( DEBUG && USE_MPI ) { MPI_Barrier ( MPI_COMM_WORLD ); }
+        
+        TIME2(T.LP[6]);
 
         // and some infos about the steps on rank 0 (step is already increased!)
         DBG_if ( H.rank == 0, "main loop | end: step=%04li t=%.4e dt=%.4e %s\n", H.nstep-1, H.t, dt, outnum );
+        
+        if ( DO_DETAILED_TIMINGS ) {
+            /* 
+             * don't do the calculations here.
+             * just write raw data and analyse with python
+             * keep this as reference
+             * 
+            double tot_iter_time          = T.LP[6] - T.LP[0];
+
+            double calc_and_sync_timestep = T.LP[2] - T.LP[1];
+            double do_godunov_calc        = T.LP[3] - T.LP[2];
+            double write_output           = T.LP[5] - T.LP[4];
+            
+            double godunov_x_tot        = T.IT0[5] - T.IT0[0];
+            double godunov_x_init       = T.IT0[3] - T.IT0[0];
+            double godunov_x_make_bound = T.IT0[2] - T.IT0[1];
+            double godunov_x_calc       = T.IT0[4] - T.IT0[3];
+            
+            double godunov_y_tot        = T.IT1[5] - T.IT1[0];
+            double godunov_y_init       = T.IT1[3] - T.IT1[0];
+            double godunov_y_make_bound = T.IT1[2] - T.IT1[1];
+            double godunov_y_calc       = T.IT1[4] - T.IT1[3];
+            */
+
+            // write timings to file
+            timingfile_write(H, T);
+            
+        }
+        
 
     }   // end main loop
+    
+    TIME(T.MP[2]);
     
     INF_if ( H.rank==0, "main loop finished, cleaning up...\n" );
 
@@ -263,6 +321,17 @@ int main ( int argc, char **argv ) {
     MPI_finish ( &H );
     MPI_hydro_finish ( &H, &Hv );
     if ( WRITE_TIMING ) { timingfile_finish( &H ); }
+    
+    
+    
+    TIME(T.MP[3]);
+
+    if ( WRITE_TIMING ) {
+        double tot_time = T.MP[3] - T.MP[0];
+        double init_time = T.MP[1] - T.MP[0];
+        double tot_loop_time = T.MP[2] - T.MP[1];
+        double outro_time = T.MP[3] - T.MP[2];
+    }
 
 
     // test message printing

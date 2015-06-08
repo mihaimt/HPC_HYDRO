@@ -118,12 +118,34 @@ void timingfile_init ( hydroparam_t* H ) {
 }
 
 
-
+/*
 inline void timingfile_write ( long step, double time, const hydroparam_t H) {
 
     fprintf ( H.timing_file, "%ld, %e\n", step, time );
 
 }
+*/
+
+inline void timingfile_write ( const hydroparam_t H, const TIMINGS T) {
+
+    fprintf ( H.timing_file,
+              "%ld"
+              "%e,%e,%e,%e,"
+              "%e,%e,%e,%e,%e,%e,%e,"
+              "%e,%e,%e,%e,%e,%e,%e,"
+              "%e,%e,%e,%e,%e,%e,%e,"
+              "\n",
+              H.nstep,
+              T.MP[0], T.MP[0], T.MP[0], T.MP[0],
+              T.LP[0], T.LP[0], T.LP[0], T.LP[0], T.LP[0], T.LP[0], T.LP[0],
+              T.IT0[0], T.IT0[1], T.IT0[2], T.IT0[3], T.IT0[4], T.IT0[5], T.IT0[6],
+              T.IT1[0], T.IT1[1], T.IT1[2], T.IT1[3], T.IT1[4], T.IT1[5], T.IT1[6]
+            );
+
+}
+
+
+
 
 
 void timingfile_finish ( hydroparam_t* H ) {
