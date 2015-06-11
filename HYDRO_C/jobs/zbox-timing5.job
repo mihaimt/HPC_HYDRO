@@ -1,0 +1,18 @@
+#!/bin/bash
+#SBATCH -J hydro_lmpi
+#SBATCH --time=1-0:00:00
+#SBATCH --ntasks=2
+#SBATCH --cpus-per-task=1 
+#SBATCH --comment="timing tests"
+#SBATCH --partition=zbox
+
+FILE="../../Input/1000x100s1000n100.nml"
+DIR="timing_zbox_ncpu2_x1000"
+
+#sbatch --dependency=afterany:$SLURM_JOB_ID $FILE.job
+
+cd ../Output
+mkdir -p $DIR
+cd $DIR
+srun ../../Bin/hydro_lmpi -i $FILE
+

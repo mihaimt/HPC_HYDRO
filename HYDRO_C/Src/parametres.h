@@ -5,7 +5,18 @@
 
 extern unsigned long flops;
 
+typedef double* DOUBLE_P; //small typedef to enforce my logic on pointer naming
 
+typedef struct _timings {
+    
+    double MP[4]; // timing points in main, outside of loops
+    double LP[8]; // timing points inside the loop
+    double IT0[6], IT1[6]; // those are arrays for timings inside hydro function
+    
+} TIMINGS;
+    
+    
+    
 typedef struct _hydroparam {
     long prt;
 

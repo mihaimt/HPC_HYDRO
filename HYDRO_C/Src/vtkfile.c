@@ -110,42 +110,104 @@ void timingfile_init ( hydroparam_t* H ) {
 
     char name[160];
 
-    sprintf ( name, "timing_%04i.cvs", H->rank );
+    sprintf ( name, "timing_%04i.csv", H->rank );
 
     H->timing_file = fopen ( name, "w" );
 
+    // print the file header
+    fprintf ( H->timing_file,
+              "step_nr,"
+              "mainloop:,"
+              "start of iteration(abs),"
+              "0..1 print and init,"
+              "1..2 compute_deltat(),"
+              "2..3 mpi dt sync,"
+              "3..4 1. h_godunov,"
+              "4..5 2. h_godunov,"
+              "5..6 writing state,"
+              "6..7 sync loop (if DBG),"
+              
+              "MPI_hydro_godunov: first sweep,"
+              "start of func (abs),"
+              "0..1 print and init,"
+              "1..2 make_boundary,"
+              "2..3 alloc wspace,"
+              "3..4 calc. loop,"
+              "4..5 dealloc. wspace,"
+              
+              "MPI_hydro_godunov: second sweep,"
+              "start of func (abs),"
+              "0..1 print and init,"
+              "1..2 make_boundary,"
+              "2..3 alloc wspace,"
+              "3..4 calc. loop,"
+              "4..5 dealloc. wspace"
+              
+              "\n");
     
 }
 
 
-
+/*
 inline void timingfile_write ( long step, double time, const hydroparam_t H) {
 
     fprintf ( H.timing_file, "%ld, %e\n", step, time );
 
 }
+*/
+
+inline void timingfile_write ( const hydroparam_t H, const TIMINGS T) {
+
+    fprintf ( H.timing_file,
+              "%ld,XXX,"
+//              "%e,%e,%e,%e,"
+              "%e,%e,%e,%e,%e,%e,%e,%e,XXX,"
+              "%e,%e,%e,%e,%e,%e,XXX,"
+              "%e,%e,%e,%e,%e,%e"
+              "\n",
+              H.nstep,
+//              T.MP[0], T.MP[1], T.MP[2], T.MP[3],
+              T.LP[0], T.LP[1]-T.LP[0], T.LP[2]-T.LP[1], T.LP[3]-T.LP[2], T.LP[4]-T.LP[3], T.LP[5]-T.LP[4], T.LP[6]-T.LP[5], T.LP[7]-T.LP[6], 
+              T.IT0[0], T.IT0[1]-T.IT0[0], T.IT0[2]-T.IT0[1], T.IT0[3]-T.IT0[2], T.IT0[4]-T.IT0[3], T.IT0[5]-T.IT0[4], 
+              T.IT1[0], T.IT1[1]-T.IT1[0], T.IT1[2]-T.IT1[1], T.IT1[3]-T.IT1[2], T.IT1[4]-T.IT1[3], T.IT1[5]-T.IT1[4]
+            );
+
+}
+
+
+
 
 
 void timingfile_finish ( hydroparam_t* H ) {
     fclose ( H->timing_file );
 }
 
-void write_stat ( double elapsed, long nsteps, long nstates, const hydroparam_t H ) {
+
+void write_stat ( const hydroparam_t H, const TIMINGS T,
+                  int nstates, double tmax, double tmin ) {
     
     LOC ( H.rank );
 
     char name[160];
     FILE* fic;
 
-    sprintf ( name, "stats.txt" );
+    sprintf ( name, "stats_%04i.txt", H.rank );
 
     fic = fopen ( name, "w" );
     
     fprintf ( fic, "stats\n" );
-    fprintf ( fic, "nsteps: %ld\n", nsteps );
+    fprintf ( fic, "nsteps: %ld\n", H.nstep );
     fprintf ( fic, "nstates_written: %ld\n", nstates );
-    fprintf ( fic, "wall_time: %e\n", elapsed );
-    
+
+    fprintf ( fic, "tot_time: %e\n", T.MP[3] - T.MP[0] );
+    fprintf ( fic, "init_time: %e\n", T.MP[1] - T.MP[0]);
+    fprintf ( fic, "tot_loop_time: %e\n", T.MP[2] - T.MP[1]);
+    fprintf ( fic, "outro_time: %e\n", T.MP[3] - T.MP[2]);
+
+    fprintf ( fic, "wall_time: %e\n", T.MP[2] - T.MP[0]);
+    fprintf ( fic, "global_min_wall_time: %e\n", tmin );
+    fprintf ( fic, "global_max_wall_time: %e\n", tmax );
+
     fclose ( fic );
 }
 

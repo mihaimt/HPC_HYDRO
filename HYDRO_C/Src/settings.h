@@ -20,21 +20,24 @@
 #define N_OMP_THREADS 1
 
 // compile tests and other debug code
-#define DEBUG ON
+#define DEBUG OFF
 
 // run the asserts
-#define DO_ASSERTS ON
+#define DO_ASSERTS OFF
 
-// measure run time of one iteration locally / globally (min/max)
-// GLOBAL results in overhead of two additional MPI_Reduce per step!
-#define GET_LOCAL_ITER_TIME  ON
-#define GET_GLOBAL_ITER_TIME ON
 
-// write the timings to a file (GET_LOCAL_ITER_TIME has to be ON for that)
-#define WRITE_TIMING ON
+// Time specific parts of the code for profiling and print them to file and screen
+// (on screen only if DEBUG on)
+// Do timings collects general timing data and writes them at the end to 
+// a status file
+#define DO_TIMINGS ON
+// gather detailed timing information about all parts of the code for each iteration..
+// very verbose!
+#define DO_DETAILED_TIMINGS ON
 
-// write status report at the end
-#define STATUS ON
+// use MPI to collect timing data and show stats of each iter on screen on rank0
+#define SHOW_GLOBAL_TIMINGS OFF
+
 
 // write initital | intermediate | final states to vtk file
 // attention: the last / final step write will probably write a state
@@ -42,7 +45,7 @@
 //     So dt (or d_steps) between two frames is always the same, expect for
 //     the last write! (default: OFF)
 #define WRITE_INIT_STATE  OFF
-#define WRITE_INTER_STATE OFF
+#define WRITE_INTER_STATE ON
 #define WRITE_FINAL_STATE OFF
 
 // use color output
@@ -69,7 +72,7 @@
 
 // do traces output (lowest level, print where in the code it is as well,
 // usually OFF)
-#define TRACE_PRINT ON
+#define TRACE_PRINT OFF
 
 // do debug output (usually OFF)
 #define DEBUG_PRINT ON

@@ -40,7 +40,7 @@ void qleftright ( const long idim,
         bmax = Hny + 1;
     }
 
-    #pragma omp for private(i)
+    // //pragma omp for private(i)
     for ( nvar = 0; nvar < Hnvar; nvar++ ) {
         for ( i = 0; i < bmax; i++ ) {
             qleft[IHVW ( i, nvar )] = qxm[IHVW ( i + 1, nvar )];

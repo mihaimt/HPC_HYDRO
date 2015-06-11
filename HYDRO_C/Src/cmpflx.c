@@ -37,7 +37,7 @@ void cmpflx ( double *RESTRICT qgdnv,
     entho = one / ( Hgamma - one );
 
     // Compute fluxes
-    #pragma omp for
+    // //pragma omp for
     for ( i = 0; i < nface; i++ ) {
         // Mass density
         flux[IHVW ( i, ID )] = qgdnv[IHVW ( i, ID )] * qgdnv[IHVW ( i, IU )];
@@ -55,7 +55,7 @@ void cmpflx ( double *RESTRICT qgdnv,
 
     // Other advected quantities
     if ( Hnvar > IP+1 ) {
-        #pragma omp for private(i)
+        // //pragma omp for private(i)
         for ( IN = IP + 1; IN < Hnvar; IN++ ) {
             for ( i = 0; i < nface; i++ ) {
                 flux[IHVW ( i, IN )] = flux[IHVW ( i, IN )] * qgdnv[IHVW ( i, IN )];

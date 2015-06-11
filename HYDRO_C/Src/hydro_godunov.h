@@ -7,6 +7,7 @@ void hydro_godunov ( long idim, double dt, const hydroparam_t H, hydrovar_t * Hv
                      hydrowork_t * Hw, hydrovarwork_t * Hvw );
 */
 void MPI_hydro_godunov ( long idim, double dt, const hydroparam_t H,
-                         hydrovar_t * Hv, hydrowork_t * Hw, hydrovarwork_t * Hvw );
+                         hydrovar_t * Hv, hydrowork_t * Hw, hydrovarwork_t * Hvw,
+                         double * IT );
 
 #endif // HYDRO_GODUNOV_H_INCLUDED

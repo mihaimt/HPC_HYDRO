@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH -J hydro_lmpi
+#SBATCH --time=1-0:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1 
+#SBATCH --comment="Weak scaling tests"
+#SBATCH --partition=zbox
+
+FILE="../../Input/weak_scaling_1.nml"
+
+#sbatch --dependency=afterany:$SLURM_JOB_ID $FILE.job
+
+cd ../Output
+mkdir zbox-weak1
+cd zbox-weak1
+srun ../../Bin/hydro_lmpi -i $FILE
+
