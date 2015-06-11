@@ -94,7 +94,7 @@ def plot_overview(steps=(1,50), imgname = 'mainloop_overview.png'):
     ax = fig.add_subplot(111)
     
     for n, i in enumerate(range(*cols)):
-        b = ax.bar(x[sel], y[i][sel], width=width, color=colors[n], bottom=bottom)
+        b = ax.bar(x[sel], y[i][sel], width=1, color=colors[n], bottom=bottom)
         bottom += y[i][sel]
     
     #ax.set_yscale("log")
