@@ -1,4 +1,6 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """
 Created on Thu Jun 11 11:37:31 2015
 
@@ -7,6 +9,7 @@ Created on Thu Jun 11 11:37:31 2015
 
 import sys
 import os
+import glob
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -102,6 +105,7 @@ def plot_overview(steps=(1,50), imgname = 'mainloop_overview.png'):
     ax.legend(header[cols[0]:cols[1]], loc='upper right')
     
     fig.savefig(imgname)
+    plt.close(fig)
 
 
 
@@ -162,6 +166,7 @@ def plot_hydro_detail(steps=(1,9), imgname='hydro_detail.png'):
     ax.add_artist(l1)
     
     fig.savefig(imgname)
+    plt.close(fig)
 
 
 
@@ -206,6 +211,7 @@ def plot_log_mainloop(steps=(8,15), imgname = 'log_times_mainloop.png'):
     
     fig.savefig(imgname)
     #plt.show()
+    plt.close(fig)
 
 
 
@@ -248,6 +254,7 @@ def plot_log_hydro_godunov(steps=(8,15), imgname = 'log_times_hgodunov.png'):
     
     fig.savefig(imgname)
     #plt.show()
+    plt.close(fig)
 
 
 
@@ -296,6 +303,7 @@ def plot_time_line_mainloop_log(steps=(0,1000), imgname = 'time_line_mainloop_lo
     
     fig.savefig(imgname)
     #plt.show()
+    plt.close(fig)
 
 
 def plot_time_line_hgodunov_log(steps=(0,1000), imgname = 'time_line_hgodunov_log.png'):
@@ -341,13 +349,13 @@ def plot_time_line_hgodunov_log(steps=(0,1000), imgname = 'time_line_hgodunov_lo
     
     fig.savefig(imgname)
     #plt.show()
-
+    plt.close(fig)
 
 
 
 def main(fn = 'timing_0000.csv', prefx=''):
     
-    pfrfx = '_'+prefx
+    prefx = prefx + '_'
 
     init(fn)    
     
@@ -356,7 +364,7 @@ def main(fn = 'timing_0000.csv', prefx=''):
     plot_hydro_detail(steps=(30,39), imgname = prefx+'hydro_detail_late.png')
 
     plot_log_mainloop(steps=(8,15), imgname = prefx+'log_times_mainloop.png')
-    plot_log_mainloop(steps=(8,15), imgname = prefx+'log_times_hgodunov.png')
+    plot_log_hydro_godunov(steps=(8,15), imgname = prefx+'log_times_hgodunov.png')
 
     plot_time_line_mainloop_log(steps=(0,1000), imgname = prefx+'time_line_mainloop_log.png')
     plot_time_line_hgodunov_log(steps=(0,1000), imgname = prefx+'time_line_hgodunov_log.png')
@@ -367,8 +375,18 @@ def help():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 2+1 and os.path.isfile(sys.argv[1]):
+    print sys.argv
+    if len(sys.argv) == 3 and os.path.isfile(sys.argv[1]):
         main(sys.argv[1], sys.argv[2])
+    elif len(sys.argv) == 2 and os.path.isfile(sys.argv[1]):
+        pf = '.'.join(sys.argv[1].split('.')[:-1]) + '_'
+        main(sys.argv[1], pf)
+    elif len(sys.argv) == 2:
+        filenames = glob.glob(sys.argv[1])
+        for filename in filenames:
+            print "working on:", filename
+            pf = '.'.join(filename.split('.')[:-1])
+            main(filename, pf)
     else:
         help()
 
