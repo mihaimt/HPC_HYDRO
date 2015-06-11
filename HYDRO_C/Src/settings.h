@@ -20,23 +20,24 @@
 #define N_OMP_THREADS 1
 
 // compile tests and other debug code
-#define DEBUG ON
+#define DEBUG OFF
 
 // run the asserts
 #define DO_ASSERTS OFF
 
 
 // Time specific parts of the code for profiling and print them to file and screen
-// (screen only if DEBUG on)
+// (on screen only if DEBUG on)
+// Do timings collects general timing data and writes them at the end to 
+// a status file
 #define DO_TIMINGS ON
+// gather detailed timing information about all parts of the code for each iteration..
+// very verbose!
 #define DO_DETAILED_TIMINGS ON
 
-#define SHOW_GLOBAL_TIMINGS ON // use MPI to collect timing data and show stats of each iter on screen on rank0
+// use MPI to collect timing data and show stats of each iter on screen on rank0
+#define SHOW_GLOBAL_TIMINGS OFF
 
-
-
-// write status report at the end
-#define STATUS ON
 
 // write initital | intermediate | final states to vtk file
 // attention: the last / final step write will probably write a state

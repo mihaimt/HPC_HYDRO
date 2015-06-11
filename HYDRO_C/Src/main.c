@@ -131,7 +131,7 @@ int main ( int argc, char **argv ) {
             if ( H.nstep == 0 ) {
                 dt = dt / 2.0;
             }
-
+            TIME2(T.LP[2]);
             // Get the smallest possible time step for all processes.
             if ( USE_MPI ) {
                 H.mpi_error = MPI_Allreduce ( &dt, &dtmin, 1, MPI_DOUBLE,
@@ -140,20 +140,23 @@ int main ( int argc, char **argv ) {
                 dt = dtmin;
             }
         }
+        else {TIME2(T.LP[2]);}
         
-        TIME2(T.LP[2]);
+        TIME2(T.LP[3]);
 
         // This is the actual calculation
         if ( ( H.nstep % 2 ) == 0 ) {
             MPI_hydro_godunov ( 1, dt, H, &Hv, &Hw, &Hvw, T.IT0 );
+            TIME2(T.LP[4]);
             MPI_hydro_godunov ( 2, dt, H, &Hv, &Hw, &Hvw, T.IT1 );
         }
         else {
-            MPI_hydro_godunov ( 2, dt, H, &Hv, &Hw, &Hvw, T.IT1 );
-            MPI_hydro_godunov ( 1, dt, H, &Hv, &Hw, &Hvw, T.IT0 );
+            MPI_hydro_godunov ( 2, dt, H, &Hv, &Hw, &Hvw, T.IT0 );
+            TIME2(T.LP[4]);
+            MPI_hydro_godunov ( 1, dt, H, &Hv, &Hw, &Hvw, T.IT1 );
         }
         
-        TIME2(T.LP[3]);
+        TIME2(T.LP[5]);
 
         H.nstep++;
         H.t += dt;
@@ -179,12 +182,12 @@ int main ( int argc, char **argv ) {
             }
         }
 
-        TIME2(T.LP[4]);
+        TIME2(T.LP[6]);
 
         // Synchronize all processes if debugging for nicer output
         if ( DEBUG && USE_MPI ) { MPI_Barrier ( MPI_COMM_WORLD ); }
         
-        TIME2(T.LP[5]);
+        TIME2(T.LP[7]);
 
          // write the time for this step to the output file
         if ( DO_DETAILED_TIMINGS ) {
