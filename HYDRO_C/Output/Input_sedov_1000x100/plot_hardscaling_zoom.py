@@ -34,8 +34,11 @@ ylabel('Time [s]', fontsize = 20)
 print N
 print ratio_s_v(N,1000,100)
 
-plot(N,t,'-',color='red',linewidth=2,label='time measurements')
+plot(N[:11],t[:11],'-',color='red',linewidth=2,label='time measurements')
 #plot(N, ratio_s_v(N, 1000, 100), '-', color = 'blue', linewidth=2, label=r'$n_{comm}/n_{comp}$')
+vlines(8,0,4000,color='green',linestyles='dashed', label='8 cores in a socket')
+vlines(16,0,4000,color='blue',linestyles='dashed', label='16 cores in a node (two sockets)')
+ylim(0, 4000)
 
 
 
@@ -44,7 +47,7 @@ plot(N,t,'-',color='red',linewidth=2,label='time measurements')
 
 legend()
 
-savefig(datafile+'.png')
+savefig(datafile+'_zoom.png')
 close()
 
 print "Done."
