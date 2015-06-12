@@ -26,7 +26,9 @@ title(r'Hard scaling for a 1000 x 100 grid')
 xlabel('Number of cores')
 ylabel('Time [s]')
 
-plot(N,t,'-',color='red',linewidth=2,label='IO, print, two col at once')
+scl = 100.
+loglog(N,t,'-',color='red',linewidth=1,label='zbox')
+loglog([1,scl], [t[0], t[0]/scl],':',color='blue',linewidth=1)
 
 #fill_between(rhocold,ucold,color='orange')
 
