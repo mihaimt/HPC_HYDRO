@@ -179,17 +179,23 @@ for element in step_f[1:]:
 
 
 	da = numpy.matrix(da)
+	# Looks better like this
+	pyplot.figure(figsize=(10,2))
+	
 	pyplot.imshow(da)
 	pyplot.hot()	
 	pyplot.clim(0,5)
-	pyplot.title("d")
+#	pyplot.title("d")
 	pyplot.colorbar(orientation = "horizontal")
+
+	pyplot.tight_layout()
+
 	pyplot.savefig(outname +"_d"+".png")
 	pyplot.cla()
 	pyplot.clf()
 	 
 
-
+"""
 	pa = large_p[0]
         for element in large_p[1:]:
 
@@ -243,7 +249,7 @@ for element in step_f[1:]:
         pyplot.savefig(outname +"_v"+".png")
         pyplot.cla()
         pyplot.clf()
-
+"""
 
 
 
