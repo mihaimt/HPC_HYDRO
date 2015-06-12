@@ -1,7 +1,7 @@
-Input_sedov_1000x100:   1 core  
+Input_sedov_1000x100:   1 core  01:00:36.290s ( 3636.290 s) 
 Input_sedov_2000x100:   2 cores 01:16:23.286s ( 4583.286 s) 
 Input_sedov_4000x100:   4 cores 01:26:44.159s ( 5204.159 s) 
-Input_sedov_6000x100:   6 cores 
+Input_sedov_6000x100:   6 cores 01:29:08.534s ( 5348.534 s). 
 Input_sedov_8000x100:   8 cores 01:29:53.962s ( 5393.962 s) 
 Input_sedov_10000x100: 10 cores 01:32:31.957s ( 5551.957 s)
 Input_sedov_14000x100: 14 cores 01:36:22.643s ( 5782.643 s)
