@@ -18,7 +18,14 @@ import matplotlib.pyplot as plt
 header = []
 data = []
 
-
+figopt = {
+    'figsize': (5,3),
+    'dpi': 200,
+}
+savefigopt = {
+    'dpi': 200,
+    'tightlayout':False
+}
 
 # plot config
 width = 0.45
@@ -85,32 +92,46 @@ def plot_overview(steps=(1,50), imgname = 'mainloop_overview.png'):
     y = [0]*10
     
     #use cols 3 - 9 (incl)
-    cols = (3,10)
+    cols = (3,9)
     for i in range(*cols):
         y[i] = data[:,i]
     bottom = y[cols[0]][sel]*0 # make an empty bar, offset for bottom start of bar
     
-    fig = plt.figure()
+    fig = plt.figure(**figopt)
     ax = fig.add_subplot(111)
     
+    width = 1.0
+    b = []
     for n, i in enumerate(range(*cols)):
-        b = ax.bar(x[sel], y[i][sel], width=1, color=colors[n], bottom=bottom)
+        b.append(ax.bar(x[sel]-width/2., y[i][sel], width=width, color=colors[n], bottom=bottom))
         bottom += y[i][sel]
     
     #ax.set_yscale("log")
     ax.set_xlabel('step nr')
     ax.set_ylabel('time [s]')
+    plt.tight_layout()
     
     # Put a legend to the right of the current axis
-    ax.legend(header[cols[0]:cols[1]], loc='upper right')
-    
-    fig.savefig(imgname)
-    plt.close(fig)
+    #ax.legend(header[cols[0]:cols[1]], loc='upper right')
 
+    # print separate legend
+    figleg = plt.figure(figsize = (4,3))
+    figleg.legend(b, header[cols[0]:cols[1]], loc='center')
+    
+    fig.savefig(imgname, **savefigopt)
+    figleg.savefig('legend_main.png')
+    
+    plt.close(fig)
+    plt.close(figleg)
+
+    
 
 
 
 def plot_hydro_detail(steps=(1,9), imgname='hydro_detail.png'):
+    
+    lfigopt = figopt.copy()
+    lfigopt['figsize'] = (3,5)
 
     sel = slice(*steps)
     
@@ -124,7 +145,7 @@ def plot_hydro_detail(steps=(1,9), imgname='hydro_detail.png'):
         y1[i] = data[:,i]
     bottom1 = y1[cols1[0]][sel]*0 # make an empty bar, offset for bottom start of bar
     
-    fig = plt.figure()
+    fig = plt.figure(**figopt)
     ax = fig.add_subplot(111)
     
     b1 = [0] * len(range(*cols1))
@@ -158,14 +179,15 @@ def plot_hydro_detail(steps=(1,9), imgname='hydro_detail.png'):
     #ax.set_yscale("log")
     ax.set_xlabel('step nr')
     ax.set_ylabel('time [s]')
+    plt.tight_layout()
     
     # Put a legend to the right of the current axis
-    l1 = plt.legend(b1, header[cols1[0]:cols1[1]], loc='upper right', title="mainloop")
+    #l1 = plt.legend(b1, header[cols1[0]:cols1[1]], loc='upper right', title="mainloop")
     #ax.add_artist(l1)
-    l2 = plt.legend(b2, header[cols2[0]:cols2[1]], loc='lower right', title="hydro_godunov")
-    ax.add_artist(l1)
+    #l2 = plt.legend(b2, header[cols2[0]:cols2[1]], loc='lower right', title="hydro_godunov")
+    #ax.add_artist(l1)
     
-    fig.savefig(imgname)
+    fig.savefig(imgname, **savefigopt)
     plt.close(fig)
 
 
@@ -195,21 +217,24 @@ def plot_log_mainloop(steps=(8,15), imgname = 'log_times_mainloop.png'):
     
     
     
-    fig = plt.figure()
+    fig = plt.figure(**figopt)
     ax = fig.add_subplot(111)
     
     for i, c in enumerate(range(*cols)):
         b = ax.bar(x[sel]+dx*(i-ncols/2.), y[c][sel], width=dx, color=colors[i])
     
     ax.set_yscale("log")
-    ax.set_ylim(ymin=1e-7)
+    ax.set_ylim(ymin=9e-7)
+    ax.set_ylim(ymax=1e0)
     ax.set_xlabel('step nr')
     ax.set_ylabel('log(time) [s]')
     
-    # Put a legend to the right of the current axis
-    ax.legend(header[cols[0]:cols[1]], loc='upper right')
+    plt.tight_layout()
     
-    fig.savefig(imgname)
+    # Put a legend to the right of the current axis
+    #ax.legend(header[cols[0]:cols[1]], loc='upper right')
+    
+    fig.savefig(imgname, **savefigopt)
     #plt.show()
     plt.close(fig)
 
@@ -238,21 +263,37 @@ def plot_log_hydro_godunov(steps=(8,15), imgname = 'log_times_hgodunov.png'):
     
     
     
-    fig = plt.figure()
+    fig = plt.figure(**figopt)
     ax = fig.add_subplot(111)
     
+    b = []
     for i, c in enumerate(range(*cols)):
-        b = ax.bar(x[sel]+dx*(i-ncols/2.), y[c][sel], width=dx, color=colors[i+6])
+        b.append(ax.bar(x[sel]+dx*(i-ncols/2.), y[c][sel], width=dx, color=colors[i+6]))
     
     ax.set_yscale("log")
-    ax.set_ylim(ymin=1e-7)
+    ax.set_ylim(ymin=9e-7)
+    ax.set_ylim(ymax=1e0)
     ax.set_xlabel('step nr')
     ax.set_ylabel('log(time) [s]')
+
+    plt.tight_layout()
     
     # Put a legend to the right of the current axis
-    ax.legend(header[cols[0]:cols[1]], loc='upper right')
+    #ax.legend(header[cols[0]:cols[1]], loc='upper right')
+
     
-    fig.savefig(imgname)
+    figleg = plt.figure(figsize = (4,3))
+    figleg.legend(b, header[cols[0]:cols[1]], loc='center')
+    
+    fig.savefig(imgname, **savefigopt)
+    figleg.savefig('legend_hydrogod.png')
+    
+    plt.close(fig)
+    plt.close(figleg)
+
+
+
+    fig.savefig(imgname, **savefigopt)
     #plt.show()
     plt.close(fig)
 
@@ -281,7 +322,7 @@ def plot_time_line_mainloop_log(steps=(0,1000), imgname = 'time_line_mainloop_lo
     
     
     
-    fig = plt.figure()
+    fig = plt.figure(**figopt)
     ax = fig.add_subplot(111)
     
     for i, c in enumerate(range(*cols)):
@@ -294,14 +335,17 @@ def plot_time_line_mainloop_log(steps=(0,1000), imgname = 'time_line_mainloop_lo
         b = ax.plot(xx, yy, '-', color=colors[i], )
     
     ax.set_yscale("log")
-    ax.set_ylim(ymin=2e-7)
+    ax.set_ylim(ymin=9e-7)
+    ax.set_ylim(ymax=1e0)
     ax.set_xlabel('step nr')
     ax.set_ylabel('log(time) [s]')
+
+    plt.tight_layout()
     
     # Put a legend to the right of the current axis
-    ax.legend(header[cols[0]:cols[1]], loc='upper right')
+    #ax.legend(header[cols[0]:cols[1]], loc='upper right')
     
-    fig.savefig(imgname)
+    fig.savefig(imgname, **savefigopt)
     #plt.show()
     plt.close(fig)
 
@@ -327,7 +371,7 @@ def plot_time_line_hgodunov_log(steps=(0,1000), imgname = 'time_line_hgodunov_lo
     ncols = cols[1]-cols[0]
     dx = 1.0*tot_width/ncols
     
-    fig = plt.figure()
+    fig = plt.figure(**figopt)
     ax = fig.add_subplot(111)
     
     for i, c in enumerate(range(*cols)):
@@ -340,14 +384,17 @@ def plot_time_line_hgodunov_log(steps=(0,1000), imgname = 'time_line_hgodunov_lo
         b = ax.plot(xx, yy, '-', color=colors[i+6], )
     
     ax.set_yscale("log")
-    ax.set_ylim(ymin=2e-7)
+    ax.set_ylim(ymin=9e-7)
+    ax.set_ylim(ymax=1e0)
     ax.set_xlabel('step nr')
     ax.set_ylabel('log(time) [s]')
     
-    # Put a legend to the right of the current axis
-    ax.legend(header[cols[0]:cols[1]], loc='upper right')
+    plt.tight_layout()
     
-    fig.savefig(imgname)
+    # Put a legend to the right of the current axis
+    #ax.legend(header[cols[0]:cols[1]], loc='upper right')
+    
+    fig.savefig(imgname, **savefigopt)
     #plt.show()
     plt.close(fig)
 
@@ -359,12 +406,12 @@ def main(fn = 'timing_0000.csv', prefx=''):
 
     init(fn)    
     
-    plot_overview(steps=(1,50), imgname = prefx+'mainloop_overview.png')
-    plot_hydro_detail(steps=(0,9), imgname = prefx+'hydro_detail_early.png')
-    plot_hydro_detail(steps=(30,39), imgname = prefx+'hydro_detail_late.png')
+    plot_overview(steps=(85,109), imgname = prefx+'mainloop_overview.png')
+    #plot_hydro_detail(steps=(0,9), imgname = prefx+'hydro_detail_early.png')
+    #plot_hydro_detail(steps=(30,33), imgname = prefx+'hydro_detail_late.png')
 
-    plot_log_mainloop(steps=(8,15), imgname = prefx+'log_times_mainloop.png')
-    plot_log_hydro_godunov(steps=(8,15), imgname = prefx+'log_times_hgodunov.png')
+    plot_log_mainloop(steps=(28,33), imgname = prefx+'log_times_mainloop.png')
+    plot_log_hydro_godunov(steps=(28,33), imgname = prefx+'log_times_hgodunov.png')
 
     plot_time_line_mainloop_log(steps=(0,1000), imgname = prefx+'time_line_mainloop_log.png')
     plot_time_line_hgodunov_log(steps=(0,1000), imgname = prefx+'time_line_hgodunov_log.png')
