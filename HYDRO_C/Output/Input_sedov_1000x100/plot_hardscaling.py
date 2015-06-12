@@ -9,10 +9,6 @@ from numpy import *
 from matplotlib.pyplot import *
 from sys import *
 
-def ratio_s_v(np, nx, ny):
-	return 4.*ny/(nx/np)/(ny+4)
-
-
 if len(argv) != 2:
 		print "Usage: plot_hardscaling.py data.txt"
 		exit(1)
@@ -26,25 +22,14 @@ data = loadtxt(datafile)
 N = data[:,0]
 t = data[:,1]
 
-title(r'Strong scaling for a 1000 x 100 grid', fontsize = 20)
-xlabel('Number of cores', fontsize = 20)
-ylabel('Time [s]', fontsize = 20)
+title(r'Hard scaling for a 1000 x 100 grid')
+xlabel('Number of cores')
+ylabel('Time [s]')
 
-
-print N
-print ratio_s_v(N,1000,100)
-
-plot(N,t,'-',color='red',linewidth=2,label='time measurements')
-#plot(N, ratio_s_v(N, 1000, 100), '-', color = 'blue', linewidth=2, label=r'$n_{comm}/n_{comp}$')
-
-
-
-<<<<<<< HEAD
 scl = 100.
 loglog(N,t,'-',color='red',linewidth=1,label='zbox')
 loglog([1,scl], [t[0], t[0]/scl],':',color='blue',linewidth=1)
-=======
->>>>>>> 6412cc0cade9cdeaf1f729857207fa040e5b1583
+
 
 #fill_between(rhocold,ucold,color='orange')
 
