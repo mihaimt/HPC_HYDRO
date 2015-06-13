@@ -30,10 +30,14 @@
 // (on screen only if DEBUG on)
 // Do timings collects general timing data and writes them at the end to 
 // a status file
-#define DO_TIMINGS ON
+//#define DO_TIMINGS ON
+// (CR) dont do timings for runs
+#define DO_TIMINGS OFF
 // gather detailed timing information about all parts of the code for each iteration..
 // very verbose!
-#define DO_DETAILED_TIMINGS ON
+//#define DO_DETAILED_TIMINGS ON
+// (CR) dont do timings for runs
+#define DO_DETAILED_TIMINGS OFF
 
 // use MPI to collect timing data and show stats of each iter on screen on rank0
 #define SHOW_GLOBAL_TIMINGS OFF
@@ -80,6 +84,7 @@
 // do run time error output (stuff for the user to see if something is
 // massively screwed up and the program will shut down, usually ON)
 #define ERROR_PRINT ON
+//#define ERROR_PRINT ON
 
 // do run time warn output (stuff for the user to see if something is screwed
 // up, usually ON)
