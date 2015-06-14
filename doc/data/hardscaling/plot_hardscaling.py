@@ -78,7 +78,7 @@ ax1.set_title('Strong scaling for a 1000 x 100 grid')
 ax1.set_ylim(ymin=1, ymax = 1e4)
 ax1.set_xlim(xmin=1, xmax=1e3)
 
-ax1.set_xlabel('number of cpus')
+ax1.set_xlabel('number of cores')
 ax1.set_ylabel('time [s]')
 
 
@@ -106,6 +106,8 @@ ax2.set_xlim(xmin=1, xmax=1e3)
 
 ax2.set_title('speedup')
 
+ax2.set_xlabel('number of cores')
+ax2.set_ylabel('time [s]')
 
 
 
@@ -131,6 +133,8 @@ ax3.set_ylim(ymin=0, ymax=1.1)
 
 ax3.set_title('efficency')
 
+ax3.set_xlabel('number of cores')
+ax3.set_ylabel('efficency')
 
 ### END ######################################################################
 
