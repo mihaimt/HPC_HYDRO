@@ -109,7 +109,7 @@ ax2.set_yscale("linear")
 ax2.set_xlim(xmin=1, xmax=fact)
 ax2.set_ylim(ymin=0, ymax=1.1)
 
-ax2.set_title('speedup')
+ax2.set_title('efficency')
 
 
 
@@ -145,24 +145,6 @@ ax2.set_title('speedup')
 plt.tight_layout()
 
 fig.savefig('weakscaling.svg', **savefigopts)
+fig.savefig('weakscaling.png', **savefigopts)
 plt.close(fig)
 
-
-
-
-#
-#
-#title(r'Strong scaling for a 1000 x 100 grid', fontsize = 20)
-#xlabel('Number of cores', fontsize = 20)
-#ylabel('Time [s]', fontsize = 20)
-#
-#
-#print N
-#print ratio_s_v(N,1000,100)
-#
-#loglog(N, t, '-', color='red', linewidth=2)
-#
-#savefig('hardscaling.png')
-#close()
-#
-#print "Done."

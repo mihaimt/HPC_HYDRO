@@ -137,6 +137,8 @@ ax3.set_title('efficency')
 plt.tight_layout()
 
 fig.savefig('hardscaling.svg', **savefigopts)
+fig.savefig('hardscaling.png', **savefigopts)
+
 plt.close(fig)
 
 
