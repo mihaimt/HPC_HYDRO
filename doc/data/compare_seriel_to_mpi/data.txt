@@ -1,0 +1,40 @@
+
+parallel, USE_MPI OFF
+mpirun -n 1 ../Bin/hydro_lmpi -i ../Input/1000x100s1000n100.nml
+
+Hydro ends approx in 00:01:03.914s (63.914) [global min: 0.000000e+00, max: 0.000000e+00].
+Hydro ends approx in 00:01:03.994s (63.994) [global min: 0.000000e+00, max: 0.000000e+00].
+Hydro ends approx in 00:01:03.817s (63.817) [global min: 0.000000e+00, max: 0.000000e+00].
+Hydro ends approx in 00:01:03.771s (63.771) [global min: 0.000000e+00, max: 0.000000e+00].
+Hydro ends approx in 00:01:03.776s (63.776) [global min: 0.000000e+00, max: 0.000000e+00].
+
+
+parallel, USE_MPI ON
+mpirun -n 1 ../Bin/hydro_lmpi -i ../Input/1000x100s1000n100.nml
+
+Hydro ends approx in 00:01:03.743s (63.743) [global min: 6.374290e+01, max: 6.374290e+01].
+Hydro ends approx in 00:01:03.769s (63.769) [global min: 6.376948e+01, max: 6.376948e+01].
+Hydro ends approx in 00:01:03.649s (63.649) [global min: 6.364933e+01, max: 6.364933e+01].
+Hydro ends approx in 00:01:03.603s (63.603) [global min: 6.360264e+01, max: 6.360264e+01].
+Hydro ends approx in 00:01:03.719s (63.719) [global min: 6.371878e+01, max: 6.371878e+01].
+
+
+sequential, with fprintf
+../Bin/hydro_mono -i ../Input/1000x100s1000n100.nml
+
+Hydro ends in 00:01:13.880s (73.880).
+Hydro ends in 00:01:13.668s (73.668).
+Hydro ends in 00:01:13.881s (73.881).
+Hydro ends in 00:01:13.820s (73.820).
+Hydro ends in 00:01:13.983s (73.983).
+
+
+sequential, without fprintf
+../Bin/hydro_mono -i ../Input/1000x100s1000n100.nml
+Hydro ends in 00:01:13.253s (73.253).
+Hydro ends in 00:01:13.451s (73.451).
+Hydro ends in 00:01:13.440s (73.440).
+Hydro ends in 00:01:13.467s (73.467).
+Hydro ends in 00:01:13.331s (73.331).
+
+
