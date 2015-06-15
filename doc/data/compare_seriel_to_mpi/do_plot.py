@@ -63,7 +63,7 @@ ax.set_xticks(x)
 ax.set_xticklabels( ('mono', 'mono\nno fprintf', 'parallel\nUSE_MPI 0', 'parallel\nUSE_MPI 1',) )
 ax.set_ylim(ymax=1.05, ymin=0.8)
 ax.set_ylabel('relative runtime [1]')
-ax.set_title('Comparison of codes')
+ax.set_title('Comparison of codes\nsingle core run, average of 5')
 
 plt.tight_layout()
 
