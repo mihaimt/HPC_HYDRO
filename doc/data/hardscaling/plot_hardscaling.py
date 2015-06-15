@@ -80,7 +80,7 @@ ax1.set_xlim(xmin=1, xmax=fact)
 ax1.set_ylim(ymin=1, ymax = 1e4)
 
 ax1.set_xlabel('number of cores')
-ax1.set_ylabel('time [s]')
+ax1.set_ylabel('total run time [s]')
 
 
 ### SECOND FIGURE ############################################################
@@ -105,10 +105,10 @@ ax2.set_yscale("log")
 ax2.set_xlim(xmin=1, xmax=fact)
 ax2.set_ylim(ymin=1, ymax=1e3)
 
-ax2.set_title('speedup')
+#ax2.set_title('speedup')
 
 ax2.set_xlabel('number of cores')
-ax2.set_ylabel('time [s]')
+ax2.set_ylabel('speedup [1]')
 
 
 
@@ -132,10 +132,10 @@ ax3.set_yscale("linear")
 ax3.set_xlim(xmin=1, xmax=fact)
 ax3.set_ylim(ymin=0, ymax=1.1)
 
-ax3.set_title('efficency')
+#ax3.set_title('efficiency')
 
 ax3.set_xlabel('number of cores')
-ax3.set_ylabel('efficency')
+ax3.set_ylabel('efficiency [1]')
 
 ### END ######################################################################
 

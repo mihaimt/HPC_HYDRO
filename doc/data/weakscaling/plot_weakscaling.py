@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from sys import argv
 
 nplots=2
-fact=1e2
+fact=5e2
 
 
 figopts = {
@@ -80,7 +80,7 @@ plot_node_bounds(ax1)
 ax1.set_title(r'Weak scaling ($\mathrm{n_x=1000 \cdot n_{cores}}$; $\mathrm{n_y=100}$)')
 
 ax1.set_xlim(xmin=1, xmax=fact)
-ax1.set_ylim(ymin=3000, ymax = 6000)
+ax1.set_ylim(ymin=3000, ymax = 8000)
 
 ax1.set_xlabel('number of cores')
 ax1.set_ylabel('time [s]')
@@ -109,7 +109,7 @@ ax2.set_yscale("linear")
 ax2.set_xlim(xmin=1, xmax=fact)
 ax2.set_ylim(ymin=0, ymax=1.1)
 
-ax2.set_title('efficency')
+ax2.set_title('efficiency [1]')
 
 ax2.set_xlabel('number of cores')
 ax2.set_ylabel('efficency')
