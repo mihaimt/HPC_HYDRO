@@ -1,0 +1,127 @@
+PGM=HydroC
+HEADER=$(wildcard *.h)
+SRC=cmpflx.c conservar.c equation_of_state.c hydro_godunov.c main.c parametres.c riemann.c trace.c vtkfile.c compute_deltat.c constoprim.c hydro_funcs.c hydro_utils.c make_boundary.c qleftright.c slope.c utils.c
+
+SRCCU=
+
+OBJ = $(patsubst %.c, %.o, ${SRC})
+DEP = $(patsubst %.c, %.d, ${SRC}) $(DEP2)
+
+#ifeq ($(O), O)
+#CC=gcc -fopenmp
+#CC=icc -openmp -openmp-report2
+#else
+#CC=icc -Wno-unknown-pragmas
+#endif
+CC=xlC_r  
+#-qnooptimize -g -qcheck=all -qfloat=nans -qheapdebug -qkeepparm
+
+#OPT=-O2 -DNDEBUG -DFAST -ipo -msse3 -vec-report1 -ip 
+#OPT=-O3 -DNDEBUG -DFAST
+#OPT=-g
+OPT=-O4 -qsmp=omp
+
+CFLAGS=$(OPT)
+
+$(PGM): $(DEP) $(OBJ)
+	$(CC) -o $(PGM) $(OPT) $(OBJ) -lm $(HMPPENDFLAGS)
+
+
+depend:
+	-rm ${DEP}; gmake ${DEP}
+
+listing:
+	a2ps --medium=A4dj -C -1 -R -l90 --toc -E --prologue=color --file-align=fill -o listing.ps Makefile $(HEADER) $(SRC)
+	ps2pdf listing.ps
+	rm listing.ps
+
+HYDROCOPENMP:
+	scp -r uchu:HydroCopenMP $(HOME)
+	make clean
+	cd $(HOME); tar czvf HYDROCOPENMP.`date +%y%m%d_%H%M%S`.tgz HydroCopenMP/*.c HydroCopenMP/*.h HydroCopenMP/Makefile HydroCopenMP/input
+
+save:
+	scp -r uchu:HydroC $(HOME)
+	make clean
+	-make listing
+	cd $(HOME); tar czvf HYDROC.`date +%y%m%d_%H%M%S`.tgz HydroC
+
+OKDIR=$(shell date +%y%m%d_%H%M%S)
+ok:
+	mkdir ok$(OKDIR)
+	cp *.c *.h Makefile ok$(OKDIR)
+
+saves:
+	scp -r shyrka:HydroC $(HOME)
+	make clean
+	make listing
+
+clean   :
+	-/bin/rm -f *.o *.so *~ *.vts  *.bic *.bak *.cu *.out ${PGM} 
+
+indent:
+	indent $(SRC) $(HEADER)
+
+dos2unix:
+	dos2unix $(SRC) $(HEADER)
+	perl -i.bak -p -e 's/\015//ig' $(SRC) $(HEADER)
+
+include $(DEP)
+
+.SUFFIXES:  .o .cu .d .c
+
+.c.d:
+	@gcc ${CPPFLAGS} $(HFLAGS) -M $< -o $@
+.c.o    :
+	${CC} ${CFLAGS} -c $< $(HMPPENDFLAGS)
+.cpp.o  :
+	${CC} ${CFLAGS} -c $<
+.cu.o:
+	${NVCC} ${CFLAGS} -c $<
+
+RUNDIR=/ptmp/ocre/coling/HydroC
+run: $(PGM)
+	mkdir -p $(RUNDIR)
+	cp $(PGM) input $(RUNDIR)
+	cd $(RUNDIR); rm -f output*.vts
+	cd $(RUNDIR); time env OMP_NUM_THREADS=8 ./$(PGM) -i input
+	# cd $(RUNDIR); time ./$(PGM) -i $(HOME)/HYDRO/Mono/Input/input_sedov_noio_20x40.nml
+
+vrun: $(PGM)
+	mkdir -p $(RUNDIR)
+	cp $(PGM) input $(RUNDIR)
+	cd $(RUNDIR); valgrind --tool=memcheck --leak-check=full ./$(PGM) -i input
+
+prun: $(PGM)
+	env CUDA_PROFILE=1 CUDA_PROFILE_LOG=./cudaProfile.log CUDA_PROFILE_CONFIG=./config.txt ccc_mprun ./$(PGM) -i input
+	# ./$(PGM) -i input
+lrun: $(PGM)
+	# ccc_mprun ./$(PGM) -i input
+	env OMP_NUM_THREADS=4 ./$(PGM) -i input
+
+lrun9: $(PGM)
+	env HMPP_VERBOSITY=9 ccc_mprun ./$(PGM) -i input
+
+gdb: $(PGM)
+	mkdir -p $(RUNDIR)
+	cp $(PGM) input $(RUNDIR)
+	cd $(RUNDIR); gdb ./$(PGM)
+
+ddt: $(PGM)
+	mkdir -p $(RUNDIR)
+	cp $(PGM) input $(RUNDIR)
+	cd $(RUNDIR); /opt/allinea/ddt-2.5.alpha/bin/ddt ./$(PGM) -i $(HOME)/HYDRO/Mono/Input/input_sedov_noio_20x40.nml
+
+perf:
+	make clean $(PGM)
+	./$(PGM) -i input
+	make O=O clean $(PGM)
+	for i in 1 2 4 8 16 32; do env OMP_NUM_THREADS=$$i ./$(PGM) -i input; done
+	make clean $(PGM)
+	ccc_mprun ./$(PGM) -i input
+	make O=O clean $(PGM)
+	for i in 1 2 4 8 16 32; do env OMP_NUM_THREADS=$$i ccc_mprun ./$(PGM) -i input; done
+
+
+FORCE:
+#EOF

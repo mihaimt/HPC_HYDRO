@@ -13,7 +13,7 @@
 //-----------------------------------------------------------------------------
 
 // compile with mpi
-#define USE_MPI YES
+#define USE_MPI OFF
 
 // compile with OPENMP
 #define USE_OPENMP OFF
@@ -32,7 +32,7 @@
 // a status file
 //#define DO_TIMINGS ON
 // (CR) dont do timings for runs
-#define DO_TIMINGS OFF
+#define DO_TIMINGS ON
 // gather detailed timing information about all parts of the code for each iteration..
 // very verbose!
 //#define DO_DETAILED_TIMINGS ON
@@ -79,7 +79,7 @@
 #define TRACE_PRINT OFF
 
 // do debug output (usually OFF)
-#define DEBUG_PRINT ON
+#define DEBUG_PRINT OFF
 
 // do run time error output (stuff for the user to see if something is
 // massively screwed up and the program will shut down, usually ON)
