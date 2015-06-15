@@ -37,12 +37,13 @@ plotopts = {
 #def ratio_s_v(npp, nx, ny):
 #	return 4.*ny/(nx/npp)/(ny+4)
 
-
+prefix = ''
 if len(argv) > 2:
     print "Usage: plot_hardscaling.py data.txt"
     exit(1)
 elif len(argv)==2:
     datafile = argv[1]
+    prefix = '.'.join(datafile.split('.')[:-1])
 else:
     datafile = 'results_hard.txt'
     
@@ -75,8 +76,8 @@ plot_node_bounds(ax1)
 
 ax1.set_title('Strong scaling for a 1000 x 100 grid')
 
+ax1.set_xlim(xmin=1, xmax=fact)
 ax1.set_ylim(ymin=1, ymax = 1e4)
-ax1.set_xlim(xmin=1, xmax=1e3)
 
 ax1.set_xlabel('number of cores')
 ax1.set_ylabel('time [s]')
@@ -101,8 +102,8 @@ plot_node_bounds(ax2)
 ax2.set_xscale("log")
 ax2.set_yscale("log")
 
+ax2.set_xlim(xmin=1, xmax=fact)
 ax2.set_ylim(ymin=1, ymax=1e3)
-ax2.set_xlim(xmin=1, xmax=1e3)
 
 ax2.set_title('speedup')
 
@@ -115,7 +116,7 @@ ax2.set_ylabel('time [s]')
 
 ax3 = fig.add_subplot(nplots,1,3)
 
-eff = speedup / N
+eff = speedup / N * N[0]
 
 ax3.plot(N, eff, 'r-', **plotopts)
 
@@ -128,7 +129,7 @@ plot_node_bounds(ax3)
 ax3.set_xscale("log")
 ax3.set_yscale("linear")
 
-ax3.set_xlim(xmin=1, xmax=1e3)
+ax3.set_xlim(xmin=1, xmax=fact)
 ax3.set_ylim(ymin=0, ymax=1.1)
 
 ax3.set_title('efficency')
@@ -140,8 +141,8 @@ ax3.set_ylabel('efficency')
 
 plt.tight_layout()
 
-fig.savefig('hardscaling.svg', **savefigopts)
-fig.savefig('hardscaling.png', **savefigopts)
+fig.savefig(prefix+'hardscaling.svg', **savefigopts)
+fig.savefig(prefix+'hardscaling.png', **savefigopts)
 
 plt.close(fig)
 

@@ -1,0 +1,1 @@
+/home/rafik/projects/hpc/HYDRO_C/Output/Input_sedov_10000x100/results_hard_10k.txt
