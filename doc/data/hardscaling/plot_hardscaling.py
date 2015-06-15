@@ -19,7 +19,7 @@ from sys import argv
 nplots=3
 
 figopts = {
-    'figsize': (5,3*nplots),
+    'figsize': (3,3*nplots),
     'dpi': 200,
 }
 savefigopts = {
@@ -74,7 +74,7 @@ ax1.plot([1,fact], [t[0],t[0]/fact], 'k--')
 # plot node boundaries
 plot_node_bounds(ax1)
 
-ax1.set_title('Strong scaling for a 1000 x 100 grid')
+ax1.set_title('Strong scaling\n1000 x 100 grid')
 
 ax1.set_xlim(xmin=1, xmax=fact)
 ax1.set_ylim(ymin=1, ymax = 1e4)
