@@ -50,7 +50,7 @@ te = np.array(te)
 rel = tm / tm[0]
 relerr = te / tm[0]
 
-fig = plt.figure(figsize=(5,3), dpi=200)
+fig = plt.figure(figsize=(4.7,3), dpi=200)
 ax = fig.add_subplot(111)
 
 x = np.arange(len(tt)) + 1
@@ -60,11 +60,12 @@ width = 0.8
 ax.bar(x-width/2., rel, width=width)
 
 ax.set_xticks(x)
-ax.set_xticklabels( ('mono', 'mono\nno fprintf', 'parallel\nUSE_MPI OFF', 'parallel\nUSE_MPI ON',) )
+ax.set_xticklabels( ('mono', 'mono\nno fprintf', 'parallel\nUSE_MPI 0', 'parallel\nUSE_MPI 1',) )
 ax.set_ylim(ymax=1.05, ymin=0.8)
 ax.set_ylabel('relative runtime [1]')
 ax.set_title('Comparison of codes')
 
 plt.tight_layout()
 
-plt.show()
+fig.savefig('plot.svg', dpi= 200)
+fig.savefig('plot.png', dpi= 200)
